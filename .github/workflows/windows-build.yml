@@ -42,3 +42,29 @@ jobs:
           path: dist/WardogsTeamselector.exe
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: windows-release-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: WardogsTeamselector-win-x64
+          path: dist
+      - name: Validate changelog generation
+        run: python3 .github/scripts/test_release.py
+      - name: Publish release with changelog and EXE
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: python3 .github/scripts/release.py
