@@ -6,7 +6,7 @@ using System.Linq;
 namespace WardogsTeamselector.Core;
 
 public enum Team { Blue, Red, Green }
-public enum RunState { Stopped, Waiting, Clicking, ConfirmingJoin }
+public enum RunState { Stopped, Waiting, Clicking }
 public sealed record MonitorInfo(string Id, string Name, Rectangle Bounds, bool Primary);
 public sealed record TargetGeometry(Rectangle Bounds, IntPtr WindowHandle, bool IsForeground, string Description, bool IsCalibrated);
 public sealed record TeamRegion(Team Team, double X, double Y, double Width, double Height)
@@ -28,8 +28,6 @@ public sealed class AppSettings
     public int MinIntervalMs { get; set; } = 100;
     public int MaxIntervalMs { get; set; } = 200;
     public double DetectionThreshold { get; set; } = 0.90;
-    public int DialogAbsenceTimeoutMs { get; set; } = 10000;
-    public bool DetectJoinedHud { get; set; } = true;
     public bool LivePreviewEnabled { get; set; } = true;
     public string? MonitorId { get; set; }
     public string WindowTitleContains { get; set; } = "wardogs";
@@ -49,7 +47,6 @@ public sealed class AppSettings
     public void Validate()
     {
         if (MinIntervalMs < 50 || MaxIntervalMs < MinIntervalMs || MaxIntervalMs > 60000) throw new ArgumentException("Es gilt 50 ≤ A ≤ B ≤ 60000 ms.");
-        if (DialogAbsenceTimeoutMs < 100 || DialogAbsenceTimeoutMs > 60000) throw new ArgumentException("Bestätigungswartezeit muss zwischen 0,1 und 60 Sekunden liegen.");
         if (!double.IsFinite(DetectionThreshold) || DetectionThreshold < 0.5 || DetectionThreshold > 1) throw new ArgumentException("Erkennungsschwelle: 0,5 bis 1.");
         if (!double.IsFinite(DetectionScale) || DetectionScale < 0.25 || DetectionScale > 4 || !double.IsFinite(DetectionOffsetX) || !double.IsFinite(DetectionOffsetY)) throw new ArgumentException("Ungültige Erkennungskalibrierung.");
         if (string.IsNullOrWhiteSpace(WindowTitleContains)) throw new ArgumentException("Spielfenster-Filter darf nicht leer sein.");
@@ -68,4 +65,4 @@ public interface IScreenService
 public interface IDialogDetector { DetectionResult Detect(CaptureFrame frame, AppSettings settings); }
 public interface IJoinedScreenDetector { DetectionResult Detect(CaptureFrame frame, AppSettings settings); }
 public interface IClickSink { void Click(Point position); }
-public sealed record AutomationSnapshot(RunState State, Team? Team, long ClickCount, int IntervalMs, string Reason, DetectionResult? Detection, TargetGeometry? Geometry, DetectionResult? JoinedDetection = null, int AbsenceRemainingMs = 0);
+public sealed record AutomationSnapshot(RunState State, Team? Team, long ClickCount, int IntervalMs, string Reason, DetectionResult? Detection, TargetGeometry? Geometry, DetectionResult? JoinedDetection = null);

@@ -14,7 +14,7 @@ public sealed class AutomationController : IDisposable
     private readonly IScreenService screen;
     private readonly IDialogDetector detector;
     private readonly IClickSink sink;
-    private readonly IJoinedScreenDetector? joinedDetector;
+    private readonly IJoinedScreenDetector joinedDetector;
     private readonly CancellationTokenSource lifetime = new();
     private readonly Task worker;
     private Session? active;
@@ -24,9 +24,9 @@ public sealed class AutomationController : IDisposable
     public event Action<AutomationSnapshot>? Updated;
     public AutomationSnapshot Snapshot { get { lock (gate) return snapshot; } }
 
-    public AutomationController(IScreenService screen, IDialogDetector detector, IClickSink sink, IJoinedScreenDetector? joinedDetector = null)
+    public AutomationController(IScreenService screen, IDialogDetector detector, IClickSink sink, IJoinedScreenDetector joinedDetector)
     {
-        this.screen = screen; this.detector = detector; this.sink = sink; this.joinedDetector = joinedDetector;
+        this.screen = screen; this.detector = detector; this.sink = sink; this.joinedDetector = joinedDetector ?? throw new ArgumentNullException(nameof(joinedDetector));
         worker = Task.Run(RunAsync);
     }
 
@@ -52,7 +52,7 @@ public sealed class AutomationController : IDisposable
     private void StopLocked(string reason)
     {
         active = null;
-        Publish(snapshot with { State = RunState.Stopped, Reason = reason, AbsenceRemainingMs = 0 });
+        Publish(snapshot with { State = RunState.Stopped, Reason = reason });
     }
 
     private async Task RunAsync()
@@ -89,7 +89,7 @@ public sealed class AutomationController : IDisposable
             }
             using var frame = screen.Capture(target);
             var detection = detector.Detect(frame, session.Settings);
-            var joined = session.Settings.DetectJoinedHud ? joinedDetector?.Detect(frame, session.Settings) : null;
+            var joined = joinedDetector.Detect(frame, session.Settings);
             lock (gate)
             {
                 if (active != session) return;
@@ -112,43 +112,38 @@ public sealed class AutomationController : IDisposable
                     else Publish(snapshot with { Reason = !target.IsForeground ? "Warte auf Spielfokus" : "Klickfreigabe benötigt kalibrierten Spielbereich" });
                     return;
                 }
-                if (!detection.IsMatch)
+                // HUD recognition is the only automatic success condition, even if
+                // the dialog detector still reports a match during the transition.
+                if (joined.IsMatch)
                 {
-                    session.Stable = 0;
-                    // Continuous HUD recognition also ends an armed run before its first click.
-                    if (joined?.IsMatch == true)
+                    session.JoinedSince ??= now;
+                    session.JoinedStable++;
+                    if (session.JoinedStable >= 3 && Stopwatch.GetElapsedTime(session.JoinedSince.Value, now).TotalMilliseconds >= 500)
                     {
-                        session.JoinedSince ??= now;
-                        session.JoinedStable++;
-                        if (session.JoinedStable >= 3 && Stopwatch.GetElapsedTime(session.JoinedSince.Value, now).TotalMilliseconds >= 500)
+                        var hudFresh = screen.ResolveTarget(session.Settings);
+                        if (hudFresh is null || !hudFresh.IsForeground || !SameGeometry(target, hudFresh) || (DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100)
                         {
-                            var hudFresh = screen.ResolveTarget(session.Settings);
-                            if (hudFresh is null || !hudFresh.IsForeground || !SameGeometry(target, hudFresh) || (DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100)
-                            {
-                                session.JoinedSince = null; session.JoinedStable = 0;
-                                if (session.Started) StopLocked("Fokus oder Spielbereich vor Beitrittsbestätigung geändert");
-                                return;
-                            }
-                            StopLocked("HUD: Beitritt erkannt");
+                            session.JoinedSince = null; session.JoinedStable = 0;
+                            if (session.Started) StopLocked("Fokus oder Spielbereich vor Beitrittsbestätigung geändert");
                             return;
                         }
+                        StopLocked("HUD: Beitritt erkannt");
+                        return;
                     }
-                    else { session.JoinedSince = null; session.JoinedStable = 0; }
-                    if (session.Started)
-                    {
-                        session.AbsentSince ??= now;
-                        var remaining = Math.Max(0, session.Settings.DialogAbsenceTimeoutMs - (int)Stopwatch.GetElapsedTime(session.AbsentSince.Value, now).TotalMilliseconds);
-                        if (remaining == 0) { StopLocked("Bestätigungsfrist abgelaufen – Auswahldialog nicht zurückgekehrt"); return; }
-                        Publish(snapshot with { State = RunState.ConfirmingJoin, AbsenceRemainingMs = remaining, Reason = "Dialog fehlt: warte auf Rückkehr oder Beitrittsbestätigung" });
-                    }
-                    else Publish(snapshot with { Reason = joined?.IsMatch == true ? "HUD-Beitritt stabilisieren" : "Warte auf Auswahldialog" });
-                    return;
                 }
-                session.AbsentSince = null;
-                session.JoinedSince = null; session.JoinedStable = 0;
-                snapshot = snapshot with { State = session.Stable < 2 ? RunState.Waiting : snapshot.State, AbsenceRemainingMs = 0 };
-                session.Stable++;
-                if (session.Stable < 3) { Publish(snapshot with { Detection = detection, Geometry = target, Reason = $"Dialog stabilisieren ({session.Stable}/3)" }); return; }
+                else { session.JoinedSince = null; session.JoinedStable = 0; }
+                if (!session.Started)
+                {
+                    // Only the initial activation needs a stable selection dialog.
+                    if (!detection.IsMatch || joined.IsMatch)
+                    {
+                        session.Stable = 0;
+                        Publish(snapshot with { Reason = joined.IsMatch ? "HUD-Beitritt stabilisieren" : "Warte auf Auswahldialog" });
+                        return;
+                    }
+                    session.Stable++;
+                    if (session.Stable < 3) { Publish(snapshot with { Reason = $"Dialog stabilisieren ({session.Stable}/3)" }); return; }
+                }
                 var elapsed = lastClickTimestamp == 0 ? double.PositiveInfinity : Stopwatch.GetElapsedTime(lastClickTimestamp, now).TotalMilliseconds;
                 if (elapsed < Math.Max(50, session.Interval))
                 {
@@ -192,7 +187,6 @@ public sealed class AutomationController : IDisposable
     {
         MinIntervalMs = value.MinIntervalMs, MaxIntervalMs = value.MaxIntervalMs,
         DetectionThreshold = value.DetectionThreshold, MonitorId = value.MonitorId,
-        DialogAbsenceTimeoutMs = value.DialogAbsenceTimeoutMs, DetectJoinedHud = value.DetectJoinedHud,
         LivePreviewEnabled = value.LivePreviewEnabled,
         WindowTitleContains = value.WindowTitleContains, ProcessNameContains = value.ProcessNameContains, DryRun = value.DryRun,
         GeometryCalibrated = value.GeometryCalibrated, ManualBounds = value.ManualBounds,
@@ -220,7 +214,6 @@ public sealed class AutomationController : IDisposable
         public int Stable;
         public int JoinedStable;
         public long? JoinedSince;
-        public long? AbsentSince;
         public int Interval;
         public bool Started;
         public long Count;

@@ -1,6 +1,6 @@
 # Steuerung und Hotkeys
 
-`AutomationController(IScreenService, IDialogDetector, IClickSink, IJoinedScreenDetector? = null)` bietet
+`AutomationController(IScreenService, IDialogDetector, IClickSink, IJoinedScreenDetector)` bietet
 `Start(Team, AppSettings)`, `Stop(string reason = "ESC")`, `Snapshot`,
 `event Action<AutomationSnapshot>? Updated` und `Dispose()`.
 
@@ -15,18 +15,15 @@ Zwischen Eingaben liegt mindestens die pro Klick neu gezogene ganzzahlige
 Wartezeit A–B einschließlich Grenzen, stets mindestens 50 ms. Die Zeitmessung
 beginnt nach Rückkehr der Eingabesenke; auch schnelle Teamwechsel umgehen die
 50-ms-Grenze nicht. Es gibt kein Nachholen ausgelassener Klicks. Aufnahmefehler,
-Fokusverlust oder geänderte Geometrie beenden einen begonnenen Lauf. Ein fehlender
-Dialog pausiert dagegen Eingaben im Zustand `ConfirmingJoin`. Kehrt der Dialog
-innerhalb von `DialogAbsenceTimeoutMs` (Standard 10000) zurück, wird dieselbe
-Session mit unverändertem Team und Zähler nach drei stabilen Bildern fortgesetzt.
-Kontinuierliche Abwesenheit bis zum Fristablauf beendet die Session dauerhaft.
-Ein optionaler HUD-Detektor bestätigt den Folgescreen nach mindestens drei
-Treffern und 500 ms ununterbrochener Erkennung, ausschließlich ohne erkannten
-Auswahldialog. Fokus, Geometrie und Aktualität der Aufnahme werden vor dieser
-Bestätigung erneut geprüft. `DetectJoinedHud` kann diesen Frühstopp abschalten.
-Beim anfänglichen Warten startet die Abwesenheitsfrist noch nicht; ein bereits
-sichtbarer Folgescreen kann den Lauf dennoch über die HUD-Prüfung beenden.
-`AbsenceRemainingMs` und `JoinedDetection` liefern GUI-Countdown und Diagnose.
+Fokusverlust oder geänderte Geometrie beenden einen begonnenen Lauf. Nach dem ersten Klick wird unabhängig vom Dialogbefund weitergeklickt, bis der
+verpflichtende HUD-Detektor die fünf weißen Balken mindestens drei Mal und
+500 ms ununterbrochen erkennt. Auch ein gleichzeitig erkannter Auswahldialog
+verhindert den HUD-Stopp nicht. Fokus, Geometrie und Aktualität der Aufnahme
+werden vor der Bestätigung erneut geprüft. Es gibt keine Abwesenheitsfrist
+und keinen Schalter zum Abschalten der HUD-Prüfung. Vor dem ersten Klick
+bleibt die stabile Dialogerkennung erforderlich; ein bereits sichtbarer
+Folgescreen kann den wartenden Lauf über die HUD-Prüfung beenden.
+`JoinedDetection` liefert die HUD-Diagnose.
 
 `Stop` synchronisiert sich mit der Eingabesenke. Nach seiner Rückkehr kann der
 beendete Lauf keinen weiteren Klick senden. Ein neu gestarteter Lauf ist eine

@@ -13,9 +13,9 @@ Die fertig gebaute EXE wird als Asset im [privaten GitHub-Release](https://githu
 5. Zunächst im Testmodus kontrollieren, anschließend für echte Eingaben **Testmodus** abwählen. **F6** aktiviert Blau, **F7** Rot, **F8** Grün. Alternativ den Teambutton anklicken. Hotkeys sind auf unterschiedliche F1–F24 anpassbar.
 6. Die Aktivierung darf schon vor der Auswahl erfolgen. Der Lauf wartet, bis der Dialog mehrfach stabil erkannt wurde und das Spiel im Vordergrund liegt. Auch volle/verblasste Teams werden angeklickt. **ESC** beendet Warten und Klicken global; ESC wird weiterhin an das Spiel gegeben.
 
-Wenn der Dialog verschwindet, pausieren die Klicks und die App prüft den Beitritt. Kommt der Dialog innerhalb der Bestätigungswartezeit zurück, setzt sie dasselbe Team nach erneuter stabiler Erkennung fort. Der Standardwert **10 Sekunden** ist unter **Dialog muss fehlen für** einstellbar. Erst nach durchgehender Abwesenheit bis zum Ablauf der Frist endet der Lauf dauerhaft. Ohne erkannten Auswahldialog werden auch während dieser Frist keine Klicks gesendet.
+Nach dem ersten Klick klickt der Lauf dasselbe Team weiter an, auch wenn der Auswahldialog verschwindet oder seine Erkennung flackert. Er endet automatisch erst, wenn die fünf weißen HUD-Balken unten rechts mindestens **0,5 Sekunden** ununterbrochen erkannt werden. Die bisherige Beendigung nach „Dialog muss fehlen für X Sekunden“ entfällt vollständig.
 
-Optional endet der Lauf früher, wenn der Folgescreen anhand seiner fünf weißen HUD-Balken unten rechts mindestens **0,5 Sekunden** stabil erkannt wird. Der Schalter **Beitritt über fünf HUD-Balken erkennen** ist standardmäßig aktiv. Die Prüfung berücksichtigt auch Abstände und dünne Balkenform, nicht nur helle Pixel. **Folgescreen prüfen** testet die mitgelieferte Referenz; cyanfarbene Messflächen und die HUD-Diagnose zeigen die Erkennung. Bei anderem HUD, veränderter Gesundheit oder UI-Skalierung kann die Erkennung fehlen: Dann bleibt die 10-Sekunden-Prüfung wirksam. Die Frist bestätigt Abwesenheit des Dialogs, nicht semantisch einen erfolgreichen Beitritt.
+Die HUD-Prüfung ist immer aktiv und berücksichtigt auch Abstände und dünne Balkenform. **Folgescreen prüfen** testet die mitgelieferte Referenz; cyanfarbene Messflächen und die HUD-Diagnose zeigen die Erkennung. Auch bei gleichzeitig positivem Dialogbefund beendet das stabil erkannte HUD den Lauf. Bei abweichendem HUD bleibt der Lauf aktiv, bis **ESC** gedrückt wird oder eine der unten genannten Stoppbedingungen eintritt. Alte Profile werden weiterhin geladen; die früheren Wartezeit- und HUD-Abschaltwerte werden ignoriert.
 
 ESC, Fokusverlust während eines begonnenen Versuchs, Änderungen der Geometrie oder Aufnahmefehler stoppen weiterhin sofort. Nach einem endgültigen Stopp braucht eine neue Auswahl eine neue Aktivierung. Bearbeiten von Einstellungen stoppt einen laufenden Vorgang.
 
@@ -54,3 +54,9 @@ Die **Erkennungsschwelle** ist als Prozentwert unter Monitor & Kalibrierung eins
 Ergebnis ist eine eigenständige Einzeldatei-EXE mit eingebettetem Referenzbild. Eine separat installierte .NET-Runtime ist für die Veröffentlichung nicht erforderlich. Native Bibliotheken können beim Start intern extrahiert werden.
 
 Die Bildprüfungen decken Referenz, proportionale Skalierung, veränderte Texte/Teamfarben sowie negative Fälle ab. Die Steuerungsprüfungen verwenden simulierte Bildschirme und Eingaben, insbesondere für die 50-ms-Untergrenze, Wartezustand, Stopp, Fokus-/Geometriewechsel und konkurrierende Starts. Diese Tests ersetzen keine Prüfung von Aufnahme und SendInput im echten Wardogs-Spiel.
+
+## GitHub Actions
+
+`.github/workflows/windows-build.yml` läuft bei Push, Pull Request und manuell über **Actions → Windows EXE → Run workflow**. Auf einem Windows-Runner mit .NET 10 führt sie die Dialog-, HUD-, Steuerungs- und Profilprüfungen aus, kompiliert die Plattformprüfungen und baut anschließend die portable Windows-x64-EXE. Nach erfolgreichem Lauf steht **WardogsTeamselector-win-x64** unter **Artifacts** für 30 Tage zum Download bereit; das ZIP enthält `WardogsTeamselector.exe`.
+
+Die Plattformprüfungen werden in CI nur kompiliert: Ihre Ausführung und die GUI-/Spielintegration benötigen einen geeigneten interaktiven Windows-Desktop und müssen dort separat geprüft werden. Die Pipeline veröffentlicht kein GitHub-Release.

@@ -39,26 +39,17 @@ await Until(() => sink.Count >= 3, "Stable dialog did not begin clicking");
 Check(detector.Calls >= 3, "Stable multi-frame checks missing");
 Check(sink.MinimumSpacing >= 50, $"50ms floor violated: {sink.MinimumSpacing}");
 detector.Match = false;
-await Until(() => control.Snapshot.State == RunState.ConfirmingJoin, "Dialog loss did not pause");
 var count = sink.Count;
-await Task.Delay(140);
-Check(sink.Count == count && control.Snapshot.AbsenceRemainingMs > 0, "Absent dialog clicked or prematurely stopped");
+// Continue for longer than the old default ten-second absence timeout.
+await Task.Delay(10500);
+Check(sink.Count > count + 20 && control.Snapshot.State == RunState.Clicking, "Dialog absence stopped clicking without HUD");
+Check(control.Snapshot.Team == Team.Red, "Dialog absence changed team");
 foreach (var match in new[] { true, true, false }) detector.Samples.Enqueue(match);
 await Until(() => detector.Samples.IsEmpty, "Transient frames were not sampled");
-await Task.Delay(40);
-Check(sink.Count == count && control.Snapshot.State == RunState.ConfirmingJoin, "Two-frame return or negative blip clicked");
+count = sink.Count;
+await Until(() => sink.Count > count, "Dialog flicker paused the active run");
+control.Stop(); count = sink.Count;
 detector.Match = true;
-await Until(() => sink.Count > count, "Returning dialog did not resume");
-Check(control.Snapshot.Team == Team.Red && control.Snapshot.ClickCount > 3, "Return lost team or count");
-control.Stop();
-var brief = Settings(); brief.DialogAbsenceTimeoutMs = 200;
-control.Start(Team.Red, brief);
-brief.DialogAbsenceTimeoutMs = 60000;
-await Until(() => control.Snapshot.State == RunState.Clicking, "Timeout run did not start");
-detector.Match = false;
-await Until(() => control.Snapshot.State == RunState.Stopped, "Continuous absence did not stop");
-Check(control.Snapshot.Reason.Contains("nicht zurückgekehrt"), "Absence timeout not explained");
-count = sink.Count; detector.Match = true;
 await Task.Delay(140);
 Check(sink.Count == count, "Stopped run auto-rearmed");
 
@@ -101,7 +92,7 @@ await Until(() => control.Snapshot.State == RunState.Stopped, "Capture failure d
 Check(control.Snapshot.Reason.Contains("fehlgeschlagen"), "Capture error not explained");
 screen.Fail = false;
 
-// HUD must be continuously visible, without the selection dialog, for at least 500ms.
+// HUD must be continuously visible for 500ms; flicker cannot finish a run.
 detector.Match = false; hud.Match = true;
 control.Start(Team.Green, Settings());
 await Task.Delay(300);
@@ -116,34 +107,45 @@ Check(control.Snapshot.Reason.Contains("HUD"), "HUD confirmation not explained")
 count = sink.Count; detector.Match = true;
 await Task.Delay(140);
 Check(sink.Count == count, "Confirmed HUD run auto-rearmed");
+
+hud.Match = false;
 control.Start(Team.Blue, Settings());
-await Until(() => control.Snapshot.State == RunState.Clicking, "HUD blocked visible dialog");
-await Task.Delay(600);
-Check(control.Snapshot.State == RunState.Clicking, "HUD confirmed while selection dialog was present");
-detector.Match = false;
-await Until(() => control.Snapshot.State == RunState.ConfirmingJoin, "HUD success run did not pause");
+await Until(() => control.Snapshot.State == RunState.Clicking, "HUD success run did not start");
+detector.Match = false; hud.Match = true;
 count = sink.Count;
+await Task.Delay(250);
+Check(control.Snapshot.State == RunState.Clicking && sink.Count > count, "Clicks paused before stable HUD confirmation");
+hud.Match = false;
+await Task.Delay(80);
+hud.Match = true;
+await Task.Delay(300);
+Check(control.Snapshot.State == RunState.Clicking, "Active HUD flicker did not reset confirmation");
 await Until(() => control.Snapshot.State == RunState.Stopped, "HUD did not confirm after clicking");
-Check(sink.Count == count && control.Snapshot.Reason.Contains("HUD"), "HUD success delivered clicks or wrong stop reason");
+Check(control.Snapshot.Reason.Contains("HUD"), "Wrong HUD stop reason");
+count = sink.Count;
+await Task.Delay(140);
+Check(sink.Count == count, "Click delivered after HUD stop");
+
+// A stale positive dialog result must not suppress HUD success.
 detector.Match = true; hud.Match = false;
 control.Start(Team.Blue, Settings());
-await Until(() => control.Snapshot.State == RunState.Clicking, "Confirming focus test did not start");
+await Until(() => control.Snapshot.State == RunState.Clicking, "Overlapping detection test did not start");
+hud.Match = true;
+await Until(() => control.Snapshot.State == RunState.Stopped, "Dialog detection suppressed mandatory HUD stop");
+
+hud.Match = false;
+control.Start(Team.Blue, Settings());
+await Until(() => control.Snapshot.State == RunState.Clicking, "Focus test did not start");
 detector.Match = false;
-await Until(() => control.Snapshot.State == RunState.ConfirmingJoin, "Confirming focus test did not pause");
 screen.Foreground = false;
-await Until(() => control.Snapshot.State == RunState.Stopped, "Focus loss while confirming did not stop");
-Check(control.Snapshot.Reason.Contains("fokus"), "Focus loss while confirming not explained");
+await Until(() => control.Snapshot.State == RunState.Stopped, "Focus loss without dialog did not stop");
+Check(control.Snapshot.Reason.Contains("fokus"), "Focus loss not explained");
 screen.Foreground = true; hud.Match = true;
-control.Stop();
-detector.Match = false;
-var hudOff = Settings(); hudOff.DetectJoinedHud = false;
-control.Start(Team.Blue, hudOff); hudOff.DetectJoinedHud = true; hudOff.DialogAbsenceTimeoutMs = 1;
-await Task.Delay(650);
-Check(control.Snapshot.State == RunState.Waiting && control.Snapshot.JoinedDetection is null, "HUD setting was not copied");
 control.Stop("Manual test stop");
 await Task.Delay(650);
 Check(control.Snapshot.Reason == "Manual test stop", "HUD detection ran after Stop");
-control.Start(Team.Blue, Settings()); screen.Foreground = false;
+detector.Match = false; screen.Foreground = false;
+control.Start(Team.Blue, Settings());
 await Task.Delay(650);
 Check(control.Snapshot.State == RunState.Waiting, "HUD confirmed without focus");
 screen.Foreground = true; hud.Match = false; detector.Match = true;
@@ -151,7 +153,7 @@ control.Stop();
 
 // Stop must wait for an in-flight input rather than allowing it to complete afterwards.
 using var blockingSink = new BlockingSink();
-using var second = new AutomationController(screen, detector, blockingSink);
+using var second = new AutomationController(screen, detector, blockingSink, hud);
 second.Start(Team.Blue, Settings());
 Check(blockingSink.Entered.Wait(3000), "Blocking input not entered");
 var stopTask = Task.Run(() => second.Stop());
@@ -162,7 +164,7 @@ await stopTask;
 var delivered = blockingSink.Count;
 await Task.Delay(120);
 Check(blockingSink.Count == delivered, "Input delivered after synchronized Stop");
-Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, transient dialog retry, absence timeout, continuous HUD confirmation/flicker/focus/disable, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
+Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, continuous clicking beyond former absence timeout, mandatory HUD confirmation/flicker/focus/overlap, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
 
 sealed class FakeScreen : IScreenService
 {

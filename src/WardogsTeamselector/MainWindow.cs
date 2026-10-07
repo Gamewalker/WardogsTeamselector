@@ -46,7 +46,6 @@ public sealed class MainWindow : Window
     private readonly Dictionary<Team, Button> teamButtons = new();
     private readonly ComboBox monitor = new(), selectedTeam = new();
     private readonly CheckBox dryRun = new() { Content = "Testmodus – keine Mauseingaben", IsChecked = true }, calibrated = new() { Content = "Geometrie für dieses Profil geprüft" };
-    private readonly CheckBox joinedHud = new() { Content = "Beitritt über fünf HUD-Balken erkennen", IsChecked = true };
     private readonly CheckBox liveUpdates = new() { Content = "Live-Bild und Detaildiagnose aktualisieren", IsChecked = true };
     private readonly TextBlock status = new(), geometryText = new(), detectionText = new(), errorText = new(), counters = new();
     private readonly TextBlock joinedText = new() { Foreground = Muted, Margin = new Thickness(0, 4, 0, 0) };
@@ -95,8 +94,7 @@ public sealed class MainWindow : Window
         left.Children.Add(Button("Stopp · ESC", () => automation.Stop("Manuell gestoppt")));
         left.Children.Add(Heading("Klickintervall")); AddField(left, "min", "Minimum A (ms)"); AddField(left, "max", "Maximum B (ms)");
         left.Children.Add(new TextBlock { Text = "Zufällig zwischen A und B. Minimum: 50 ms.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
-        AddField(left, "absence", "Dialog muss fehlen für (Sekunden)");
-        left.Children.Add(new TextBlock { Text = "Standard: 10 s. Kommt die Auswahl vorher zurück, geht der Versuch weiter.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
+        left.Children.Add(new TextBlock { Text = "Weiterklicken bis die fünf weißen HUD-Balken erkannt werden. ESC stoppt jederzeit.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
         dryRun.Margin = new Thickness(0, 15, 0, 10); dryRun.Foreground = Foreground; dryRun.Checked += Changed; dryRun.Unchecked += Changed; left.Children.Add(dryRun);
         counters.TextWrapping = TextWrapping.Wrap; counters.Foreground = Muted; left.Children.Add(counters);
         var right = new DockPanel(); Grid.SetColumn(right, 1); control.Children.Add(right);
@@ -128,8 +126,7 @@ public sealed class MainWindow : Window
         calibrated.Foreground = Foreground; calibrated.Margin = new Thickness(0, 8, 0, 0); calibrated.Checked += Changed; calibrated.Unchecked += Changed; a.Children.Add(calibrated);
         a.Children.Add(Heading("Sprachunabhängige Erkennung")); AddField(a, "threshold", "Erkennungsschwelle (50–100 %, Standard 90)"); AddField(a, "offsetx", "Dialogverschiebung X (% der Breite)"); AddField(a, "offsety", "Dialogverschiebung Y (% der Höhe)"); AddField(a, "scale", "Dialogskalierung (1 = Referenz)");
         a.Children.Add(new TextBlock { Text = "Rahmen und Flächen werden geprüft, keine Überschrift und keine Teamverfügbarkeit. Nach Änderungen erst im Testmodus prüfen.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
-        joinedHud.Foreground = Foreground; joinedHud.Margin = new Thickness(0, 12, 0, 0); joinedHud.Checked += Changed; joinedHud.Unchecked += Changed; a.Children.Add(joinedHud);
-        a.Children.Add(new TextBlock { Text = "Früher Stopp bei stabil erkanntem Folgescreen (mindestens 0,5 s). Abschalten, falls dieses HUD bei dir anders aussieht.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
+        a.Children.Add(new TextBlock { Text = "Nach dem ersten Klick wird bis zur stabilen Erkennung der fünf weißen HUD-Balken weitergeklickt (mindestens 0,5 s). ESC stoppt jederzeit.", Foreground = Muted, TextWrapping = TextWrapping.Wrap });
         b.Children.Add(Heading("Teamflächen überschreiben")); selectedTeam.ItemsSource = Enum.GetValues<Team>().Select(t => new TeamChoice(t, TeamName(t))).ToList(); selectedTeam.DisplayMemberPath = "Name"; selectedTeam.SelectedIndex = 0; selectedTeam.SelectionChanged += (_, _) => LoadRegion(); b.Children.Add(selectedTeam);
         AddField(b, "rx", "Links (% des Spielbereichs)"); AddField(b, "ry", "Oben (%)"); AddField(b, "rw", "Breite (%)"); AddField(b, "rh", "Höhe (%)"); b.Children.Add(Button("Teamfläche übernehmen", ApplyRegion));
         b.Children.Add(new TextBlock { Text = "Alternativ: Team hier wählen, im Live-Bild ein Rechteck aufziehen. Klickpunkt ist dessen Mitte. Blaue, rote und grüne Rahmen zeigen die gespeicherten Flächen.", TextWrapping = TextWrapping.Wrap, Foreground = Muted, Margin = new Thickness(0, 5, 0, 0) });
@@ -142,7 +139,6 @@ public sealed class MainWindow : Window
     {
         fields["min"].Text = settings.MinIntervalMs.ToString(); fields["max"].Text = settings.MaxIntervalMs.ToString(); fields["title"].Text = settings.WindowTitleContains;
         fields["process"].Text = settings.ProcessNameContains;
-        fields["absence"].Text = Format(settings.DialogAbsenceTimeoutMs / 1000d); joinedHud.IsChecked = settings.DetectJoinedHud;
         liveUpdates.IsChecked = settings.LivePreviewEnabled;
         fields["threshold"].Text = Format(settings.DetectionThreshold * 100); fields["offsetx"].Text = Format(settings.DetectionOffsetX * 100); fields["offsety"].Text = Format(settings.DetectionOffsetY * 100); fields["scale"].Text = Format(settings.DetectionScale);
         fields["bounds"].Text = settings.ManualBounds is Rectangle r ? $"{r.X},{r.Y},{r.Width},{r.Height}" : ""; dryRun.IsChecked = settings.DryRun; calibrated.IsChecked = settings.GeometryCalibrated;
@@ -153,7 +149,6 @@ public sealed class MainWindow : Window
     {
         var s = new AppSettings { MinIntervalMs = int.Parse(fields["min"].Text), MaxIntervalMs = int.Parse(fields["max"].Text), WindowTitleContains = fields["title"].Text.Trim(), ProcessNameContains = fields["process"].Text.Trim(), DetectionThreshold = Number("threshold") / 100, DetectionOffsetX = Number("offsetx") / 100, DetectionOffsetY = Number("offsety") / 100, DetectionScale = Number("scale"), DryRun = dryRun.IsChecked == true, GeometryCalibrated = calibrated.IsChecked == true, MonitorId = (monitor.SelectedItem as MonitorChoice)?.Id, Regions = settings.Regions.ToList(), Hotkeys = keyBoxes.ToDictionary(k => k.Key, k => 0x70 + k.Value.SelectedIndex) };
         if (!string.IsNullOrWhiteSpace(fields["bounds"].Text)) { var v = fields["bounds"].Text.Split(',').Select(int.Parse).ToArray(); if (v.Length != 4) throw new ArgumentException("Spielbereich benötigt X,Y,Breite,Höhe."); s.ManualBounds = new(v[0], v[1], v[2], v[3]); }
-        s.DialogAbsenceTimeoutMs = checked((int)Math.Round(Number("absence") * 1000)); s.DetectJoinedHud = joinedHud.IsChecked == true;
         s.LivePreviewEnabled = liveUpdatesEnabled;
         s.Validate(); return s;
     }
@@ -194,8 +189,8 @@ public sealed class MainWindow : Window
             AutomationSnapshot current;
             lock (uiUpdateGate) { current = pendingUiSnapshot!; uiUpdateQueued = false; }
             if (closing) return;
-            status.Text = current.State switch { RunState.Waiting => "Wartet auf die Teamauswahl · " + TeamName(current.Team ?? Team.Blue), RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), RunState.ConfirmingJoin => "Klicks pausiert · prüft Beitritt", _ => "Gestoppt" };
-            counters.Text = $"Klicks: {current.ClickCount}\nLetztes Intervall: {current.IntervalMs} ms\n{current.Reason}" + (current.State == RunState.ConfirmingJoin ? $"\nBestätigung in {current.AbsenceRemainingMs / 1000d:F1} s" : "");
+            status.Text = current.State switch { RunState.Waiting => "Wartet auf die Teamauswahl · " + TeamName(current.Team ?? Team.Blue), RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), _ => "Gestoppt" };
+            counters.Text = $"Klicks: {current.ClickCount}\nLetztes Intervall: {current.IntervalMs} ms\n{current.Reason}";
             if (liveUpdatesEnabled && current.Detection != null) UpdateDetection(current.Detection, current.JoinedDetection);
             if (logLines.LastOrDefault()?.EndsWith(current.Reason) != true) AddLog(current.Reason);
         });
@@ -229,7 +224,7 @@ public sealed class MainWindow : Window
     {
         try { automation.Stop("Referenzprüfung"); referenceMode = true; using var stream = typeof(MainWindow).Assembly.GetManifestResourceStream(resource) ?? throw new FileNotFoundException("Referenzbild fehlt."); using var bmp = new Bitmap(stream); var g = new TargetGeometry(new(0, 0, bmp.Width, bmp.Height), IntPtr.Zero, false, title, true); using var frame = new CaptureFrame((Bitmap)bmp.Clone(), g); lastImage = ToSource(bmp); preview.Source = lastImage; lastGeometry = g; geometryText.Text = $"{title} · {bmp.Width}×{bmp.Height} · keine Eingaben"; var config = ReadFields(); UpdateDetection(detector.Detect(frame, config), joinedDetector.Detect(frame, config)); DrawOverlay(); } catch (Exception ex) { ShowError(ex.Message); }
     }
-    private void UpdateDetection(DetectionResult d, DetectionResult? joined = null) { detectionText.Text = $"Dialog: {(d.IsMatch ? "erkannt" : "nicht erkannt")} · Score {d.Score:P0}"; detectionText.Foreground = d.IsMatch ? new SolidColorBrush(Color.FromRgb(120, 220, 160)) : Muted; joinedText.Text = joined == null ? "" : $"Folgescreen: {(joined.IsMatch ? "HUD erkannt" : "nicht erkannt")} · Score {joined.Score:P0}" + (settings.DetectJoinedHud ? "" : " · Frühstopp deaktiviert"); probes.ItemsSource = d.Probes.Concat(joined?.Probes.Select(p => p with { Name = "HUD · " + p.Name }) ?? Enumerable.Empty<ProbeResult>()).ToArray(); }
+    private void UpdateDetection(DetectionResult d, DetectionResult? joined = null) { detectionText.Text = $"Dialog: {(d.IsMatch ? "erkannt" : "nicht erkannt")} · Score {d.Score:P0}"; detectionText.Foreground = d.IsMatch ? new SolidColorBrush(Color.FromRgb(120, 220, 160)) : Muted; joinedText.Text = joined == null ? "" : $"Folgescreen: {(joined.IsMatch ? "HUD erkannt" : "nicht erkannt")} · Score {joined.Score:P0}"; probes.ItemsSource = d.Probes.Concat(joined?.Probes.Select(p => p with { Name = "HUD · " + p.Name }) ?? Enumerable.Empty<ProbeResult>()).ToArray(); }
     private static BitmapSource ToSource(Bitmap bitmap) { using var stream = new MemoryStream(); bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png); stream.Position = 0; var img = new BitmapImage(); img.BeginInit(); img.CacheOption = BitmapCacheOption.OnLoad; img.StreamSource = stream; img.EndInit(); img.Freeze(); return img; }
     private (double X, double Y, double W, double H) ImageArea()
     {
