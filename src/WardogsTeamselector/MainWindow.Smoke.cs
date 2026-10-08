@@ -26,7 +26,7 @@ public sealed partial class MainWindow
         }
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
         LocalizeInterface();
-        Check(Icon != null, "App icon loaded");
+        Check(Icon is System.Windows.Media.Imaging.BitmapSource { PixelWidth: >= 256, PixelHeight: >= 256 }, "HD app icon loaded");
         Check(Title.Contains(BuildDescription), "Current build is visible in window title");
         Check(!restartUpdateButton.IsEnabled, "Restart requires a verified update");
         Check(pages.Items.Count == 4, "Four task areas");

@@ -41,7 +41,9 @@ public sealed partial class MainWindow
         DockPanel.SetDock(header, Dock.Top);
         root.Children.Add(header);
         var identity = new StackPanel { Orientation = Orientation.Horizontal };
-        identity.Children.Add(new Image { Source = Icon, Width = 38, Height = 38, Margin = new Thickness(0, 0, 12, 0) });
+        var identityIcon = new Image { Source = Icon, Width = 38, Height = 38, Margin = new Thickness(0, 0, 12, 0) };
+        RenderOptions.SetBitmapScalingMode(identityIcon, BitmapScalingMode.HighQuality);
+        identity.Children.Add(identityIcon);
         var title = new StackPanel();
         title.Children.Add(new TextBlock { Text = "WardogsTeamselector", FontSize = 24, FontWeight = FontWeights.SemiBold });
         status.Text = "Bereit";
