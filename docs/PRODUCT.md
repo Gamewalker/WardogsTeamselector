@@ -49,4 +49,4 @@ Die aktuellen GUI-Prüfungen und Ansichten unter `artifacts/operator-status-with
 
 ## Darstellung
 
-Die vom Nutzer bestätigte dunkle native Windows-Werkzeugoberfläche bleibt erhalten: Segoe UI, vorhandenes Anwendungssymbol, Teamfarben, klare deutsche Labels und native helle Kontrollen. Die Überarbeitung ordnet die Bedienung nach Aufgabe und erhält Status, Stopp und Profilaktionen unabhängig vom aktiven Bereich. Bestehende Bildassets bleiben unverändert.
+Die dunkle native Windows-Werkzeugoberfläche verwendet ein einheitliches Theme im gewünschten Windows-11-Stil: Segoe UI, vorhandenes Anwendungssymbol, Teamfarben, klare deutsche Labels, sprechende Vektor-Icons, abgerundete dunkle Kontrollen und sichtbare Tastaturzustände. Trennlinien, eigene Konfigurationsflächen und Abstand zu Scrollleisten ordnen die Bereiche. Status, Stopp und Profilaktionen bleiben unabhängig vom aktiven Bereich erreichbar. Bestehende Bildassets bleiben unverändert.
