@@ -58,8 +58,6 @@ public sealed partial class MainWindow
         identity.VerticalAlignment = VerticalAlignment.Center;
         identity.Children.Add(title);
         header.Children.Add(identity);
-        groupStopButton.IsEnabled = groupFollow.Enabled;
-        groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
         var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         headerUpdateButton = Button("Update", InstallHeaderUpdate);
         headerUpdateButton.Margin = new Thickness(0, 0, 12, 0);
