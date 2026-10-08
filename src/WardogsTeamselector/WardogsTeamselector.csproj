@@ -4,7 +4,9 @@
     <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><ImplicitUsings>disable</ImplicitUsings><Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest><AssemblyName>WardogsTeamselector</AssemblyName>
     <RootNamespace>WardogsTeamselector</RootNamespace><Product>WardogsTeamselector</Product><Version>1.0.0</Version>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><EmbeddedResource Include="Assets\reference.png" LogicalName="WardogsTeamselector.Reference" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Assets\joined.png" LogicalName="WardogsTeamselector.Joined" /></ItemGroup>
+  <ItemGroup><Resource Include="Assets\app.ico" /></ItemGroup>
 </Project>

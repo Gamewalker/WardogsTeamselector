@@ -25,8 +25,8 @@ public sealed class CaptureFrame : IDisposable
 }
 public sealed class AppSettings
 {
-    public int MinIntervalMs { get; set; } = 100;
-    public int MaxIntervalMs { get; set; } = 200;
+    public int MinIntervalMs { get; set; } = 50;
+    public int MaxIntervalMs { get; set; } = 70;
     public double DetectionThreshold { get; set; } = 0.90;
     public bool LivePreviewEnabled { get; set; } = true;
     public string? MonitorId { get; set; }

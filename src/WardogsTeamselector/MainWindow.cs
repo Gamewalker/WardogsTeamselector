@@ -64,6 +64,7 @@ public sealed class MainWindow : Window
     public MainWindow(bool registerGlobalHotkeys = true)
     {
         Title = "WardogsTeamselector"; Width = 1180; Height = 820; MinWidth = 920; MinHeight = 660;
+        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/app.ico"));
         Background = new SolidColorBrush(Color.FromRgb(19, 26, 30)); Foreground = Brushes.WhiteSmoke; FontFamily = new System.Windows.Media.FontFamily("Segoe UI"); FontSize = 14;
         automation = new(screen, detector, new WindowsClickSink(), joinedDetector);
         automation.Updated += OnAutomation;
@@ -264,6 +265,9 @@ public sealed class MainWindow : Window
     private sealed record TeamChoice(Team Team, string Name);
     internal async Task CaptureSmokeImages(string directory)
     {
+        if (Icon == null) throw new InvalidOperationException("App-Icon fehlt.");
+        // Exercise the preview toggle even when the saved profile has it disabled.
+        liveUpdates.IsChecked = true;
         timer.Stop(); LoadReference(); await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
         Directory.CreateDirectory(directory);
         var tabs = FindTabs((DependencyObject)Content)!;

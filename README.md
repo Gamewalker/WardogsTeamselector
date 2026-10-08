@@ -9,7 +9,7 @@ Beide fertig gebauten EXE-Varianten werden als Assets im [privaten GitHub-Releas
 1. EXE starten und Wardogs öffnen. Titel und Prozessname müssen standardmäßig `wardogs` enthalten. Falls das Spiel anders heißt, beide Filter unter **Monitor & Kalibrierung** anpassen.
 2. Im Auswahlbildschirm das **Live-Bild** prüfen. Teamrahmen zeigen die Klickflächen, Punkte deren Mitte; gelbe Markierungen zeigen die Messflächen. Die Diagnose sollte „Dialog: erkannt“ melden.
 3. Bei abweichender Oberfläche den Spielbereich, die Dialogkalibrierung und gegebenenfalls die drei Teamflächen anpassen. Teamflächen als Prozentwerte eingeben und **Teamfläche übernehmen**, oder das gewünschte Team unter Kalibrierung auswählen und im Live-Bild ein Rechteck ziehen. Änderungen speichern.
-4. A und B sind minimale/maximale zufällige Wartezeit in Millisekunden. Es gilt **50 ≤ A ≤ B ≤ 60000**. Standard: 100–200 ms. Die interne Untergrenze 50 ms kann auch über die Konfigurationsdatei nicht unterschritten werden.
+4. A und B sind minimale/maximale zufällige Wartezeit in Millisekunden. Es gilt **50 ≤ A ≤ B ≤ 60000**. Standard: 50–70 ms. Die interne Untergrenze 50 ms kann auch über die Konfigurationsdatei nicht unterschritten werden.
 5. Zunächst im Testmodus kontrollieren, anschließend für echte Eingaben **Testmodus** abwählen. **F6** aktiviert Blau, **F7** Rot, **F8** Grün. Alternativ den Teambutton anklicken. Hotkeys sind auf unterschiedliche F1–F24 anpassbar.
 6. Die Aktivierung darf schon vor der Auswahl erfolgen. Der Lauf wartet, bis der Dialog mehrfach stabil erkannt wurde und das Spiel im Vordergrund liegt. Auch volle/verblasste Teams werden angeklickt. **ESC** beendet Warten und Klicken global; ESC wird weiterhin an das Spiel gegeben.
 
