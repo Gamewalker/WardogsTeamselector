@@ -24,6 +24,8 @@ public sealed partial class MainWindow
     private bool updateBusy;
     private bool restartAfterUpdate;
     private Button restartUpdateButton = null!;
+    private Button headerUpdateButton = null!;
+    private UpdateAsset? availableUpdate;
     private string? stagedUpdate;
     private UpdateAsset? stagedAsset;
     private static string Metadata(string key) => typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value ?? "";
@@ -74,19 +76,22 @@ public sealed partial class MainWindow
         catch { updateStatus.Text = "Update-Einstellungen nicht lesbar. Update-Einstellungen neu speichern."; }
     }
 
-    private async Task CheckForUpdates(bool manual = false)
+    private async Task CheckForUpdates(bool manual = false, bool restart = false)
     {
         if (smokeMode || closing || updateBusy || stagedUpdate != null || (!manual && !updatePreferences.Enabled)) return;
         string variant = Metadata("UpdateVariant");
         if (CurrentBuild == 0 || string.IsNullOrEmpty(variant)) { updateStatus.Text = "Automatische Updates sind nur in veröffentlichten Release-EXEs verfügbar."; return; }
         updateBusy = true;
+        UpdateHeaderUpdateButton();
         string? download = null;
         try
         {
             updateStatus.Text = "Updates werden geprüft …";
             using var client = ReleaseUpdate.CreateClient();
-            var asset = await ReleaseUpdate.CheckAsync(client, CurrentBuild, variant, updateCancellation.Token);
+            var asset = availableUpdate ?? await ReleaseUpdate.CheckAsync(client, CurrentBuild, variant, updateCancellation.Token);
             if (asset == null) { updateStatus.Text = $"Build {CurrentBuild} ist aktuell."; return; }
+            availableUpdate = asset;
+            UpdateHeaderUpdateButton();
             updateStatus.Text = $"Build {asset.Build} wird heruntergeladen …";
             Directory.CreateDirectory(UpdatePreferences.DirectoryPath);
             download = Path.Combine(UpdatePreferences.DirectoryPath, "update-" + Guid.NewGuid().ToString("N") + ".exe");
@@ -95,6 +100,7 @@ public sealed partial class MainWindow
             stagedUpdate = download; stagedAsset = asset; download = null;
             restartUpdateButton.IsEnabled = true;
             updateStatus.Text = $"Build {asset.Build} ist geprüft. Jetzt installieren und neu starten oder beim Beenden installieren lassen.";
+            if (restart) RestartForUpdate();
         }
         catch (OperationCanceledException) { if (!closing) updateStatus.Text = "Updateprüfung abgebrochen oder Zeitlimit erreicht."; }
         catch (System.Net.Http.HttpRequestException) { updateStatus.Text = "Updateprüfung nicht möglich. Internetverbindung prüfen; später wird erneut geprüft."; }
@@ -104,7 +110,24 @@ public sealed partial class MainWindow
         {
             if (download != null && File.Exists(download)) { try { File.Delete(download); } catch { } }
             updateBusy = false;
+            UpdateHeaderUpdateButton();
         }
+    }
+
+    private void InstallHeaderUpdate()
+    {
+        if (smokeMode || closing || updateBusy || availableUpdate == null) return;
+        if (stagedUpdate != null) RestartForUpdate();
+        else _ = CheckForUpdates(manual: true, restart: true);
+    }
+
+    private void UpdateHeaderUpdateButton()
+    {
+        headerUpdateButton.Visibility = availableUpdate == null ? Visibility.Collapsed : Visibility.Visible;
+        headerUpdateButton.IsEnabled = availableUpdate != null && !updateBusy && !closing;
+        headerUpdateButton.ToolTip = updateBusy && availableUpdate != null
+            ? $"Build {availableUpdate.Build} wird heruntergeladen …"
+            : "Update installieren und neu starten";
     }
 
     private void RestartForUpdate()
@@ -120,7 +143,9 @@ public sealed partial class MainWindow
     {
         if (stagedUpdate != null) { try { File.Delete(stagedUpdate); } catch { } }
         stagedUpdate = null; stagedAsset = null;
+        availableUpdate = null;
         restartUpdateButton.IsEnabled = false;
+        UpdateHeaderUpdateButton();
     }
 
     private void FinishUpdates()

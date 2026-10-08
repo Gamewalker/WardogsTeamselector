@@ -60,7 +60,7 @@ public sealed partial class MainWindow
         "Änderungen verwerfen" or "Standardwerte laden …" => ActionIcon.Undo,
         "Einstellungen speichern" or "Bild speichern" or "Update-Einstellungen speichern" => ActionIcon.Save,
         "Spiel suchen / Bild laden" => ActionIcon.Search,
-        "Monitore aktualisieren" or "Jetzt auf Updates prüfen" or "Update installieren und neu starten" => ActionIcon.Refresh,
+        "Update" or "Monitore aktualisieren" or "Jetzt auf Updates prüfen" or "Update installieren und neu starten" => ActionIcon.Refresh,
         "Teamfläche übernehmen" or "Spiel / Klickflächen prüfen" or "Übernehmen & in Einrichtung prüfen" => ActionIcon.Target,
         "Speichern & zum Betrieb" => ActionIcon.Play,
         "Intervall / Hotkeys ändern" => ActionIcon.Keyboard,
