@@ -2,6 +2,12 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Update-Neustart und sichtbare Buildnummer (8. Oktober 2026)
+
+Alle 54 Updateprüfungen bestanden. Der echte PowerShell-Helfer installiert und startet dabei eine harmlose Test-EXE aus einem Pfad mit Leerzeichen, Apostroph und Unicode. Prüfsummenfehler verhindern den Neustart; ein fehlgeschlagener Prozessstart erhält die erfolgreiche Installation und meldet den nötigen manuellen Start. Die bisherigen Prüfungen für Backup, gesperrte bzw. geänderte EXEs und Helferbereinigung bestehen weiterhin.
+
+Die Einzeldatei-EXE mit Runtime wurde ohne Warnungen oder Fehler gebaut. Der GUI-Prüflauf bestand und kontrolliert die Buildnummer im Fenstertitel sowie den deaktivierten Neustartbutton ohne vorbereitetes Update. Der Updatebereich wurde bei Mindestgröße visuell geprüft; Screenshots liegen unter `artifacts/update-restart-smoke`. Der ungespeicherte-Einstellungen-Dialog wurde in diesem Prüflauf nicht interaktiv bedient.
+
 ## Herkunft und Fehlereinreichung (8. Oktober 2026)
 
 `build.ps1 -Tests -OutputDirectory dist/project-info` war erfolgreich und baute beide Runtime-Varianten ohne Warnungen oder Fehler. Alle Bild-, Steuerungs-, Profil- und 33 Updateprüfungen bestanden. Die Plattformprüfung bestand mit 23 Checks; Windows verweigerte im Test den Vordergrundwechsel, weshalb diese einzelne Assertion übersprungen wurde.

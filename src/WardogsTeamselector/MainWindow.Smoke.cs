@@ -15,6 +15,8 @@ public sealed partial class MainWindow
     {
         Directory.CreateDirectory(directory);
         Check(Icon != null, "App icon loaded");
+        Check(Title.Contains(BuildDescription), "Current build is visible in window title");
+        Check(!restartUpdateButton.IsEnabled, "Restart requires a verified update");
         Check(pages.Items.Count == 4, "Four task areas");
         Check(updateStatus.Text.Contains("GUI-Prüflauf") && !updateTimer.IsEnabled && stagedUpdate == null, "Smoke mode never checks or stages updates");
         Check(pages.SelectedIndex == (hasSavedProfile && startupSettingsError == null ? 1 : 0), "Startup follows saved profile");

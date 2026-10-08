@@ -22,6 +22,8 @@ public sealed partial class MainWindow
     private readonly CancellationTokenSource updateCancellation = new();
     private UpdatePreferences updatePreferences = new();
     private bool updateBusy;
+    private bool restartAfterUpdate;
+    private Button restartUpdateButton = null!;
     private string? stagedUpdate;
     private UpdateAsset? stagedAsset;
     private static string Metadata(string key) => typeof(App).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value ?? "";
@@ -48,6 +50,9 @@ public sealed partial class MainWindow
             catch { updateStatus.Text = "Update-Einstellungen konnten nicht gespeichert werden."; }
         }));
         panel.Children.Add(Button("Jetzt auf Updates prüfen", () => _ = CheckForUpdates(manual: true)));
+        restartUpdateButton = Button("Update installieren und neu starten", RestartForUpdate);
+        restartUpdateButton.IsEnabled = false;
+        panel.Children.Add(restartUpdateButton);
         updateStatus.Foreground = Muted;
         panel.Children.Add(updateStatus);
         return panel;
@@ -88,7 +93,8 @@ public sealed partial class MainWindow
             await ReleaseUpdate.DownloadAsync(client, asset, download, updateCancellation.Token);
             if (closing || (!manual && !updatePreferences.Enabled)) return;
             stagedUpdate = download; stagedAsset = asset; download = null;
-            updateStatus.Text = $"Build {asset.Build} ist geprüft und wird beim Beenden installiert. Beim nächsten Start ist die neue Version aktiv.";
+            restartUpdateButton.IsEnabled = true;
+            updateStatus.Text = $"Build {asset.Build} ist geprüft. Jetzt installieren und neu starten oder beim Beenden installieren lassen.";
         }
         catch (OperationCanceledException) { if (!closing) updateStatus.Text = "Updateprüfung abgebrochen oder Zeitlimit erreicht."; }
         catch (System.Net.Http.HttpRequestException) { updateStatus.Text = "Updateprüfung nicht möglich. Internetverbindung prüfen; später wird erneut geprüft."; }
@@ -101,10 +107,20 @@ public sealed partial class MainWindow
         }
     }
 
+    private void RestartForUpdate()
+    {
+        if (smokeMode || closing || stagedUpdate == null || stagedAsset == null) return;
+        restartAfterUpdate = true;
+        Close();
+        // Closing can be cancelled by the unsaved-settings dialog.
+        if (!closing) restartAfterUpdate = false;
+    }
+
     private void DiscardStagedUpdate()
     {
         if (stagedUpdate != null) { try { File.Delete(stagedUpdate); } catch { } }
         stagedUpdate = null; stagedAsset = null;
+        restartUpdateButton.IsEnabled = false;
     }
 
     private void FinishUpdates()
@@ -125,6 +141,7 @@ public sealed partial class MainWindow
                 ProcessId = Environment.ProcessId, Source = stagedUpdate, Target = target,
                 Backup = target + ".previous", Sha256 = stagedAsset.Sha256,
                 TargetSha256 = targetHash,
+                Restart = restartAfterUpdate,
                 Result = Path.Combine(UpdatePreferences.DirectoryPath, "update-result.txt"), Script = script
             }));
             Process.Start(UpdateInstaller.CreateStartInfo(script, job))?.Dispose();
