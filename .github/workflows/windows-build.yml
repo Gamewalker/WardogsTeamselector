@@ -54,11 +54,13 @@ jobs:
           $result = Join-Path $output 'result.txt'
           if (!(Test-Path $result)) {
             "UI smoke produced no result. Process exit code: $($process.ExitCode)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+            Write-Output "::error::UI smoke produced no result. Process exit code: $($process.ExitCode)"
             throw 'UI smoke produced no result'
           }
           $message = Get-Content -Raw $result
           if ($process.ExitCode -ne 0 -or $message.Trim() -ne 'GUI smoke passed') {
             @('### Group UI smoke failure', '```text', $message, '```') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+            Write-Output ('::error::' + $message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A'))
             throw $message
           }
       - name: Upload desktop UI screenshots
