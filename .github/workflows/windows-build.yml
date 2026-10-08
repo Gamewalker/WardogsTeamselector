@@ -30,16 +30,18 @@ jobs:
         run: |
           dotnet build tests/PlatformChecks/PlatformChecks.csproj -c Release
           if ($LASTEXITCODE -ne 0) { throw 'Platform check build failed' }
-      - name: Publish portable Windows x64 EXE
+      - name: Publish Windows x64 EXEs with and without runtime
         shell: pwsh
         run: |
           ./build.ps1
-          if (!(Test-Path 'dist/WardogsTeamselector.exe')) { throw 'Published EXE missing' }
-      - name: Upload EXE
+          foreach ($variant in @('with-runtime', 'without-runtime')) {
+            if (!(Test-Path "dist/WardogsTeamselector-win-x64-$variant.exe")) { throw "Published EXE missing: $variant" }
+          }
+      - name: Upload EXEs
         uses: actions/upload-artifact@v4
         with:
           name: WardogsTeamselector-win-x64
-          path: dist/WardogsTeamselector.exe
+          path: dist/WardogsTeamselector-win-x64-*.exe
           if-no-files-found: error
           retention-days: 30
 
@@ -63,7 +65,7 @@ jobs:
           path: dist
       - name: Validate changelog generation
         run: python3 .github/scripts/test_release.py
-      - name: Publish release with changelog and EXE
+      - name: Publish release with changelog and both EXEs
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

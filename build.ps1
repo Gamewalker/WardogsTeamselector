@@ -9,7 +9,13 @@ if ($Tests) {
         if ($LASTEXITCODE -ne 0) { throw "Prüfung fehlgeschlagen: $testProject" }
     }
 }
-$publishDirectory = Join-Path $projectRoot $OutputDirectory
-& $sdkCommand publish (Join-Path $projectRoot 'src\WardogsTeamselector\WardogsTeamselector.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o $publishDirectory
-if ($LASTEXITCODE -ne 0) { throw 'Veröffentlichung fehlgeschlagen.' }
-Write-Output (Join-Path $publishDirectory 'WardogsTeamselector.exe')
+$publishRoot = Join-Path $projectRoot $OutputDirectory
+foreach ($variant in @('with-runtime', 'without-runtime')) {
+    $selfContained = if ($variant -eq 'with-runtime') { 'true' } else { 'false' }
+    $publishDirectory = Join-Path $publishRoot $variant
+    & $sdkCommand publish (Join-Path $projectRoot 'src\WardogsTeamselector\WardogsTeamselector.csproj') -c Release -r win-x64 --self-contained $selfContained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o $publishDirectory
+    if ($LASTEXITCODE -ne 0) { throw "Veröffentlichung fehlgeschlagen: $variant" }
+    $asset = Join-Path $publishRoot "WardogsTeamselector-win-x64-$variant.exe"
+    Copy-Item -LiteralPath (Join-Path $publishDirectory 'WardogsTeamselector.exe') -Destination $asset -Force
+    Write-Output $asset
+}
