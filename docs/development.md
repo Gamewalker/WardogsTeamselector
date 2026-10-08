@@ -13,7 +13,7 @@ Benötigt werden Windows x64 und das .NET-10-SDK mit WPF-Unterstützung. Das Bui
 Ergebnis sind zwei Einzeldatei-EXEs mit eingebetteten Referenzbildern im Verzeichnis `dist/`:
 
 - `WardogsTeamselector-win-x64-with-runtime.exe`: mit gebündelter Runtime; keine separate .NET-Installation erforderlich. Native Bibliotheken können beim Start intern extrahiert werden.
-- `WardogsTeamselector-win-x64-without-runtime.exe`: ohne gebündelte Runtime; benötigt die installierte **.NET 10 Desktop Runtime (x64)**. Beide Varianten verwenden dieselben Einstellungen.
+- `WardogsTeamselector-win-x64-without-runtime.exe`: ohne gebündelte Runtime; benötigt die installierte **[.NET 10 Desktop Runtime (x64)](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)**. Beide Varianten verwenden dieselben Einstellungen.
 
 Die Bildprüfungen decken Referenz, proportionale Skalierung, veränderte Texte/Teamfarben sowie negative Fälle ab. Die Steuerungsprüfungen verwenden simulierte Bildschirme und Eingaben, insbesondere für die 50-ms-Untergrenze, Wartezustand, Stopp, Fokus-/Geometriewechsel und konkurrierende Starts. Diese Tests ersetzen keine Prüfung von Aufnahme und SendInput im echten Wardogs-Spiel.
 

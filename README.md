@@ -9,7 +9,7 @@ Wähle dein Team in Wardogs mit einem Tastendruck. Das Windows-Tool klickt dein 
 Lade unter **Assets** die passende EXE herunter und starte sie – eine Installation des Tools ist nicht nötig.
 
 - **Mit Runtime:** `WardogsTeamselector-win-x64-with-runtime.exe` – enthält alles zum Starten. Die passende Wahl, wenn du dir unsicher bist.
-- **Ohne Runtime:** `WardogsTeamselector-win-x64-without-runtime.exe` – kleinerer Download, benötigt die installierte **.NET 10 Desktop Runtime (x64)**.
+- **Ohne Runtime:** `WardogsTeamselector-win-x64-without-runtime.exe` – kleinerer Download, benötigt die installierte **[.NET 10 Desktop Runtime (x64)](https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe)**.
 
 Beide Varianten bieten dieselben Funktionen und nutzen dieselben Einstellungen. Du brauchst **Windows x64** und Wardogs.
 
