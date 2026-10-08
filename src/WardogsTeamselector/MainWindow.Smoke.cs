@@ -55,12 +55,17 @@ public sealed partial class MainWindow
                 {
                     ShowPage(page); await Settle();
                     Check(!dirty && !regionDirty, "Translation and navigation preserve saved field state");
-                    var headerButtons = ((StackPanel)stopButton.Parent).Children.OfType<Button>().ToArray();
-                    var aboutPosition = headerButtons[0].TranslatePoint(new Point(), (UIElement)Content);
+                    var runControls = (Grid)stopButton.Parent;
+                    Check(runControls.Children.Contains(status) && DockPanel.GetDock(runControls) == Dock.Bottom, "Stop belongs to the persistent run-status bar");
+                    var statusPosition = status.TranslatePoint(new Point(), (UIElement)Content);
                     var stopPosition = stopButton.TranslatePoint(new Point(), (UIElement)Content);
-                    Check(Math.Abs(aboutPosition.Y - stopPosition.Y) < 1 && Math.Abs(headerButtons[0].ActualHeight - stopButton.ActualHeight) < 1, "Header buttons share top and bottom edges");
+                    Check(Math.Abs(statusPosition.Y + status.ActualHeight / 2 - stopPosition.Y - stopButton.ActualHeight / 2) < 1, "Stop is centered beside the current run status");
+                    Check(stopPosition.Y >= pages.TranslatePoint(new Point(0, pages.ActualHeight), (UIElement)Content).Y && stopPosition.Y + stopButton.ActualHeight <= profileText.TranslatePoint(new Point(), (UIElement)Content).Y, "Stop stays visible between task content and profile actions");
+                    Check(stopPosition.X + stopButton.ActualWidth <= ((FrameworkElement)Content).ActualWidth + 1, "Stop fits at minimum width in every task and language");
                     var languagePosition = languageSelector.TranslatePoint(new Point(), (UIElement)Content);
-                    Check(Math.Abs(languagePosition.Y + languageSelector.ActualHeight / 2 - stopPosition.Y - stopButton.ActualHeight / 2) < 1, "Language selector is centered with header buttons");
+                    var aboutButton = ((StackPanel)languageSelector.Parent).Children.OfType<Button>().Single();
+                    var aboutPosition = aboutButton.TranslatePoint(new Point(), (UIElement)Content);
+                    Check(Math.Abs(languagePosition.Y + languageSelector.ActualHeight / 2 - aboutPosition.Y - aboutButton.ActualHeight / 2) < 1, "Language selector is centered with the about button");
                     var headerPosition = languageSelector.TranslatePoint(new Point(languageSelector.ActualWidth, 0), (UIElement)Content);
                     Check(headerPosition.X <= ((FrameworkElement)Content).ActualWidth + 1, "Language selector fits the header at minimum width");
                     SaveRender(Path.Combine(directory, $"{code}-{size.Item1}-{page + 1}.png"));

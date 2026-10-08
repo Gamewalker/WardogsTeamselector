@@ -2,6 +2,12 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Stopp neben dem Laufstatus (8. Oktober 2026)
+
+`build.ps1 -Tests -OutputDirectory dist/stop-placement` besteht und veröffentlicht beide Runtime-Varianten ohne Warnungen oder Fehler. Die Plattformprüfung besteht mit 23 Checks; Windows verweigert den Test-Fokuswechsel, weshalb diese einzelne Assertion übersprungen wird.
+
+Der GUI-Prüflauf beider endgültigen EXEs besteht. Er prüft die feste Laufsteuerung direkt über den Profilaktionen in allen vier Bereichen, bei Standard- und Mindestgröße sowie auf Englisch, Arabisch und Chinesisch. Stopp steht mittig neben dem Laufstatus, bleibt innerhalb des Fensters und ist weiterhin nur beim Warten oder Klicken aktiv. Die Diagnosevorschau passt sich der verfügbaren Höhe an. Aufnahmen unter `artifacts/stop-placement-confirm-with-runtime` und `artifacts/stop-placement-confirm-without-runtime` erfassen außerdem Teamwechsel, manuellen Stopp und Sprachwechsel. Betrieb und Diagnose wurden visuell kontrolliert. Keine Benutzerprofile gespeichert und keine Mauseingaben gesendet.
+
 ## Mehrsprachige Oberfläche (8. Oktober 2026)
 
 `LocalizationChecks` besteht mit 13.176 Prüfungen für alle 20 Sprachkataloge: gleiche Schlüssel, nicht leere Übersetzungen, unveränderte Platzhalter und dynamische Werte, Sprachwechsel und Rückwechsel, Englisch als Standard, unbekannte Sprachcodes, arabische Leserichtung, unveränderte Fensterfilter und Pfade sowie Sprachpräferenz-Roundtrip und Wiederherstellung nach beschädigter JSON-Datei. Persistenzprüfungen verwenden ausschließlich temporäre Dateien; Benutzerpräferenzen bleiben unverändert. Die Prüfung ist in `build.ps1 -Tests` und GitHub Actions eingebunden.

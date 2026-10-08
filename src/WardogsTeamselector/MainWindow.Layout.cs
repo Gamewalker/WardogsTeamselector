@@ -48,7 +48,7 @@ public sealed partial class MainWindow
         title.Children.Add(new TextBlock { Text = "WardogsTeamselector", FontSize = 24, FontWeight = FontWeights.SemiBold });
         status.Text = "Bereit";
         status.Foreground = Muted;
-        title.Children.Add(status);
+        identity.VerticalAlignment = VerticalAlignment.Center;
         identity.Children.Add(title);
         header.Children.Add(identity);
         stopButton = Button("Stopp · ESC", () => automation.Stop("Manuell gestoppt"));
@@ -64,7 +64,6 @@ public sealed partial class MainWindow
         aboutButton.Margin = new Thickness(0);
         aboutButton.VerticalAlignment = VerticalAlignment.Center;
         headerActions.Children.Add(aboutButton);
-        headerActions.Children.Add(stopButton);
         headerActions.Children.Add(BuildLanguageSelector());
         Grid.SetColumn(headerActions, 1);
         header.Children.Add(headerActions);
@@ -97,6 +96,18 @@ public sealed partial class MainWindow
         profileActions.Children.Add(saveButton);
         Grid.SetColumn(profileActions, 1);
         footer.Children.Add(profileActions);
+
+        // Run controls stay together and available independently of the selected task.
+        var runControls = new Grid { Margin = new Thickness(0, 14, 0, 0) };
+        runControls.ColumnDefinitions.Add(new());
+        runControls.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        status.VerticalAlignment = VerticalAlignment.Center;
+        status.TextWrapping = TextWrapping.Wrap;
+        runControls.Children.Add(status);
+        Grid.SetColumn(stopButton, 1);
+        runControls.Children.Add(stopButton);
+        DockPanel.SetDock(runControls, Dock.Bottom);
+        root.Children.Add(runControls);
 
         BuildPreviewPane();
         pages.Background = Background;
@@ -402,7 +413,6 @@ public sealed partial class MainWindow
         var legend = Hint("Teamfarben: Klickflächen  ·  Gelb: Dialogprüfung  ·  Cyan: HUD-Prüfung", 8);
         DockPanel.SetDock(legend, Dock.Bottom); previewPane.Children.Add(legend);
         previewHost.Background = Brushes.Black;
-        previewHost.MinHeight = 64;
         previewHost.ClipToBounds = true;
         previewHost.Children.Add(preview);
         previewEmpty.TextWrapping = TextWrapping.Wrap;
