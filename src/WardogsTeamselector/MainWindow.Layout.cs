@@ -29,6 +29,7 @@ public sealed partial class MainWindow
     private readonly CheckBox drawRegion = new() { Content = "Teamfläche im Bild zeichnen" };
     private Button saveButton = null!, discardButton = null!, stopButton = null!;
     private Border runPanel = null!;
+    private TextBlock operationFocusHint = null!;
 
     private void Build()
     {
@@ -224,7 +225,8 @@ public sealed partial class MainWindow
         runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(8), Padding = new Thickness(24), Margin = new Thickness(0, 0, 0, 24) };
         body.Children.Add(runPanel);
 
-        body.Children.Add(Hint("Ein Team aktivieren, dann zum Spiel wechseln. Die aktive Teamtaste bleibt markiert."));
+        operationFocusHint = Hint("");
+        body.Children.Add(operationFocusHint);
 
         var teams = new Grid();
         foreach (var team in Enum.GetValues<Team>())
@@ -478,6 +480,9 @@ public sealed partial class MainWindow
 
     private void UpdateOperationSummary()
     {
+        operationFocusHint.Text = focusGame.IsChecked == true
+            ? "Auto-Fokus ist an: Ein Team aktivieren, und die App holt das Spiel in den Vordergrund."
+            : "Auto-Fokus ist aus: Ein Team aktivieren, dann selbst zum Spiel wechseln.";
         bool testing = dryRun.IsChecked == true;
         runMode.Text = testing ? "Testmodus · keine Mauseingaben" : "Echte Klicks aktiviert · ESC stoppt sofort";
         runMode.Foreground = testing ? Muted : WarningBrush;

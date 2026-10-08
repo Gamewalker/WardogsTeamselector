@@ -8,6 +8,8 @@ Die App startet beim ersten Mal auf Englisch. Über die Sprachauswahl neben **Ü
 
 **Stopp · ESC** steht neben dem Laufstatus in der festen Leiste direkt über den Profilaktionen. Die Laufsteuerung bleibt beim Wechsel zwischen Einrichtung, Betrieb, Konfiguration und Diagnose erreichbar.
 
+Der Hinweis über den Teamtasten zeigt den aktuellen Auto-Fokus-Status: Ist Auto-Fokus an, holt die App das Spiel nach der Teamaktivierung in den Vordergrund. Ist er aus, fordert der Hinweis zum manuellen Wechsel ins Spiel auf. Änderungen unter **Konfiguration → Spielfokus** und das Verwerfen von Änderungen aktualisieren diesen Hinweis direkt.
+
 **Über die App** in der Kopfzeile zeigt Herkunft, GitHub-Projekt, GPL-v3.0-Lizenz und Build-Informationen. **Fehler auf GitHub melden** öffnet ein vorbereitetes Issue im Browser; der Button steht auch unter **Diagnose**. Ergänze Reproduktionsschritte, erwartetes und tatsächliches Ergebnis sowie möglichst Statusgrund und Diagnoseexport. Zum Abschicken auf GitHub ist eine Anmeldung erforderlich.
 
 Die Oberfläche hat vier Bereiche. Neue Profile starten in **Einrichtung**, vorhandene gültige Profile direkt in **Betrieb**. Ein ungültiges gespeichertes Profil öffnet die Einrichtung mit einem Fehlerhinweis.
