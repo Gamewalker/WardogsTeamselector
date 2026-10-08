@@ -54,7 +54,10 @@ jobs:
           $result = Join-Path $output 'result.txt'
           if (!(Test-Path $result)) { throw 'UI smoke produced no result' }
           $message = Get-Content -Raw $result
-          if ($process.ExitCode -ne 0 -or $message.Trim() -ne 'GUI smoke passed') { throw $message }
+          if ($process.ExitCode -ne 0 -or $message.Trim() -ne 'GUI smoke passed') {
+            @('### Group UI smoke failure', '```text', $message, '```') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+            throw $message
+          }
       - name: Upload desktop UI screenshots
         if: always()
         uses: actions/upload-artifact@v4
