@@ -22,6 +22,10 @@ public sealed partial class MainWindow
         settings = new AppSettings(); startupSettingsError = null; dirty = false;
         LoadFields(); ApplyHotkeys(settings);
         Check(!dirty && !regionDirty, "Loading fields does not create unsaved edits");
+        Check(!stopButton.IsEnabled, "Stop is disabled before activation");
+        Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(dryRun) && LogicalElements((DependencyObject)((TabItem)pages.Items[3]).Content).Contains(dryRun), "Test-mode control belongs exclusively to diagnosis");
+        Check(operationState.TextAlignment == TextAlignment.Center && runReason.TextAlignment == TextAlignment.Center && counters.TextAlignment == TextAlignment.Center, "Current run is centered");
+        Check(teamButtons.Values.All(button => button.HorizontalContentAlignment == HorizontalAlignment.Center) && teamKeyLabels.Values.All(label => label.TextAlignment == TextAlignment.Center), "Hotkeys are centered on team buttons");
         ShowPage(0); LoadReference(); await Settle();
         Check(detectionText.Text.Contains("Dialog: erkannt"), "Embedded dialog reference detected");
 
@@ -95,13 +99,35 @@ public sealed partial class MainWindow
         StartTeam(Team.Blue); await Settle();
         Check(dirty && profileText.Text.Contains("Ungespeicherte"), "Activation does not claim edits are saved");
         Check(pages.SelectedIndex == 1 && automation.Snapshot.State == RunState.Waiting && !timer.IsEnabled, "Operation waits without extra preview captures");
+        Check(stopButton.IsEnabled && teamStateLabels[Team.Blue].Text == "Aktiv · wartet" && teamStateLabels.Where(pair => pair.Key != Team.Blue).All(pair => pair.Value.Text == "Aktivieren"), "Exactly the active team is marked while waiting, and stop is enabled");
         SaveRender(Path.Combine(directory, "waiting.png"));
+        Width = 1180; Height = 820; await Settle();
+        SaveRender(Path.Combine(directory, "desktop-waiting.png"));
+        Width = MinWidth; Height = MinHeight; await Settle();
         foreach (int page in new[] { 0, 2, 3, 1 }) ShowPage(page);
         Check(automation.Snapshot.State == RunState.Waiting, "Navigating between tasks preserves an active run");
         liveUpdates.IsChecked = false; await RefreshPreview();
         Check(!timer.IsEnabled && preview.Source == null && probes.ItemsSource == null && automation.Snapshot.State == RunState.Waiting, "Disabling preview frees detail resources without stopping automation");
+        StartTeam(Team.Red); await Settle();
+        Check(teamStateLabels[Team.Red].Text == "Aktiv · wartet" && teamStateLabels[Team.Blue].Text == "Aktivieren", "Switching teams moves the active marker");
+        SaveRender(Path.Combine(directory, "red-waiting.png"));
+        StartTeam(Team.Green); await Settle();
+        Check(teamStateLabels[Team.Green].Text == "Aktiv · wartet" && teamStateLabels[Team.Red].Text == "Aktivieren", "Green is marked without retaining another active team");
+        ShowPage(3); dryRun.IsChecked = false; await Settle();
+        Check(automation.Snapshot.State == RunState.Stopped && !stopButton.IsEnabled && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Changing test mode in diagnosis stops the run and clears markers");
+        dryRun.IsChecked = true;
+        StartTeam(Team.Blue); await Settle();
         stopButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
-        Check(automation.Snapshot.State == RunState.Stopped, "Persistent stop control stops the run");
+        await Settle();
+        Check(automation.Snapshot.State == RunState.Stopped && !stopButton.IsEnabled && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Stopping disables stop and clears the active team");
+        SaveRender(Path.Combine(directory, "stopped.png"));
+
+        // UI-only snapshot fixture: the controller stays stopped and sends no input.
+        OnAutomation(new AutomationSnapshot(RunState.Clicking, Team.Green, 12, 61, "Testmodus: Klick simuliert", null, null));
+        await Settle();
+        Check(operationState.Text == "Klickt · Grün" && teamStateLabels[Team.Green].Text == "Aktiv · klickt" && stopButton.IsEnabled, "Clicking state has clear phase, team and active controls");
+        SaveRender(Path.Combine(directory, "clicking-fixture.png"));
+        OnAutomation(automation.Snapshot); await Settle();
 
         ShowPage(3); LoadJoinedReference(); await Settle();
         Check(joinedText.Text.Contains("HUD erkannt") && detectionText.Text.Contains("Dialog: nicht erkannt") && !timer.IsEnabled, "HUD reference works while automatic preview is off");
@@ -110,7 +136,7 @@ public sealed partial class MainWindow
         Check(previewEmpty.Visibility == Visibility.Visible && previewSource.Text == "Spielfenster fehlt", "Single capture exposes missing-window empty state");
         SaveRender(Path.Combine(directory, "missing-window.png"));
         Check(errorText.Visibility == Visibility.Collapsed, "Expected validation errors cleared");
-        File.WriteAllText(Path.Combine(directory, "checks.txt"), "PASS: startup routing, four areas, all tabs at both sizes, navigation, drawing guard, region drafts, validation recovery, duplicate hotkeys, dirty state, preview lifecycle, global stop, reference checks and empty state. No mouse input sent; no profile saved.");
+        File.WriteAllText(Path.Combine(directory, "checks.txt"), "PASS: startup routing, four areas, both sizes, navigation, drawing, region drafts, validation, hotkeys, dirty state, preview lifecycle, diagnosis-only test mode, centered run and hotkeys, exclusive active-team markers, waiting/switching/stopping and UI-only clicking snapshot, conditional stop, reference checks and empty state. No mouse input sent; no profile saved. clicking-fixture.png uses a UI snapshot fixture while the controller is stopped.");
     }
 
     private async Task Settle()

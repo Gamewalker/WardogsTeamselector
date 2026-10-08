@@ -6,6 +6,8 @@ Die GUI-Startprüfung `--ui-smoke <Ausgabeordner>` kontrolliert die automatische
 
 Historische Prüfläufe stehen darunter; ihre früheren Beschreibungen der Dialogabwesenheitsfrist gelten nicht mehr für den aktuellen Ablauf.
 
+Ergänzung zur Betriebsanzeige: Der Prüflauf kontrolliert, dass der Testmodus nur unter Diagnose umschaltbar ist, Zustand/Grund/Zähler und Hotkeys zentriert sind und ausschließlich das aktuell wartende oder klickende Team markiert wird. Wechsel zwischen Blau, Rot und Grün sowie Stopp und Testmoduswechsel werden geprüft; Stopp ist vor der Aktivierung und danach deaktiviert. `clicking-fixture.png` prüft die Darstellung der Klickphase mit einem UI-Snapshot bei gestopptem Controller und ist kein Beleg echter Spieleingaben.
+
 Umbenennung 7. Oktober 2026: Projekt, Namespace, Assemblies und portable EXE heißen `WardogsTeamselector`. Vollständiger Neubau mit allen fünf Prüfprojekten erfolgreich: 19 Dialog-, 17 HUD-Bildprüfungen, Steuerungs-/Profiltests und 18 Plattformprüfungen. Gültige alte Einstellungen werden beim ersten Start in `%LOCALAPPDATA%/WardogsTeamselector` kopiert; die alte Datei bleibt unverändert.
 
 Ergänzung 7. Oktober 2026: Live-Vorschau und Detaildiagnose sind abschaltbar. Profil-Roundtrip der gespeicherten Wahl geprüft. Die GUI-Startprüfung kontrolliert, dass beim Abschalten der Vorschau-Timer deaktiviert, Bild und Messwerttabelle freigegeben und eine aktivierte Steuerung weiterhin im Wartezustand bleibt. Neue Veröffentlichung unter `dist/update`, da die vorherige EXE zum Buildzeitpunkt lief. GUI-Prüfungen binden keine globalen Hotkeys, damit sie laufende Instanzen nicht stören.

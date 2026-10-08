@@ -35,6 +35,10 @@ typography:
     fontFamily: "Segoe UI"
     fontSize: "18px"
     fontWeight: 600
+  team-hotkey:
+    fontFamily: "Segoe UI"
+    fontSize: "26px"
+    fontWeight: 600
   heading:
     fontFamily: "Segoe UI"
     fontSize: "17px"
@@ -56,17 +60,14 @@ components:
   button-team-blue:
     backgroundColor: "{colors.team-blue}"
     textColor: "{colors.team-button-text}"
-    typography: "{typography.team-button}"
     padding: "8px 12px"
   button-team-red:
     backgroundColor: "{colors.team-red}"
     textColor: "{colors.team-button-text}"
-    typography: "{typography.team-button}"
     padding: "8px 12px"
   button-team-green:
     backgroundColor: "{colors.team-green}"
     textColor: "{colors.team-button-text}"
-    typography: "{typography.team-button}"
     padding: "8px 12px"
   text-field:
     backgroundColor: "{colors.input-background}"
@@ -82,13 +83,13 @@ components:
 
 Die bestätigte Identität bleibt eine dunkle, kompakte native Windows-Werkzeugoberfläche. Segoe UI, ausgeschriebene deutsche Beschriftungen, Teamfarben und das vorhandene Anwendungssymbol verbinden das Werkzeug mit Wardogs. Helle native Bedienelemente stehen auf dunklem Grund; ihre Windows-/WPF-Zustände gehören zur Oberfläche.
 
-Die gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; fertige Ansichten liegen unter `artifacts/usability-final-with-runtime/` und `artifacts/usability-final-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.
+Die gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; die aktuellen Ansichten liegen unter `artifacts/operator-status-with-runtime/` und `artifacts/operator-status-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.
 
 **Key Characteristics:**
 
 - Dunkle tonale Flächen mit hellen nativen Windows-Kontrollen.
 - Teamfarben mit Teamnamen und registrierten F-Tasten.
-- Dauerhaft erreichbarer Stopp, globaler Laufstatus und Profilfußleiste.
+- Dauerhaft sichtbarer Stopp, globaler Laufstatus und Profilfußleiste.
 - Vorschau und Messwerte bei Einrichtung und Diagnose.
 
 ## Colors
@@ -97,11 +98,11 @@ Anthrazit trägt die Oberfläche, gedämpftes Blaugrau erklärt sie und die drei
 
 ### Primary
 
-**Teamblau**, **Teamrot** und **Teamgrün** tragen Aktivierungstasten, Teamrahmen und Mittelpunkte im Bild. Weiße Tastenbeschriftungen ergänzen die ausgeschriebenen Namen. Teamrot trägt außerdem die beschriftete globale Stopptaste.
+**Teamblau**, **Teamrot** und **Teamgrün** tragen Aktivierungstasten, Teamrahmen und Mittelpunkte im Bild. Weiße Tastenbeschriftungen ergänzen die ausgeschriebenen Namen. Teamrot trägt außerdem die globale Stopptaste während eines Laufs.
 
 ### Secondary
 
-**Erkennungsgrün** hebt einen positiven Befund mit Text und Score hervor. **Fehlerkoralle** markiert Fehlertext und betroffene Eingaben; **Warnsand** ungespeicherte Änderungen und echte Klicks. **Messgelb** und **HUD-Cyan** unterscheiden die Dialog- und HUD-Konturen.
+**Erkennungsgrün** hebt einen positiven Befund mit Text und Score sowie den Zustand „Klickt“ hervor. **Fehlerkoralle** markiert Fehlertext und betroffene Eingaben; **Warnsand** ungespeicherte Änderungen, echte Klicks und den Wartezustand. **Messgelb** und **HUD-Cyan** unterscheiden die Dialog- und HUD-Konturen.
 
 ### Neutral
 
@@ -115,11 +116,14 @@ Fenstergrund, dunkle Flächen, Wechselzeilen und Tabellenkopf verwenden die vorh
 
 ### Hierarchy
 
-- **Title:** Anwendungstitel und großer Laufzustand im Betrieb.
+- **Title:** Anwendungstitel.
 - **Page title:** Einstieg und Aufgabenbeschreibung jedes Bereichs.
-- **Team button:** Teamname und F-Taste auf den drei Aktivierungstasten.
+- **Team button:** Teamname auf den drei Aktivierungstasten.
+- **Team hotkey:** große, zentrierte F-Taste unter dem Teamnamen. „Hotkey inaktiv“ verwendet stattdessen 16 DIP.
 - **Heading:** wiederkehrende Gruppen wie Teamflächen, Tastenkürzel und Protokoll.
 - **Body:** Felder, Tabs, globaler Status, Hinweise und Diagnose. Hinweise haben 20 DIP Zeilenhöhe; Zähler im Betrieb sind etwas größer (16 DIP).
+
+Die zentrierte Laufanzeige im Betrieb verwendet 32 DIP und Semibold für den Zustand, 17 DIP für den Grund und 16 DIP für den Zähler. Modustext und Aktions-/Phasenzeile der Teamtasten verwenden die Body-Größe.
 
 **The Lesbarer Zustand Rule.** Lauf, Eingabemodus, Speicherzustand und Erkennung werden ausgeschrieben. Hinweise, Fehler, Labels und Zähler umbrechen innerhalb ihrer Fläche.
 
@@ -127,7 +131,7 @@ Fenstergrund, dunkle Flächen, Wechselzeilen und Tabellenkopf verwenden die vorh
 
 Das Fenster startet mit 1180 × 820 DIP und hat eine Mindestgröße von 920 × 660 DIP. Außenabstand: 20 DIP; Registerinhalt: 16 DIP. Oberhalb der Tabs stehen Anwendungssymbol, Titel, globaler Laufstatus mit Test-/Echtmodus und rechts die Stopptaste. Ein sichtbarer Fehler fügt sich darunter ein. Die feste Fußleiste enthält links den Profilzustand und rechts Verwerfen sowie Speichern.
 
-Vier nummerierte native Tabs bilden die Aufgabenfolge: **1. Einrichtung**, **2. Betrieb**, **3. Konfiguration**, **4. Diagnose**. Einrichtung hat links eine 320-DIP-Formularspalte mit 20 DIP Abstand zur flexiblen Vorschau; das Formular scrollt unabhängig vom Bild. Betrieb verwendet drei gleich breite Teamtasten und einen vertikalen Scrollbereich. Konfiguration hat zwei gleich breite Spalten mit 28 DIP Zwischenraum in einem gemeinsamen Scrollbereich. Diagnose verwendet links 420 DIP für Referenzaktionen, Tabelle und Protokoll und rechts die flexible Vorschau; Tabelle und Protokoll scrollen separat.
+Vier nummerierte native Tabs bilden die Aufgabenfolge: **1. Einrichtung**, **2. Betrieb**, **3. Konfiguration**, **4. Diagnose**. Einrichtung hat links eine 320-DIP-Formularspalte mit 20 DIP Abstand zur flexiblen Vorschau; das Formular scrollt unabhängig vom Bild. Betrieb stellt die zentrierte Laufanzeige über drei gleich breite Teamtasten in einem vertikalen Scrollbereich. Konfiguration hat zwei gleich breite Spalten mit 28 DIP Zwischenraum in einem gemeinsamen Scrollbereich. Diagnose verwendet links 420 DIP für den Testmodus-Schalter, Referenzaktionen, Tabelle und Protokoll und rechts die flexible Vorschau. Die linke Diagnosespalte scrollt als Ganzes; ihre Tabelle und ihr Protokoll haben zusätzlich eigene Scrollbereiche.
 
 Bei Mindestgröße bleibt die Anordnung erhalten: Aktionen und Texte umbrechen, umfangreiche Formulare scrollen. Prozentwerte, manuelle Spielgrenzen und Dialogkalibrierung liegen in zunächst geschlossenen Expandern. Die gemeinsame Vorschau erscheint ausschließlich in Einrichtung und Diagnose. Neue oder ungültige Profile öffnen Einrichtung; ein gespeichertes gültiges Profil öffnet Betrieb.
 
@@ -145,7 +149,9 @@ Rechteckige Kontroll- und Bildflächen bestimmen die Form; eigene abgerundete Ka
 
 ### Buttons
 
-Deutsche Verben benennen die Aktion. Die Basis hat mindestens 36 DIP Höhe, 12 DIP horizontalen und 8 DIP vertikalen Innenabstand. Normale Aktionen verwenden native helle Buttons. Teamtasten sind mindestens 78 DIP hoch, gleich breit und mit 12 DIP Abstand angeordnet; sie zeigen Teamname und registrierte F-Taste oder „Hotkey inaktiv“. Die rote Stopptaste bleibt im Kopf erreichbar.
+Deutsche Verben benennen die Aktion. Die Basis hat mindestens 36 DIP Höhe, 12 DIP horizontalen und 8 DIP vertikalen Innenabstand. Normale Aktionen verwenden native helle Buttons. Teamtasten sind mindestens 112 DIP hoch, gleich breit und mit 12 DIP Abstand angeordnet. Ihre zentrierten Zeilen zeigen Teamname, registrierte F-Taste oder „Hotkey inaktiv“ und „Aktivieren“ beziehungsweise die laufende Phase. Die globale Stopptaste bleibt im Kopf sichtbar und ist nur während „Wartet“ oder „Klickt“ aktiviert: weißer Text auf Teamrot. Vor der Aktivierung und nach dem Stopp zeigt sie explizit DimGray-Text (#696969) auf dem hellen Registergrund und erklärt im Tooltip „Kein Lauf aktiv. Zuerst ein Team aktivieren.“
+
+**The Laufmarkierung Rule.** Nur das laufende Team erhält einen weißen 3-DIP-Rahmen und „Aktiv · wartet“ oder „Aktiv · klickt“. Nach dem Stopp verschwinden Rahmen und Aktivmarkierung; alle Teamtasten zeigen wieder „Aktivieren“.
 
 ### Inputs / Fields
 
@@ -153,11 +159,11 @@ Native helle Felder stehen auf dunklem Grund. Textfelder haben mindestens 32 DIP
 
 ### Navigation und Profil
 
-Die vier sichtbaren Tabs behalten native Auswahlzustände. Kontextaktionen im Betrieb führen zur Einrichtung oder Konfiguration. Reine Navigation verändert weder Profil noch Lauf. Die Fußleiste unterscheidet „Standardprofil · noch nicht gespeichert“, „Einstellungen gespeichert“ und „Ungespeicherte Änderungen“; Verwerfen erscheint bei Änderungen. Aktivierung übernimmt gültige aktuelle Eingaben, ohne sie automatisch zu speichern. Beim Schließen mit Änderungen bietet ein natives Dialogfenster Speichern, Schließen ohne Speichern oder Abbrechen.
+Die vier sichtbaren Tabs behalten native Auswahlzustände. Kontextaktionen im Betrieb führen zur Einrichtung, Konfiguration oder zu „Diagnose / Testmodus“. Reine Navigation verändert weder Profil noch Lauf. Die Fußleiste unterscheidet „Standardprofil · noch nicht gespeichert“, „Einstellungen gespeichert“ und „Ungespeicherte Änderungen“; Verwerfen erscheint bei Änderungen. Aktivierung übernimmt gültige aktuelle Eingaben, ohne sie automatisch zu speichern. Beim Schließen mit Änderungen bietet ein natives Dialogfenster Speichern, Schließen ohne Speichern oder Abbrechen.
 
 ### Laufstatus
 
-Der Kopf zeigt „Gestoppt“, „Wartet“ oder „Klickt“ mit Team und Eingabemodus. Betrieb ergänzt Grund, Klickanzahl und letztes Intervall. Der Modushinweis ist dunkel und gerahmt; echte Klicks erhalten Warnfarbe und ausdrücklichen Text. Die Betriebsübersicht nennt die Beitrittsbedingung: fünf HUD-Balken für mindestens 0,5 Sekunden.
+Der Kopf zeigt „Gestoppt“, „Wartet“ oder „Klickt“ mit Team und Eingabemodus. Betrieb beginnt mit einer dunklen, gerahmten Laufanzeige: Überschrift, großer Zustand, Grund, Klickanzahl samt letztem Intervall und Modustext stehen zentriert übereinander. Warten verwendet Warnsand, Klicken Erkennungsgrün; während eines Laufs trägt der 2-DIP-Rahmen die aktive Teamfarbe, sonst Trennblaugrau. Echte Klicks erhalten Warnfarbe und ausdrücklichen Modustext. Die Betriebsübersicht nennt die Beitrittsbedingung: fünf HUD-Balken für mindestens 0,5 Sekunden. Der Testmodus-Schalter steht ausschließlich in Diagnose.
 
 ### Bildprüfung und Kalibrierung
 
@@ -169,7 +175,7 @@ Automatische Vorschauaufnahmen laufen nominell alle 350 ms nur in Einrichtung un
 
 ### Diagnose
 
-Die schreibgeschützte Tabelle zeigt „Messfläche“, „Score“, „Soll“ und „Ist“ auf dunklen alternierenden Zeilen mit horizontalen Trennlinien. Das schreibgeschützte, umbrechende Protokoll trägt Zeitstempel und folgt dem neuesten Eintrag. Referenzprüfungen und Diagnoseexport stehen unmittelbar bei diesen Prüfungen.
+Der Testmodus-Schalter steht oberhalb der Referenzaktionen und beendet beim Umschalten einen Lauf. Die schreibgeschützte Tabelle zeigt „Messfläche“, „Score“, „Soll“ und „Ist“ auf dunklen alternierenden Zeilen mit horizontalen Trennlinien; sie ist 160 DIP hoch. Das 120 DIP hohe, schreibgeschützte und umbrechende Protokoll trägt Zeitstempel und folgt dem neuesten Eintrag. Die zusätzliche äußere Scrollfläche hält Schalter, Referenzprüfungen, Messwerte und Protokoll auch bei Mindestgröße erreichbar.
 
 ## Do's and Don'ts
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-08T19:47:59Z",
+  "generatedAt": "2026-10-08T20:12:45Z",
   "title": "Design System: WardogsTeamselector",
   "extensions": {
     "nativePlatform": {
@@ -94,7 +94,7 @@
     "typographyMeta": {
       "title": {
         "displayName": "Title",
-        "purpose": "Anwendungstitel und großer Laufzustand im Betrieb."
+        "purpose": "Anwendungstitel."
       },
       "page-title": {
         "displayName": "Page title",
@@ -102,7 +102,7 @@
       },
       "team-button": {
         "displayName": "Team button",
-        "purpose": "Teamname und F-Taste auf den drei Aktivierungstasten."
+        "purpose": "Teamname auf den drei Aktivierungstasten."
       },
       "heading": {
         "displayName": "Heading",
@@ -111,6 +111,10 @@
       "body": {
         "displayName": "Body",
         "purpose": "Felder, Tabs, globaler Status, Hinweise und Diagnose."
+      },
+      "team-hotkey": {
+        "displayName": "Team hotkey",
+        "purpose": "Große, zentrierte F-Taste unter dem Teamnamen."
       }
     },
     "shadows": [],
@@ -120,11 +124,11 @@
   "components": [],
   "narrative": {
     "northStar": "Windows-Werkzeug neben dem Spiel",
-    "overview": "Die bestätigte Identität bleibt eine dunkle, kompakte native Windows-Werkzeugoberfläche. Segoe UI, ausgeschriebene deutsche Beschriftungen, Teamfarben und das vorhandene Anwendungssymbol verbinden das Werkzeug mit Wardogs. Helle native Bedienelemente stehen auf dunklem Grund; ihre Windows-/WPF-Zustände gehören zur Oberfläche.\n\nDie gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; fertige Ansichten liegen unter `artifacts/usability-final-with-runtime/` und `artifacts/usability-final-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.",
+    "overview": "Die bestätigte Identität bleibt eine dunkle, kompakte native Windows-Werkzeugoberfläche. Segoe UI, ausgeschriebene deutsche Beschriftungen, Teamfarben und das vorhandene Anwendungssymbol verbinden das Werkzeug mit Wardogs. Helle native Bedienelemente stehen auf dunklem Grund; ihre Windows-/WPF-Zustände gehören zur Oberfläche.\n\nDie gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; die aktuellen Ansichten liegen unter `artifacts/operator-status-with-runtime/` und `artifacts/operator-status-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.",
     "keyCharacteristics": [
       "Dunkle tonale Flächen mit hellen nativen Windows-Kontrollen.",
       "Teamfarben mit Teamnamen und registrierten F-Tasten.",
-      "Dauerhaft erreichbarer Stopp, globaler Laufstatus und Profilfußleiste.",
+      "Dauerhaft sichtbarer Stopp, globaler Laufstatus und Profilfußleiste.",
       "Vorschau und Messwerte bei Einrichtung und Diagnose."
     ],
     "rules": [
@@ -142,6 +146,11 @@
         "name": "The Dauerhaft erreichbar Rule",
         "body": "Navigation und Scrollen lassen globalen Status, Stopp und Profilaktionen an ihren festen Positionen.",
         "section": "layout"
+      },
+      {
+        "name": "The Laufmarkierung Rule",
+        "body": "Nur das laufende Team erhält einen weißen 3-DIP-Rahmen und „Aktiv · wartet“ oder „Aktiv · klickt“. Nach dem Stopp verschwinden Rahmen und Aktivmarkierung; alle Teamtasten zeigen wieder „Aktivieren“.",
+        "section": "components"
       }
     ],
     "dos": [

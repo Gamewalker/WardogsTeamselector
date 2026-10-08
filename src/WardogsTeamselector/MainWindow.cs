@@ -177,8 +177,9 @@ public sealed partial class MainWindow : Window
     }
     private void ApplyHotkeys(AppSettings next)
     {
-        try { hotkeys?.Apply(next); foreach (var team in Enum.GetValues<Team>()) { teamButtons[team].Content = TeamName(team) + " aktivieren\nF" + (next.Hotkeys[team] - 0x6F); teamButtons[team].ToolTip = "Einmal drücken aktiviert das Team. ESC bricht ab."; } }
-        catch { foreach (var team in Enum.GetValues<Team>()) { teamButtons[team].Content = TeamName(team) + " aktivieren\nHotkey inaktiv"; teamButtons[team].ToolTip = "Hotkey-Konflikt: Unter Konfiguration andere Tasten wählen und speichern. Die Teamtasten bleiben verfügbar."; } throw; }
+        try { hotkeys?.Apply(next); foreach (var team in Enum.GetValues<Team>()) { teamKeyLabels[team].Text = "F" + (next.Hotkeys[team] - 0x6F); teamKeyLabels[team].FontSize = 26; teamButtons[team].ToolTip = "Einmal drücken aktiviert das Team. ESC bricht ab."; } }
+        catch { foreach (var team in Enum.GetValues<Team>()) { teamKeyLabels[team].Text = "Hotkey inaktiv"; teamKeyLabels[team].FontSize = 16; teamButtons[team].ToolTip = "Hotkey-Konflikt: Unter Konfiguration andere Tasten wählen und speichern. Die Teamtasten bleiben verfügbar."; } throw; }
+        finally { UpdateRunDisplay(automation.Snapshot); }
     }
     private void RegisterKeys() { try { ApplyHotkeys(settings); } catch (Exception ex) { ShowError(ex.Message); } }
     private void ResetSettings()
@@ -230,12 +231,7 @@ public sealed partial class MainWindow : Window
             AutomationSnapshot current;
             lock (uiUpdateGate) { current = pendingUiSnapshot!; uiUpdateQueued = false; }
             if (closing) return;
-            var state = current.State switch { RunState.Waiting => "Wartet · " + TeamName(current.Team ?? Team.Blue), RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), _ => "Gestoppt" };
-            status.Text = state + (settings.DryRun ? " · Testmodus" : " · echte Klicks");
-            operationState.Text = current.State == RunState.Stopped && current.Team == null ? "Bereit für die Teamwahl" : state;
-            runReason.Text = current.Reason;
-            counters.Text = $"{(settings.DryRun ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
-            drawRegion.IsEnabled = current.State == RunState.Stopped;
+            UpdateRunDisplay(current);
             if (current.State != RunState.Stopped) CancelRegionDrag();
             if (liveUpdatesEnabled && !referenceMode && current.Detection != null) UpdateDetection(current.Detection, current.JoinedDetection);
             if (logLines.LastOrDefault()?.EndsWith(current.Reason) != true) AddLog(current.Reason);

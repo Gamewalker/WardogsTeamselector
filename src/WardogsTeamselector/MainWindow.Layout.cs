@@ -12,8 +12,8 @@ namespace WardogsTeamselector;
 // THESIS: Four task areas guide setup, operation, configuration and diagnosis.
 // OWN-WORLD: Dark native Windows utility, Segoe UI, explicit labels and team colors.
 // STORY: Connect the game, check click areas, run a team, investigate only as needed.
-// FIRST VIEWPORT: Task tabs below a persistent status and stop control; setup pairs
-// editable geometry with its preview, while operation dedicates the space to teams.
+// FIRST VIEWPORT: Persistent status and conditional stop; operation leads with a
+// centered run display above team buttons with centered hotkeys and active markers.
 // FORM: User-specified four-area workflow, code-led within the established identity.
 // FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 public sealed partial class MainWindow
@@ -22,11 +22,13 @@ public sealed partial class MainWindow
     private readonly Grid setupPreviewSlot = new(), diagnosticPreviewSlot = new();
     private readonly DockPanel previewPane = new();
     private readonly TextBlock previewEmpty = new(), previewSource = new();
-    private readonly TextBlock modeText = new(), profileText = new(), operationSummary = new(), runReason = new();
+    private readonly TextBlock runMode = new(), profileText = new(), operationSummary = new(), runReason = new();
     private readonly TextBlock operationState = new(), setupFeedback = new();
+    private readonly System.Collections.Generic.Dictionary<Team, TextBlock> teamKeyLabels = new(), teamStateLabels = new();
+    private readonly System.Collections.Generic.Dictionary<Team, Border> teamFrames = new();
     private readonly CheckBox drawRegion = new() { Content = "Teamfläche im Bild zeichnen" };
     private Button saveButton = null!, discardButton = null!, stopButton = null!;
-    private Border modeNotice = null!;
+    private Border runPanel = null!;
 
     private void Build()
     {
@@ -53,6 +55,7 @@ public sealed partial class MainWindow
         stopButton.Background = TeamBrush(Team.Red);
         stopButton.Foreground = Brushes.White;
         stopButton.VerticalAlignment = VerticalAlignment.Center;
+        stopButton.IsEnabled = false;
         stopButton.ToolTip = "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel.";
         Grid.SetColumn(stopButton, 1);
         header.Children.Add(stopButton);
@@ -170,51 +173,62 @@ public sealed partial class MainWindow
     private UIElement BuildOperation()
     {
         var body = new StackPanel();
-        body.Children.Add(PageTitle("Team aktivieren", "Einmal auswählen, dann zum Spiel wechseln. Der Lauf wartet auf den stabil erkannten Dialog und Spielfokus."));
+        var currentRun = new StackPanel();
+        var heading = Heading("Aktueller Lauf");
+        heading.TextAlignment = TextAlignment.Center;
+        heading.Margin = new Thickness(0, 0, 0, 8);
+        currentRun.Children.Add(heading);
+        operationState.FontSize = 32;
+        operationState.FontWeight = FontWeights.SemiBold;
+        operationState.TextWrapping = TextWrapping.Wrap;
+        operationState.TextAlignment = TextAlignment.Center;
+        currentRun.Children.Add(operationState);
+        runReason.FontSize = 17;
+        runReason.Foreground = Muted;
+        runReason.TextWrapping = TextWrapping.Wrap;
+        runReason.TextAlignment = TextAlignment.Center;
+        runReason.Margin = new Thickness(0, 8, 0, 0);
+        currentRun.Children.Add(runReason);
+        counters.FontSize = 16;
+        counters.TextWrapping = TextWrapping.Wrap;
+        counters.TextAlignment = TextAlignment.Center;
+        counters.Margin = new Thickness(0, 12, 0, 0);
+        currentRun.Children.Add(counters);
+        runMode.TextWrapping = TextWrapping.Wrap;
+        runMode.TextAlignment = TextAlignment.Center;
+        runMode.Margin = new Thickness(0, 8, 0, 0);
+        currentRun.Children.Add(runMode);
+        runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), Padding = new Thickness(20), Margin = new Thickness(0, 0, 0, 20) };
+        body.Children.Add(runPanel);
 
-        var mode = new StackPanel();
-        dryRun.Content = "Testmodus verwenden · keine Mauseingaben";
-        dryRun.Foreground = Foreground;
-        dryRun.Checked += Changed; dryRun.Unchecked += Changed;
-        mode.Children.Add(dryRun);
-        modeText.TextWrapping = TextWrapping.Wrap;
-        modeText.Margin = new Thickness(0, 6, 0, 0);
-        mode.Children.Add(modeText);
-        modeNotice = new Border { Child = mode, Background = SurfaceBrush, Padding = new Thickness(16), Margin = new Thickness(0, 10, 0, 20) };
-        body.Children.Add(modeNotice);
+        body.Children.Add(Hint("Ein Team aktivieren, dann zum Spiel wechseln. Die aktive Teamtaste bleibt markiert."));
 
         var teams = new Grid();
         foreach (var team in Enum.GetValues<Team>())
         {
             teams.ColumnDefinitions.Add(new());
             var t = team;
-            var button = Button(TeamName(t) + " aktivieren", () => StartTeam(t));
-            button.MinHeight = 78;
-            button.FontSize = 18;
-            button.FontWeight = FontWeights.SemiBold;
+            var button = Button("", () => StartTeam(t));
+            var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            content.Children.Add(new TextBlock { Text = TeamName(t), FontSize = 18, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center });
+            var key = new TextBlock { FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 4, 0, 4) };
+            var state = new TextBlock { FontSize = 14, TextAlignment = TextAlignment.Center };
+            teamKeyLabels[t] = key; teamStateLabels[t] = state;
+            content.Children.Add(key); content.Children.Add(state);
+            button.Content = content;
+            button.MinHeight = 112;
+            button.HorizontalContentAlignment = HorizontalAlignment.Center;
+            button.VerticalContentAlignment = VerticalAlignment.Center;
             button.Background = TeamBrush(t);
             button.Foreground = Brushes.White;
-            button.Margin = new Thickness(0, 0, team == Team.Green ? 0 : 12, 0);
+            button.Margin = new Thickness(0);
             teamButtons[t] = button;
-            Grid.SetColumn(button, (int)team);
-            teams.Children.Add(button);
+            var frame = new Border { Child = button, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(3), Margin = new Thickness(0, 0, team == Team.Green ? 0 : 12, 0) };
+            teamFrames[t] = frame;
+            Grid.SetColumn(frame, (int)team);
+            teams.Children.Add(frame);
         }
         body.Children.Add(teams);
-        body.Children.Add(Heading("Aktueller Lauf"));
-        operationState.FontSize = 24;
-        operationState.FontWeight = FontWeights.SemiBold;
-        operationState.Text = "Bereit für die Teamwahl";
-        operationState.TextWrapping = TextWrapping.Wrap;
-        body.Children.Add(operationState);
-        runReason.Foreground = Muted;
-        runReason.Text = "Noch kein Lauf gestartet. Ein Team auswählen oder dessen F-Taste drücken.";
-        runReason.TextWrapping = TextWrapping.Wrap;
-        runReason.Margin = new Thickness(0, 6, 0, 12);
-        body.Children.Add(runReason);
-        counters.FontSize = 16;
-        counters.Text = "Simulierte Klicks: 0  ·  Letztes Intervall: –";
-        counters.TextWrapping = TextWrapping.Wrap;
-        body.Children.Add(counters);
 
         body.Children.Add(new Separator { Background = BorderBrushColor, Margin = new Thickness(0, 22, 0, 12) });
         operationSummary.Foreground = Muted;
@@ -223,6 +237,7 @@ public sealed partial class MainWindow
         var links = new WrapPanel { Margin = new Thickness(0, 12, 0, 0) };
         links.Children.Add(Button("Spiel / Klickflächen prüfen", () => ShowPage(0)));
         links.Children.Add(Button("Intervall / Hotkeys ändern", () => ShowPage(2)));
+        links.Children.Add(Button("Diagnose / Testmodus", () => ShowPage(3)));
         body.Children.Add(links);
         body.Children.Add(Hint("Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. ESC, Fokusverlust und Aufnahmefehler stoppen den Lauf.", 18));
         return Scroll(body);
@@ -288,6 +303,12 @@ public sealed partial class MainWindow
         detail.RowDefinitions.Add(new() { Height = new GridLength(0.7, GridUnitType.Star) });
         var heading = new StackPanel();
         heading.Children.Add(PageTitle("Erkennung untersuchen", "Referenzen prüfen nur die Erkennung. Sie senden keine Eingaben und stoppen einen laufenden Versuch."));
+        dryRun.Content = "Testmodus verwenden · keine Mauseingaben";
+        dryRun.Foreground = Foreground;
+        dryRun.Margin = new Thickness(0, 4, 0, 8);
+        dryRun.ToolTip = "Simuliert den vollständigen Ablauf ohne Mauseingaben. Ein Wechsel beendet einen laufenden Versuch. Zum Behalten Einstellungen speichern.";
+        dryRun.Checked += Changed; dryRun.Unchecked += Changed;
+        heading.Children.Add(dryRun);
         var references = new WrapPanel { Margin = new Thickness(0, 8, 0, 8) };
         references.Children.Add(Button("Dialogreferenz prüfen", LoadReference));
         references.Children.Add(Button("HUD-Referenz prüfen", LoadJoinedReference));
@@ -298,6 +319,7 @@ public sealed partial class MainWindow
 
         probes.AutoGenerateColumns = false;
         probes.MinHeight = 100;
+        probes.Height = 160;
         probes.Foreground = Foreground;
         probes.Background = SurfaceBrush;
         probes.RowBackground = SurfaceBrush;
@@ -318,11 +340,12 @@ public sealed partial class MainWindow
         Grid.SetRow(probes, 1); detail.Children.Add(probes);
         var logHeading = Heading("Ereignisprotokoll"); Grid.SetRow(logHeading, 2); detail.Children.Add(logHeading);
         log.MinHeight = 90;
+        log.Height = 120;
         log.Background = SurfaceBrush;
         log.Foreground = Foreground;
         log.Padding = new Thickness(8);
         Grid.SetRow(log, 3); detail.Children.Add(log);
-        grid.Children.Add(detail);
+        grid.Children.Add(Scroll(detail));
         Grid.SetColumn(diagnosticPreviewSlot, 1); grid.Children.Add(diagnosticPreviewSlot);
         return grid;
     }
@@ -413,15 +436,36 @@ public sealed partial class MainWindow
     private void UpdateOperationSummary()
     {
         bool testing = dryRun.IsChecked == true;
-        modeText.Text = testing ? "Erkennung und Ablauf prüfen. Es werden keine Klicks an das Spiel gesendet." : "Echte Klicks sind aktiviert. Spiel im Vordergrund halten; ESC stoppt sofort.";
-        modeText.Foreground = testing ? Muted : WarningBrush;
-        modeNotice.BorderBrush = testing ? BorderBrushColor : WarningBrush;
-        modeNotice.BorderThickness = new Thickness(1);
+        runMode.Text = testing ? "Testmodus · keine Mauseingaben" : "Echte Klicks aktiviert · ESC stoppt sofort";
+        runMode.Foreground = testing ? Muted : WarningBrush;
         operationSummary.Text = $"Klickintervall: {fields["min"].Text}–{fields["max"].Text} ms  ·  Fenster: {fields["title"].Text}\nBeitritt: fünf HUD-Balken für mindestens 0,5 s  ·  Stopp: ESC";
         status.ToolTip = testing ? "Testmodus · keine Mauseingaben" : "Echte Klicks aktiviert";
-        var current = automation.Snapshot;
+        UpdateRunDisplay(automation.Snapshot);
+    }
+
+    private void UpdateRunDisplay(AutomationSnapshot current)
+    {
+        bool running = current.State != RunState.Stopped;
+        bool testing = dryRun.IsChecked == true;
         string state = current.State switch { RunState.Waiting => "Wartet · " + TeamName(current.Team ?? Team.Blue), RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), _ => "Gestoppt" };
         status.Text = state + (testing ? " · Testmodus" : " · echte Klicks");
+        operationState.Text = current.State == RunState.Stopped && current.Team == null ? "Bereit für die Teamwahl" : state;
+        operationState.Foreground = current.State switch { RunState.Waiting => WarningBrush, RunState.Clicking => BrushFrom(120, 220, 160), _ => Foreground };
+        runPanel.BorderBrush = running && current.Team is Team activeTeam ? TeamBrush(activeTeam) : BorderBrushColor;
+        runReason.Text = current.Team == null && current.State == RunState.Stopped ? "Ein Team auswählen oder dessen F-Taste drücken." : current.Reason;
+        counters.Text = $"{(testing ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
+        stopButton.IsEnabled = running;
+        stopButton.Foreground = running ? Brushes.White : Brushes.DimGray;
+        stopButton.Background = running ? TeamBrush(Team.Red) : BrushFrom(230, 234, 236);
+        stopButton.ToolTip = running ? "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel." : "Kein Lauf aktiv. Zuerst ein Team aktivieren.";
+        drawRegion.IsEnabled = !running;
+        foreach (var team in Enum.GetValues<Team>())
+        {
+            bool active = running && current.Team == team;
+            teamFrames[team].BorderBrush = active ? Brushes.White : Brushes.Transparent;
+            teamStateLabels[team].Text = active ? current.State == RunState.Clicking ? "Aktiv · klickt" : "Aktiv · wartet" : "Aktivieren";
+            AutomationProperties.SetName(teamButtons[team], $"Team {TeamName(team)}, {teamKeyLabels[team].Text}, {teamStateLabels[team].Text}");
+        }
     }
 
     private static TabItem Page(string title, UIElement content) => new()
