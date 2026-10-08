@@ -132,7 +132,7 @@ public sealed partial class MainWindow
         catch
         {
             DiscardStagedUpdate();
-            MessageBox.Show(this, "Das Update konnte nicht gestartet werden. Die bisherige Version bleibt erhalten.", "Update");
+            LocalizedMessageBox.Show(this, "Das Update konnte nicht gestartet werden. Die bisherige Version bleibt erhalten.", "Update");
         }
     }
 }

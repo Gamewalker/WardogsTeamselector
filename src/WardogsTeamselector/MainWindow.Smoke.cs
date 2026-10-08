@@ -14,6 +14,18 @@ public sealed partial class MainWindow
     internal async Task CaptureSmokeImages(string directory)
     {
         Directory.CreateDirectory(directory);
+        LocalizeInterface();
+        Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
+        Check((string)stopButton.Content == "Stop · ESC" && profileText.Text.Contains("Default profile") || (string)stopButton.Content == "Stop · ESC" && hasSavedProfile, "English header and profile");
+        SaveRender(Path.Combine(directory, "english-startup.png"));
+        foreach (var language in Localization.Languages)
+        {
+            languageSelector.SelectedItem = language;
+            LocalizeInterface();
+            Check((string)stopButton.Content == Localization.Text("Stopp · ESC"), "Stop label follows language: " + language.Code);
+        }
+        languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
+        LocalizeInterface();
         Check(Icon != null, "App icon loaded");
         Check(pages.Items.Count == 4, "Four task areas");
         Check(updateStatus.Text.Contains("GUI-Prüflauf") && !updateTimer.IsEnabled && stagedUpdate == null, "Smoke mode never checks or stages updates");
@@ -106,6 +118,18 @@ public sealed partial class MainWindow
         StartTeam(Team.Blue); await Settle();
         Check(dirty && profileText.Text.Contains("Ungespeicherte"), "Activation does not claim edits are saved");
         Check(pages.SelectedIndex == 1 && automation.Snapshot.State == RunState.Waiting && !timer.IsEnabled, "Operation waits without extra preview captures");
+        string draftTitle = fields["title"].Text;
+        languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "en");
+        await Settle();
+        Check(automation.Snapshot.State == RunState.Waiting && dirty && fields["title"].Text == draftTitle, "Language switching preserves an active run and unsaved drafts");
+        Check(teamStateLabels[Team.Blue].Text == Localization.Text("Aktiv · wartet"), "Active markers change language");
+        SaveRender(Path.Combine(directory, "english-waiting.png"));
+        languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "ar");
+        await Settle();
+        Check(operationState.FlowDirection == FlowDirection.RightToLeft, "Arabic text uses RTL");
+        SaveRender(Path.Combine(directory, "arabic-waiting.png"));
+        languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
+        await Settle();
         Check(stopButton.IsEnabled && teamStateLabels[Team.Blue].Text == "Aktiv · wartet" && teamStateLabels.Where(pair => pair.Key != Team.Blue).All(pair => pair.Value.Text == "Aktivieren"), "Exactly the active team is marked while waiting, and stop is enabled");
         SaveRender(Path.Combine(directory, "waiting.png"));
         Width = 1180; Height = 820; await Settle();

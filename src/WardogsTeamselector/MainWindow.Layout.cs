@@ -60,6 +60,7 @@ public sealed partial class MainWindow
         var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         headerActions.Children.Add(Button("Über die App", ShowAboutWindow));
         headerActions.Children.Add(stopButton);
+        headerActions.Children.Add(BuildLanguageSelector());
         Grid.SetColumn(headerActions, 1);
         header.Children.Add(headerActions);
 

@@ -9,6 +9,7 @@
   <ItemGroup><EmbeddedResource Include="Assets\reference.png" LogicalName="WardogsTeamselector.Reference" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Assets\joined.png" LogicalName="WardogsTeamselector.Joined" /></ItemGroup>
   <ItemGroup><Resource Include="Assets\app.ico" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Localization\*.json" LogicalName="WardogsTeamselector.Localization.%(Filename).json" /></ItemGroup>
   <ItemGroup>
     <AssemblyMetadata Include="ReleaseBuild" Value="$(ReleaseBuild)" />
     <AssemblyMetadata Include="UpdateVariant" Value="$(UpdateVariant)" />

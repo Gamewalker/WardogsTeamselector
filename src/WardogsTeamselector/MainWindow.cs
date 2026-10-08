@@ -74,6 +74,7 @@ public sealed partial class MainWindow : Window
     public MainWindow(bool registerGlobalHotkeys = true)
     {
         smokeMode = !registerGlobalHotkeys;
+        Localization.SetLanguage(smokeMode ? "en" : Localization.LoadPreference());
         Title = "WardogsTeamselector"; Width = 1180; Height = 820; MinWidth = 920; MinHeight = 660;
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/app.ico"));
         Background = new SolidColorBrush(Color.FromRgb(19, 26, 30)); Foreground = Brushes.WhiteSmoke; FontFamily = new System.Windows.Media.FontFamily("Segoe UI"); FontSize = 14;
@@ -81,6 +82,8 @@ public sealed partial class MainWindow : Window
         automation.Updated += OnAutomation;
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
         Build(); LoadFields();
+        LayoutUpdated += (_, _) => LocalizeInterface();
+        LocalizeInterface();
         Loaded += (_, _) => InitializeUpdates();
         Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
@@ -92,7 +95,7 @@ public sealed partial class MainWindow : Window
         {
             if (dirty && !smokeMode)
             {
-                var choice = MessageBox.Show(this, "Änderungen vor dem Schließen speichern?", "Ungespeicherte Einstellungen", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                var choice = LocalizedMessageBox.Show(this, "Änderungen vor dem Schließen speichern?", "Ungespeicherte Einstellungen", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (choice == MessageBoxResult.Cancel || (choice == MessageBoxResult.Yes && !SaveSettings())) { e.Cancel = true; return; }
             }
             closing = true; timer.Stop(); automation.Dispose(); hotkeys?.Dispose();
@@ -189,7 +192,7 @@ public sealed partial class MainWindow : Window
     private void RegisterKeys() { try { ApplyHotkeys(settings); } catch (Exception ex) { ShowError(ex.Message); } }
     private void ResetSettings()
     {
-        if (!smokeMode && MessageBox.Show(this, "Standardwerte laden? Intervall, Hotkeys, Spielbereich und Teamflächen werden zurückgesetzt. Die gespeicherte Datei bleibt bis zum Speichern erhalten.", "Profil zurücksetzen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        if (!smokeMode && LocalizedMessageBox.Show(this, "Standardwerte laden? Intervall, Hotkeys, Spielbereich und Teamflächen werden zurückgesetzt. Die gespeicherte Datei bleibt bis zum Speichern erhalten.", "Profil zurücksetzen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
         automation.Stop("Standardwerte geladen"); settings = new(); LoadFields(); RegisterKeys(); dirty = true;
         ClearError(); UpdateProfileState(); AddLog("Standardprofil geladen. Zum Behalten speichern."); DrawOverlay();
     }

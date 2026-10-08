@@ -58,18 +58,20 @@ public sealed partial class MainWindow
         close.HorizontalAlignment = HorizontalAlignment.Right;
         panel.Children.Add(close);
         dialog.Content = Scroll(panel);
+        dialog.LayoutUpdated += (_, _) => LocalizeInterface(dialog);
+        LocalizeInterface(dialog);
         return dialog;
     }
 
     private static string BugReportUrl()
     {
         string body = $"## Fehlerbeschreibung\n\n## Schritte zum Reproduzieren\n1. \n\n## Erwartetes Ergebnis\n\n## Tatsächliches Ergebnis\n\n## App und System\n- App: WardogsTeamselector\n- Build: {BuildDescription}\n- Variante: {VariantDescription}\n- Windows: {Environment.OSVersion.VersionString}\n\n## Statusgrund und Diagnose\nBitte Statusgrund ergänzen und bei Bedarf einen Diagnoseexport oder Screenshot anhängen.\n";
-        return ProjectUrl + "/issues/new?title=" + Uri.EscapeDataString("Fehler: ") + "&body=" + Uri.EscapeDataString(body);
+        return ProjectUrl + "/issues/new?title=" + Uri.EscapeDataString(Localization.Text("Fehler: ")) + "&body=" + Uri.EscapeDataString(Localization.Text(body));
     }
 
     private void OpenProjectLink(string url)
     {
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })?.Dispose(); }
-        catch { MessageBox.Show(this, "Der Browser konnte nicht geöffnet werden. Öffne diesen Link manuell:\n\n" + url, "GitHub-Link", MessageBoxButton.OK, MessageBoxImage.Information); }
+        catch { LocalizedMessageBox.Show(this, "Der Browser konnte nicht geöffnet werden. Öffne diesen Link manuell:\n\n" + url, "GitHub-Link", MessageBoxButton.OK, MessageBoxImage.Information); }
     }
 }
