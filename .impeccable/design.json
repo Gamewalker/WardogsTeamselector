@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T19:47:59Z",
+  "title": "Design System: WardogsTeamselector",
+  "extensions": {
+    "nativePlatform": {
+      "name": "Windows WPF",
+      "units": "Frontmatter px values represent WPF device-independent pixels (DIP).",
+      "controls": "Hover, focus, selection and disabled states are supplied by the native Windows/WPF theme.",
+      "previewPolicy": "HTML/CSS replicas and synthetic tonal ramps are omitted because they do not describe the native shipping implementation."
+    },
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Fensteranthrazit"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Helltext"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Hinweisblaugrau"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Trennblaugrau"
+      },
+      "row": {
+        "role": "neutral",
+        "displayName": "Flächenanthrazit"
+      },
+      "row-alternate": {
+        "role": "neutral",
+        "displayName": "Wechselzeile"
+      },
+      "table-header": {
+        "role": "neutral",
+        "displayName": "Tabellenkopf"
+      },
+      "team-blue": {
+        "role": "primary",
+        "displayName": "Teamblau"
+      },
+      "team-red": {
+        "role": "primary",
+        "displayName": "Teamrot"
+      },
+      "team-green": {
+        "role": "primary",
+        "displayName": "Teamgrün"
+      },
+      "team-button-text": {
+        "role": "neutral",
+        "displayName": "Weiße Teamtastenbeschriftung"
+      },
+      "detected": {
+        "role": "secondary",
+        "displayName": "Erkennungsgrün"
+      },
+      "error": {
+        "role": "secondary",
+        "displayName": "Fehlerkoralle"
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warnsand"
+      },
+      "probe": {
+        "role": "secondary",
+        "displayName": "Messgelb"
+      },
+      "hud-probe": {
+        "role": "secondary",
+        "displayName": "HUD-Cyan"
+      },
+      "preview-background": {
+        "role": "neutral",
+        "displayName": "Schwarze Bildfläche"
+      },
+      "input-background": {
+        "role": "neutral",
+        "displayName": "Helle Eingabe"
+      },
+      "input-text": {
+        "role": "neutral",
+        "displayName": "Eingabetext"
+      },
+      "tab-background": {
+        "role": "neutral",
+        "displayName": "Registergrund"
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Anwendungstitel und großer Laufzustand im Betrieb."
+      },
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "Einstieg und Aufgabenbeschreibung jedes Bereichs."
+      },
+      "team-button": {
+        "displayName": "Team button",
+        "purpose": "Teamname und F-Taste auf den drei Aktivierungstasten."
+      },
+      "heading": {
+        "displayName": "Heading",
+        "purpose": "Wiederkehrende Gruppen wie Teamflächen, Tastenkürzel und Protokoll."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Felder, Tabs, globaler Status, Hinweise und Diagnose."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "Windows-Werkzeug neben dem Spiel",
+    "overview": "Die bestätigte Identität bleibt eine dunkle, kompakte native Windows-Werkzeugoberfläche. Segoe UI, ausgeschriebene deutsche Beschriftungen, Teamfarben und das vorhandene Anwendungssymbol verbinden das Werkzeug mit Wardogs. Helle native Bedienelemente stehen auf dunklem Grund; ihre Windows-/WPF-Zustände gehören zur Oberfläche.\n\nDie gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; fertige Ansichten liegen unter `artifacts/usability-final-with-runtime/` und `artifacts/usability-final-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.",
+    "keyCharacteristics": [
+      "Dunkle tonale Flächen mit hellen nativen Windows-Kontrollen.",
+      "Teamfarben mit Teamnamen und registrierten F-Tasten.",
+      "Dauerhaft erreichbarer Stopp, globaler Laufstatus und Profilfußleiste.",
+      "Vorschau und Messwerte bei Einrichtung und Diagnose."
+    ],
+    "rules": [
+      {
+        "name": "The Teamzuordnung Rule",
+        "body": "Teamfarben bleiben zwischen Aktivierung und Bildmarkierung gleich; Teamname und Zustand bleiben zusätzlich als Text lesbar.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lesbarer Zustand Rule",
+        "body": "Lauf, Eingabemodus, Speicherzustand und Erkennung werden ausgeschrieben. Hinweise, Fehler, Labels und Zähler umbrechen innerhalb ihrer Fläche.",
+        "section": "typography"
+      },
+      {
+        "name": "The Dauerhaft erreichbar Rule",
+        "body": "Navigation und Scrollen lassen globalen Status, Stopp und Profilaktionen an ihren festen Positionen.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do deutsche Aktionsbeschriftungen, native Kontrollzustände und die bestehende Segoe-UI-Hierarchie beibehalten.",
+      "Do Teamfarben konsistent zwischen Aktivierung und Bildmarkierungen verwenden und mit Text ergänzen.",
+      "Do Status, Stopp und Profilaktionen außerhalb der scrollenden Aufgabenflächen erhalten.",
+      "Do Fehler mit sichtbarer Erklärung und Tastaturfokus am zuständigen Feld korrigierbar machen.",
+      "Do Bildquelle, Referenzmodus und erforderliches Einschalten des Zeichnens erklären."
+    ],
+    "donts": [
+      "Don't Farbe als einzige Zustands- oder Teaminformation verwenden.",
+      "Don't native helle Eingaben und Tabs als vollständig selbst gestaltetes dunkles Kontrolltheme dokumentieren.",
+      "Don't Teamaktivierung als automatisches Speichern darstellen oder Entwürfe als gespeichertes Profil beschriften.",
+      "Don't die vorhandene Windows-Schrift oder Anwendungsgrafik durch ein dekoratives neues Thema ersetzen."
+    ]
+  }
+}

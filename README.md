@@ -6,16 +6,20 @@ Beide fertig gebauten EXE-Varianten werden als Assets im [privaten GitHub-Releas
 
 ## Benutzung
 
-1. EXE starten und Wardogs öffnen. Titel und Prozessname müssen standardmäßig `wardogs` enthalten. Falls das Spiel anders heißt, beide Filter unter **Monitor & Kalibrierung** anpassen.
-2. Im Auswahlbildschirm das **Live-Bild** prüfen. Teamrahmen zeigen die Klickflächen, Punkte deren Mitte; gelbe Markierungen zeigen die Messflächen. Die Diagnose sollte „Dialog: erkannt“ melden.
-3. Bei abweichender Oberfläche den Spielbereich, die Dialogkalibrierung und gegebenenfalls die drei Teamflächen anpassen. Teamflächen als Prozentwerte eingeben und **Teamfläche übernehmen**, oder das gewünschte Team unter Kalibrierung auswählen und im Live-Bild ein Rechteck ziehen. Änderungen speichern.
-4. A und B sind minimale/maximale zufällige Wartezeit in Millisekunden. Es gilt **50 ≤ A ≤ B ≤ 60000**. Standard: 50–70 ms. Die interne Untergrenze 50 ms kann auch über die Konfigurationsdatei nicht unterschritten werden.
-5. Zunächst im Testmodus kontrollieren, anschließend für echte Eingaben **Testmodus** abwählen. **F6** aktiviert Blau, **F7** Rot, **F8** Grün. Alternativ den Teambutton anklicken. Hotkeys sind auf unterschiedliche F1–F24 anpassbar.
-6. Die Aktivierung darf schon vor der Auswahl erfolgen. Der Lauf wartet, bis der Dialog mehrfach stabil erkannt wurde und das Spiel im Vordergrund liegt. Auch volle/verblasste Teams werden angeklickt. **ESC** beendet Warten und Klicken global; ESC wird weiterhin an das Spiel gegeben.
+Die Oberfläche hat vier Bereiche. Neue Profile starten in **Einrichtung**, vorhandene gültige Profile direkt in **Betrieb**. Ein ungültiges gespeichertes Profil öffnet die Einrichtung mit einem Fehlerhinweis.
+
+1. **Einrichtung:** Wardogs öffnen. Titel und Prozessname müssen standardmäßig `wardogs` enthalten; die Filter und den Monitor bei Bedarf anpassen. **Spiel suchen / Bild laden** übernimmt die Eingaben für die Vorschau. Im Auswahlbildschirm die Teamrahmen und ihre Klickpunkte prüfen. Zum Ändern das gewünschte Team wählen und **Teamfläche im Bild zeichnen** einschalten, oder **Teamfläche als Prozentwerte** aufklappen. Änderungen werden auch beim Teamwechsel und beim Speichern übernommen. Mit **Speichern & zum Betrieb** die Einrichtung abschließen.
+2. **Betrieb:** Zunächst **Testmodus verwenden** eingeschaltet lassen. Ein Team per Taste oder Button aktivieren, dann zum Spiel wechseln. **F6** aktiviert Blau, **F7** Rot, **F8** Grün. Für echte Mauseingaben den Testmodus ausschalten; der Modus bleibt auch im globalen Status sichtbar. Der Lauf wartet auf den stabil erkannten Dialog und Spielfokus. **Stopp · ESC** ist in allen Bereichen erreichbar; ESC funktioniert global und wird weiterhin an das Spiel gegeben.
+3. **Konfiguration:** Klickintervalle, F-Tasten, Erkennungsschwelle und automatische Vorschau einstellen. Das Klickintervall ist zufällig zwischen Minimum und Maximum; es gilt **50 ≤ Minimum ≤ Maximum ≤ 60000**, Standard **50–70 ms**. Erweiterte Dialogverschiebung und Skalierung bei Bedarf aufklappen, anschließend **Übernehmen & in Einrichtung prüfen** wählen. Die interne 50-ms-Untergrenze kann nicht unterschritten werden.
+4. **Diagnose:** Dialog- oder HUD-Referenz prüfen, Messwerte und Protokoll ansehen sowie Bild oder Diagnose exportieren. Referenzen sind klar als statische Testbilder gekennzeichnet; sie senden keine Eingaben und stoppen einen aktiven Lauf. **Live-Bild laden** kehrt zum Spielbild zurück.
+
+**Ungespeicherte Änderungen** stehen in der Fußleiste. **Einstellungen speichern** sichert sie dauerhaft; **Änderungen verwerfen** lädt das gespeicherte Profil. Beim Schließen mit Änderungen wird nach Speichern gefragt. Eine Teamaktivierung verwendet gültige aktuelle Eingaben, speichert diese aber nicht automatisch. Reine Navigation und der Vorschau-Schalter stoppen keinen Lauf; das Bearbeiten der Steuerungs- und Kalibrierwerte stoppt ihn.
+
+Die Aktivierung darf schon vor der Auswahl erfolgen. Auch volle/verblasste Teams werden angeklickt. Globale Teamhotkeys sind auf unterschiedliche F1–F24 anpassbar.
 
 Nach dem ersten Klick klickt der Lauf dasselbe Team weiter an, auch wenn der Auswahldialog verschwindet oder seine Erkennung flackert. Er endet automatisch erst, wenn die fünf weißen HUD-Balken unten rechts mindestens **0,5 Sekunden** ununterbrochen erkannt werden. Die bisherige Beendigung nach „Dialog muss fehlen für X Sekunden“ entfällt vollständig.
 
-Die HUD-Prüfung ist immer aktiv und berücksichtigt auch Abstände und dünne Balkenform. **Folgescreen prüfen** testet die mitgelieferte Referenz; cyanfarbene Messflächen und die HUD-Diagnose zeigen die Erkennung. Auch bei gleichzeitig positivem Dialogbefund beendet das stabil erkannte HUD den Lauf. Bei abweichendem HUD bleibt der Lauf aktiv, bis **ESC** gedrückt wird oder eine der unten genannten Stoppbedingungen eintritt. Alte Profile werden weiterhin geladen; die früheren Wartezeit- und HUD-Abschaltwerte werden ignoriert.
+Die HUD-Prüfung ist immer aktiv und berücksichtigt auch Abstände und dünne Balkenform. **HUD-Referenz prüfen** unter Diagnose testet die mitgelieferte Referenz; cyanfarbene Messflächen und die HUD-Diagnose zeigen die Erkennung. Auch bei gleichzeitig positivem Dialogbefund beendet das stabil erkannte HUD den Lauf. Bei abweichendem HUD bleibt der Lauf aktiv, bis **ESC** gedrückt wird oder eine der unten genannten Stoppbedingungen eintritt. Alte Profile werden weiterhin geladen; die früheren Wartezeit- und HUD-Abschaltwerte werden ignoriert.
 
 ESC, Fokusverlust während eines begonnenen Versuchs, Änderungen der Geometrie oder Aufnahmefehler stoppen weiterhin sofort. Nach einem endgültigen Stopp braucht eine neue Auswahl eine neue Aktivierung. Bearbeiten von Einstellungen stoppt einen laufenden Vorgang.
 
@@ -23,25 +27,25 @@ ESC, Fokusverlust während eines begonnenen Versuchs, Änderungen der Geometrie 
 
 Automatisch wird der physische Clientbereich des Spielfensters erkannt. Ein fest ausgewählter Monitor bindet die Auswahl an diesen Monitor; die tatsächliche Fenstergröße wird berücksichtigt. Manuelle Grenzen sind physische Desktopkoordinaten `X,Y,Breite,Höhe` und müssen innerhalb des Spielbereichs liegen. Negative Monitorursprünge sind möglich.
 
-Referenz ist das mitgelieferte, in der EXE eingebettete Bild mit 3838 × 2158 Pixeln. Für 16:9 wird proportionale Skalierung verwendet. Andere Seitenverhältnisse benötigen Kalibrierung und das Häkchen **Geometrie für dieses Profil geprüft**, bevor echte Klicks freigegeben werden. Die Erkennung prüft Rahmen und feste neutrale Flächen, keine sprachabhängige Schrift, Teamfarben oder wechselnden Zahlen.
+Referenz ist das mitgelieferte, in der EXE eingebettete Bild mit 3838 × 2158 Pixeln. Für 16:9 wird proportionale Skalierung verwendet. Andere Seitenverhältnisse benötigen Kalibrierung und das Häkchen **Abweichende Geometrie geprüft** unter Einrichtung, bevor echte Klicks freigegeben werden. Die Erkennung prüft Rahmen und feste neutrale Flächen, keine sprachabhängige Schrift, Teamfarben oder wechselnden Zahlen.
 
 **Dialogverschiebung/Skalierung** verändern die Erkennungsflächen. Die Teamflächen sind separat zu prüfen und anzupassen. HDR, abweichende UI-Skalierung und exklusives Vollbild müssen mit einer tatsächlichen Spielaufnahme geprüft werden. Schwarze oder verdeckte Aufnahmen erlauben keine Klicks.
 
 Die Live-Vorschau wird regelmäßig aktualisiert. Das Appfenster darf den zu erkennenden Dialog nicht verdecken; idealerweise die GUI auf einem zweiten Monitor verwenden oder zum Spiel wechseln.
 
-Nach der Kalibrierung **Live-Bild und Detaildiagnose aktualisieren** ausschalten. Der Vorschau-Timer, die zusätzlichen Aufnahmen, PNG-Konvertierung und laufende Messwerttabellen entfallen; das Bild wird freigegeben. Die nötige Erkennung für Teamklicks und Beitrittsbestätigung läuft weiter. Statuswechsel bleiben sichtbar, Klickzähler und Countdown aktualisieren sich bei ausgeschalteter Anzeige höchstens einmal pro Sekunde. Umschalten stoppt keinen Versuch. Mit **Einstellungen speichern** bleibt die Wahl beim nächsten Start erhalten. **Live-Bild** aktiviert die Vorschau wieder; Referenzprüfungen bleiben als manuelle Einzelprüfungen verfügbar.
+Die automatische Live-Vorschau lässt sich unter Konfiguration ausschalten. Zusätzliche Vorschauaufnahmen und PNG-Konvertierung finden ohnehin nur in Einrichtung und Diagnose statt. Im Betrieb bleibt die nötige Erkennung für Teamklicks und Beitrittsbestätigung aktiv. Statuswechsel bleiben sichtbar; bei ausgeschalteter Vorschau aktualisiert sich der Klickzähler höchstens einmal pro Sekunde. Umschalten stoppt keinen Versuch. Mit **Einstellungen speichern** bleibt die Wahl beim nächsten Start erhalten. **Live-Bild laden** erstellt bei ausgeschalteter Automatik eine Einzelaufnahme; Referenzprüfungen bleiben manuell verfügbar.
 
-Die **Erkennungsschwelle** ist als Prozentwert unter Monitor & Kalibrierung einstellbar; Standard ist **90 %**. Gespeicherte eigene Werte bleiben erhalten. Hover-Aufhellung einer Teamkarte und eine kleine lokale Cursorüberdeckung werden toleriert. Die schwächste Flächenprobe wird nicht gewichtet und in der Diagnose markiert; alle vier äußeren Rahmenkanten bleiben erforderlich. Der Score ist keine Prozentzahl aller Bildschirm-Pixel. Bei weiterhin fehlender Erkennung zeigt die Diagnose die abweichenden Messflächen; eine Aufnahme mit Maus auf dem Dialog hilft bei der weiteren Kalibrierung.
+Die **Erkennungsschwelle** ist als Prozentwert unter Konfiguration einstellbar; Standard ist **90 %**. Gespeicherte eigene Werte bleiben erhalten. Hover-Aufhellung einer Teamkarte und eine kleine lokale Cursorüberdeckung werden toleriert. Die schwächste Flächenprobe wird nicht gewichtet und in der Diagnose markiert; alle vier äußeren Rahmenkanten bleiben erforderlich. Der Score ist keine Prozentzahl aller Bildschirm-Pixel. Bei weiterhin fehlender Erkennung zeigt die Diagnose die abweichenden Messflächen; eine Aufnahme mit Maus auf dem Dialog hilft bei der weiteren Kalibrierung.
 
 ## Diagnose und Dateien
 
-- **Referenz prüfen** testet die Erkennung am eingebetteten Bild und sendet keine Eingaben.
+- **Dialogreferenz prüfen** unter Diagnose testet die Erkennung am eingebetteten Bild und sendet keine Eingaben.
 - **Bild speichern** exportiert den zuletzt gezeigten Frame als PNG.
 - **Diagnose** zeigt Einzelwerte, RGB-Soll/Ist, Status, Klickzähler und Stoppgrund.
 - **Diagnose exportieren** speichert das Protokoll einschließlich Geometrie und aktueller Messwerte.
 - Einstellungen: `%LOCALAPPDATA%\WardogsTeamselector\settings.json`. Ungültige gespeicherte Profile sperren den Start, bis gültige Einstellungen gespeichert wurden.
 - Beim ersten Start ohne neues Profil werden gültige Einstellungen aus `%LOCALAPPDATA%\WardogsClicker\settings.json` übernommen. Die alte Datei bleibt erhalten, damit ältere Versionen weiter funktionieren.
-- **Profil zurücksetzen** lädt die Standardwerte; anschließend speichern, um sie dauerhaft zu behalten.
+- **Standardwerte laden …** unter Konfiguration lädt das Standardprofil; anschließend speichern, um es dauerhaft zu behalten.
 
 ## Entwicklung und Veröffentlichung
 
