@@ -39,6 +39,8 @@ public sealed partial class MainWindow
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Background = Background, Foreground = Foreground, FontFamily = FontFamily, FontSize = FontSize
         };
+        dialog.Resources.MergedDictionaries.Add(CreateTheme());
+        dialog.UseLayoutRounding = true;
         var panel = new StackPanel { Margin = new Thickness(24) };
         panel.Children.Add(PageTitle("WardogsTeamselector", "Ein quelloffenes Windows-Tool zur Teamauswahl in Wardogs."));
         panel.Children.Add(Hint($"{BuildDescription} · {VariantDescription}"));

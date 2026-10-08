@@ -74,6 +74,8 @@ public sealed partial class MainWindow
                 await Settle();
                 Check(!dirty, "Navigation does not change settings");
                 Check(page is not (0 or 3) || previewPane.Parent == (page == 0 ? setupPreviewSlot : diagnosticPreviewSlot), "Preview belongs to selected task");
+                if (page is 0 or 3)
+                    Check(previewHost.ActualHeight <= ((FrameworkElement)previewHost.Parent).ActualHeight + 1, "Preview fits its frame without clipping at either window size");
                 SaveRender(Path.Combine(directory, $"{size.Item1}-{page + 1}.png"));
             }
             ShowPage(2);

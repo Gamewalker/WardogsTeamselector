@@ -1,197 +1,68 @@
 ---
 name: WardogsTeamselector
-description: Dunkle native Windows-Werkzeugoberfläche neben dem Spiel.
+description: Dunkles natives Windows-Werkzeug mit einer einheitlichen Oberfläche im Windows-11-Stil.
 colors:
-  background: "#131a1e"
+  background: "#1c1e22"
+  content: "#25282d"
+  surface: "#202328"
+  control: "#303338"
+  input: "#1d2024"
   text: "#f5f5f5"
   muted: "#9fb1b9"
-  border: "#414f55"
-  row: "#1c262b"
-  row-alternate: "#232d32"
-  table-header: "#303e45"
+  border: "#3e434a"
+  control-border: "#50545a"
+  accent: "#91c8f6"
+  accent-text: "#102434"
+  disabled-text: "#aeb4be"
   team-blue: "#1670a3"
   team-red: "#a43835"
   team-green: "#227c4d"
-  team-button-text: "#ffffff"
-  detected: "#78dca0"
   error: "#ffa189"
   warning: "#f5cc7b"
-  probe: "#ffd700"
-  hud-probe: "#00ffff"
-  preview-background: "#000000"
-  input-background: "#ffffff"
-  input-text: "#000000"
-  tab-background: "#e6eaec"
-typography:
-  title:
-    fontFamily: "Segoe UI"
-    fontSize: "24px"
-    fontWeight: 600
-  page-title:
-    fontFamily: "Segoe UI"
-    fontSize: "21px"
-    fontWeight: 600
-  team-button:
-    fontFamily: "Segoe UI"
-    fontSize: "18px"
-    fontWeight: 600
-  team-hotkey:
-    fontFamily: "Segoe UI"
-    fontSize: "26px"
-    fontWeight: 600
-  heading:
-    fontFamily: "Segoe UI"
-    fontSize: "17px"
-    fontWeight: 600
-  body:
-    fontFamily: "Segoe UI"
-    fontSize: "14px"
-    fontWeight: 400
-spacing:
-  field-padding: "6px"
-  action-gap: "8px"
-  team-gap: "12px"
-  content-padding: "16px"
-  outer-margin: "20px"
-components:
-  button:
-    textColor: "{colors.input-text}"
-    padding: "8px 12px"
-  button-team-blue:
-    backgroundColor: "{colors.team-blue}"
-    textColor: "{colors.team-button-text}"
-    padding: "8px 12px"
-  button-team-red:
-    backgroundColor: "{colors.team-red}"
-    textColor: "{colors.team-button-text}"
-    padding: "8px 12px"
-  button-team-green:
-    backgroundColor: "{colors.team-green}"
-    textColor: "{colors.team-button-text}"
-    padding: "8px 12px"
-  text-field:
-    backgroundColor: "{colors.input-background}"
-    textColor: "{colors.input-text}"
-    padding: "6px"
 ---
 
 # Design System: WardogsTeamselector
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
-## Overview
+## Visuelle Richtung
 
-**Creative North Star: "Windows-Werkzeug neben dem Spiel"**
+Die App bleibt ein dunkles natives Windows-Werkzeug neben dem Spiel. Die gewünschte Windows-11-Anmutung entsteht durch einheitliche tonale Flächen, dezente Rundungen, klare Gruppen, Segoe UI und konsistente Linien-Icons. Anwendungssymbol, Teamfarben, deutsche Beschriftungen und der Ablauf mit Einrichtung, Betrieb, Konfiguration und Diagnose bleiben erhalten.
 
-Die bestätigte Identität bleibt eine dunkle, kompakte native Windows-Werkzeugoberfläche. Segoe UI, ausgeschriebene deutsche Beschriftungen, Teamfarben und das vorhandene Anwendungssymbol verbinden das Werkzeug mit Wardogs. Helle native Bedienelemente stehen auf dunklem Grund; ihre Windows-/WPF-Zustände gehören zur Oberfläche.
+Die gemeinsame Kontrollgestaltung liegt in `src/WardogsTeamselector/Theme.xaml`; Vektor-Icons und gemeinsame Flächen in `MainWindow.Theme.cs`. `MainWindow.Layout.cs` ordnet die Bereiche. Das Theme gilt auch im Fenster „Über die App“.
 
-Die gebaute Anordnung trennt Einrichtung, Betrieb, Konfiguration und Diagnose. Sichtbare Rückmeldungen erklären Lauf, Testmodus, Fehler und Speicherzustand. Die visuelle Quelle sind `src/WardogsTeamselector/MainWindow.Layout.cs` und `MainWindow.cs`; die aktuellen Ansichten liegen unter `artifacts/operator-status-with-runtime/` und `artifacts/operator-status-without-runtime/`. Die bestehende Palette und die Bildassets bleiben erhalten.
+## Typografie und Icons
 
-**Key Characteristics:**
+Segoe UI trägt die gesamte Oberfläche. Titel: 24 DIP, Seitentitel: 21 DIP, Gruppen: 17 DIP, laufender Zustand: 32 DIP, Teamnamen: 18 DIP, Teamhotkeys: 26 DIP, Fließtext: 14 DIP. Titel und Gruppen sind Semibold. Hinweise umbrechen mit 20 DIP Zeilenhöhe.
 
-- Dunkle tonale Flächen mit hellen nativen Windows-Kontrollen.
-- Teamfarben mit Teamnamen und registrierten F-Tasten.
-- Dauerhaft sichtbarer Stopp, globaler Laufstatus und Profilfußleiste.
-- Vorschau und Messwerte bei Einrichtung und Diagnose.
+Die eigenen Vektor-Icons verwenden ein gemeinsames 24er-Koordinatensystem, 1,7 DIP Strichstärke und abgerundete Linienenden. Aktionen und Navigation zeigen 18 DIP große Icons; Teamaktivierung verwendet 20 DIP. Icons ergänzen sichtbare Beschriftungen. Buttons erhalten weiterhin ausdrücklich zugängliche Aktionsnamen; die Teamnamen enthalten auch Hotkey und Aktivierungszustand.
 
-## Colors
+## Flächen und Abstände
 
-Anthrazit trägt die Oberfläche, gedämpftes Blaugrau erklärt sie und die drei Teamfarben kennzeichnen die Teamwahl. Die Frontmatter-Werte sind die Farbquelle.
+Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Laufstatus, Info und Stopp. Die feste Profilfußleiste hat eine eigene gerahmte Fläche und 16 × 12 DIP Innenabstand.
 
-### Primary
+Einrichtung verwendet eine 320-DIP-Spalte, Diagnose eine 420-DIP-Spalte. Ein eigener 24-DIP-Zwischenraum mit mittiger 1-DIP-Linie trennt Formulare und Bildvorschau. Konfiguration verwendet zwei gleich breite, gerahmte Flächen mit 18 DIP Innenabstand und 20 DIP Abstand zueinander. Gruppenüberschriften haben 24 DIP Abstand davor und 12 DIP danach.
 
-**Teamblau**, **Teamrot** und **Teamgrün** tragen Aktivierungstasten, Teamrahmen und Mittelpunkte im Bild. Weiße Tastenbeschriftungen ergänzen die ausgeschriebenen Namen. Teamrot trägt außerdem die globale Stopptaste während eines Laufs.
+Scrollbereiche reservieren zusätzlich 16 DIP rechts und 8 DIP unten für Abstand zwischen Inhalt und Scrollleiste. Die dunklen Scrollleisten sind 14 DIP breit und unterstützen Ziehen, Seitenklicks, Mausrad und Tastatur. Formulare scrollen unabhängig von der Bildvorschau. Status, Stopp und Profilaktionen bleiben erreichbar.
 
-### Secondary
+## Kontrollen und Zustände
 
-**Erkennungsgrün** hebt einen positiven Befund mit Text und Score sowie den Zustand „Klickt“ hervor. **Fehlerkoralle** markiert Fehlertext und betroffene Eingaben; **Warnsand** ungespeicherte Änderungen, echte Klicks und den Wartezustand. **Messgelb** und **HUD-Cyan** unterscheiden die Dialog- und HUD-Konturen.
+Buttons haben mindestens 40 DIP Höhe, 14 × 9 DIP Innenabstand, 6 DIP Rundung und einen feinen Rahmen. Sekundäre Aktionen sind dunkel mit heller Schrift. Profil speichern und Einrichtung abschließen tragen die hellblaue Akzentfarbe mit dunkler Schrift. Hover hellt die Fläche leicht auf, Drücken dunkelt sie ab. Tastaturfokus zeigt einen 2-DIP-Akzentrahmen. Deaktivierte Buttons verwenden eine gedämpfte dunkle Fläche und lesbare graue Schrift.
 
-### Neutral
+Die drei Teamtasten sind mindestens 144 DIP hoch und behalten ihre Blau-, Rot- und Grünflächen sowie weiße Schrift. Nur das laufende Team erhält einen weißen 3-DIP-Außenrahmen und „Aktiv · wartet“ oder „Aktiv · klickt“. Schnelle Teamwechsel aktualisieren die Anzeige unmittelbar, auch bei abgeschalteter Vorschau. Stopp ist nur während eines Laufs aktiv und dann rot.
 
-Fenstergrund, dunkle Flächen, Wechselzeilen und Tabellenkopf verwenden die vorhandenen Anthrazitabstufungen. Helltext trägt Hauptinformationen, Hinweisblaugrau Erklärungen und Trennblaugrau Rahmen und Linien. Schwarz umgibt die proportionale Bildvorschau. Textfelder sind weiß mit schwarzem Text; Tabs besitzen eine helle Basis. Windows/WPF liefert die tatsächliche Auswahl-, Hover- und Fokusdarstellung nativer Kontrollen.
+Eingaben sind dunkel, mindestens 38 DIP hoch und haben 10 × 8 DIP Innenabstand sowie 5 DIP Rundung. Textfelder zeigen bei Fokus eine Akzentlinie; der Fehlerrahmen bleibt erhalten. Auswahlfelder verwenden dunkle Popups, helle Schrift und unterscheidbare Auswahl- und Hoverflächen. Checkboxen haben eine 18-DIP-Kontur mit 4 DIP Rundung und eine hellblaue Markierung. Expander zeigen eine Trennlinie und einen Richtungswinkel.
 
-**The Teamzuordnung Rule.** Teamfarben bleiben zwischen Aktivierung und Bildmarkierung gleich; Teamname und Zustand bleiben zusätzlich als Text lesbar.
+Die vier Register zeigen jeweils ein Icon und ihre Aufgabenbezeichnung. Die Auswahl erhält eine tonale Fläche und eine kurze hellblaue Linie. Hover und Tastaturfokus bleiben eigenständig sichtbar. Die native Fensterleiste und Systemdialoge bleiben Windows-Kontrollen.
 
-## Typography
+## Betrieb, Vorschau und Diagnose
 
-**Body Font:** Segoe UI. Dieselbe native Schrift trägt Titel, Kontrollen und Diagnose; es gibt keine separate dekorative Display- oder Monospace-Schrift. Die Frontmatter-Werte in `px` stehen für WPF-Geräteeinheiten (DIP), nicht für physische Bildschirm-Pixel.
+Der Betrieb beginnt mit einer zentrierten Laufanzeige in einer gerahmten Fläche mit 8 DIP Rundung. Zustand, Grund, Zähler und Test-/Echtmodus bleiben ausgeschrieben. Warten verwendet Warnfarbe, Klicken Erkennungsgrün; der Laufrahmen verwendet die aktive Teamfarbe.
 
-### Hierarchy
+Die Bildvorschau behält ihr Seitenverhältnis auf Schwarz. Quelle, Geometrie, Dialog- und HUD-Befund stehen darüber, die Legende darunter. Teamflächen, Dialogprüfung und HUD-Prüfung bleiben farblich konsistent. Die Vorschau ist im Bereich Einrichtung und Diagnose sichtbar. Referenzbilder sind als statisch gekennzeichnet und senden keine Eingaben.
 
-- **Title:** Anwendungstitel.
-- **Page title:** Einstieg und Aufgabenbeschreibung jedes Bereichs.
-- **Team button:** Teamname auf den drei Aktivierungstasten.
-- **Team hotkey:** große, zentrierte F-Taste unter dem Teamnamen. „Hotkey inaktiv“ verwendet stattdessen 16 DIP.
-- **Heading:** wiederkehrende Gruppen wie Teamflächen, Tastenkürzel und Protokoll.
-- **Body:** Felder, Tabs, globaler Status, Hinweise und Diagnose. Hinweise haben 20 DIP Zeilenhöhe; Zähler im Betrieb sind etwas größer (16 DIP).
+Die Diagnose verwendet eine schreibgeschützte Tabelle mit dunklen Wechselzeilen und horizontalen Linien sowie ein umbrechendes Ereignisprotokoll. Die gesamte linke Spalte scrollt, Tabelle und Protokoll haben zusätzlich eigene Scrollbereiche. Der Testmodus-Schalter bleibt ausschließlich in Diagnose.
 
-Die zentrierte Laufanzeige im Betrieb verwendet 32 DIP und Semibold für den Zustand, 17 DIP für den Grund und 16 DIP für den Zähler. Modustext und Aktions-/Phasenzeile der Teamtasten verwenden die Body-Größe.
+## Verifikation
 
-**The Lesbarer Zustand Rule.** Lauf, Eingabemodus, Speicherzustand und Erkennung werden ausgeschrieben. Hinweise, Fehler, Labels und Zähler umbrechen innerhalb ihrer Fläche.
-
-## Layout
-
-Das Fenster startet mit 1180 × 820 DIP und hat eine Mindestgröße von 920 × 660 DIP. Außenabstand: 20 DIP; Registerinhalt: 16 DIP. Oberhalb der Tabs stehen Anwendungssymbol, Titel, globaler Laufstatus mit Test-/Echtmodus und rechts die Stopptaste. Ein sichtbarer Fehler fügt sich darunter ein. Die feste Fußleiste enthält links den Profilzustand und rechts Verwerfen sowie Speichern.
-
-Vier nummerierte native Tabs bilden die Aufgabenfolge: **1. Einrichtung**, **2. Betrieb**, **3. Konfiguration**, **4. Diagnose**. Einrichtung hat links eine 320-DIP-Formularspalte mit 20 DIP Abstand zur flexiblen Vorschau; das Formular scrollt unabhängig vom Bild. Betrieb stellt die zentrierte Laufanzeige über drei gleich breite Teamtasten in einem vertikalen Scrollbereich. Konfiguration hat zwei gleich breite Spalten mit 28 DIP Zwischenraum in einem gemeinsamen Scrollbereich. Diagnose verwendet links 420 DIP für den Testmodus-Schalter, Referenzaktionen, Tabelle und Protokoll und rechts die flexible Vorschau. Die linke Diagnosespalte scrollt als Ganzes; ihre Tabelle und ihr Protokoll haben zusätzlich eigene Scrollbereiche.
-
-Bei Mindestgröße bleibt die Anordnung erhalten: Aktionen und Texte umbrechen, umfangreiche Formulare scrollen. Prozentwerte, manuelle Spielgrenzen und Dialogkalibrierung liegen in zunächst geschlossenen Expandern. Die gemeinsame Vorschau erscheint ausschließlich in Einrichtung und Diagnose. Neue oder ungültige Profile öffnen Einrichtung; ein gespeichertes gültiges Profil öffnet Betrieb.
-
-**The Dauerhaft erreichbar Rule.** Navigation und Scrollen lassen globalen Status, Stopp und Profilaktionen an ihren festen Positionen.
-
-## Elevation & Depth
-
-Die eigene Oberfläche verwendet keine Schatten oder dekorativen Animationen. Tonale Flächen, horizontale Trennlinien und Rahmen vermitteln Struktur. Buttons, Tabs, Eingaben, Auswahlfelder, Checkboxen, Expander und Scrollleisten behalten native Windows-/WPF-Interaktionen einschließlich Fokus, Hover und Auswahl.
-
-## Shapes
-
-Rechteckige Kontroll- und Bildflächen bestimmen die Form; eigene abgerundete Karten oder Pillen sind nicht implementiert. Die schwarze Vorschaufläche beschneidet ihr Overlay und erhält das Bildseitenverhältnis. Dialog- und HUD-Messflächen verwenden 1 DIP Kontur; Teamflächen 2 DIP Kontur mit einem 8-DIP-Mittelpunkt. Die aktuelle Zeichenauswahl verwendet ein weiß gestricheltes Rechteck mit 2 DIP Kontur und schwacher transparenter Füllung.
-
-## Components
-
-### Buttons
-
-Deutsche Verben benennen die Aktion. Die Basis hat mindestens 36 DIP Höhe, 12 DIP horizontalen und 8 DIP vertikalen Innenabstand. Normale Aktionen verwenden native helle Buttons. Teamtasten sind mindestens 112 DIP hoch, gleich breit und mit 12 DIP Abstand angeordnet. Ihre zentrierten Zeilen zeigen Teamname, registrierte F-Taste oder „Hotkey inaktiv“ und „Aktivieren“ beziehungsweise die laufende Phase. Die globale Stopptaste bleibt im Kopf sichtbar und ist nur während „Wartet“ oder „Klickt“ aktiviert: weißer Text auf Teamrot. Vor der Aktivierung und nach dem Stopp zeigt sie explizit DimGray-Text (#696969) auf dem hellen Registergrund und erklärt im Tooltip „Kein Lauf aktiv. Zuerst ein Team aktivieren.“
-
-**The Laufmarkierung Rule.** Nur das laufende Team erhält einen weißen 3-DIP-Rahmen und „Aktiv · wartet“ oder „Aktiv · klickt“. Nach dem Stopp verschwinden Rahmen und Aktivmarkierung; alle Teamtasten zeigen wieder „Aktivieren“.
-
-### Inputs / Fields
-
-Native helle Felder stehen auf dunklem Grund. Textfelder haben mindestens 32 DIP Höhe, 6 DIP Innenabstand und 6 DIP unteren Abstand. Labels sind ihren Feldern zugeordnet; Eingaben und Teamhotkeys haben zugängliche Namen. Validierungsfehler wechseln zum zuständigen Bereich, öffnen nötige Expander, markieren die Eingabe, scrollen sie in Sicht und setzen den Fokus. Doppelte F-Tasten nennen Teams und Taste und fokussieren das zu ändernde Auswahlfeld. Ein sonst transparenter 2-DIP-Rahmen um die Hotkeyfelder stellt die Fehlermarkierung unabhängig vom nativen ComboBox-Theme sicher.
-
-### Navigation und Profil
-
-Die vier sichtbaren Tabs behalten native Auswahlzustände. Kontextaktionen im Betrieb führen zur Einrichtung, Konfiguration oder zu „Diagnose / Testmodus“. Reine Navigation verändert weder Profil noch Lauf. Die Fußleiste unterscheidet „Standardprofil · noch nicht gespeichert“, „Einstellungen gespeichert“ und „Ungespeicherte Änderungen“; Verwerfen erscheint bei Änderungen. Aktivierung übernimmt gültige aktuelle Eingaben, ohne sie automatisch zu speichern. Beim Schließen mit Änderungen bietet ein natives Dialogfenster Speichern, Schließen ohne Speichern oder Abbrechen.
-
-### Laufstatus
-
-Der Kopf zeigt „Gestoppt“, „Wartet“ oder „Klickt“ mit Team und Eingabemodus. Betrieb beginnt mit einer dunklen, gerahmten Laufanzeige: Überschrift, großer Zustand, Grund, Klickanzahl samt letztem Intervall und Modustext stehen zentriert übereinander. Warten verwendet Warnsand, Klicken Erkennungsgrün; während eines Laufs trägt der 2-DIP-Rahmen die aktive Teamfarbe, sonst Trennblaugrau. Echte Klicks erhalten Warnfarbe und ausdrücklichen Modustext. Die Betriebsübersicht nennt die Beitrittsbedingung: fünf HUD-Balken für mindestens 0,5 Sekunden. Der Testmodus-Schalter steht ausschließlich in Diagnose.
-
-### Bildprüfung und Kalibrierung
-
-Quelle, Geometrie, Fokus und getrennte Dialog-/HUD-Befunde stehen über dem Bild; die Legende erklärt die Konturen. „Live-Bild laden“ und „Bild speichern“ ergänzen die Vorschau. Leere oder fehlgeschlagene Aufnahmen zeigen einen nächsten Schritt. Statische Referenzen sind beschriftet und senden keine Eingaben.
-
-Zeichnen muss in Einrichtung ausdrücklich eingeschaltet werden und ist nur bei gestopptem Lauf möglich. Kreuzcursor und begrenztes Auswahlrechteck geben Rückmeldung; während des Zuges bleibt das Bild bestehen. Abschluss, Navigation oder Verlust der Mausaufnahme räumen die Zugrückmeldung auf. Prozentwerte bleiben zunächst Entwürfe und werden beim Teamwechsel, Prüfen, Speichern oder Aktivieren validiert und übernommen. Ungültige Werte halten das betreffende Team und Fehlerfeld korrigierbar.
-
-Automatische Vorschauaufnahmen laufen nominell alle 350 ms nur in Einrichtung und Diagnose, sofern aktiviert und kein Referenzbild geöffnet ist. Nötige Steuerungserkennung läuft unabhängig davon; manuelles Laden und Referenzprüfungen bleiben bei ausgeschalteter Vorschau verfügbar.
-
-### Diagnose
-
-Der Testmodus-Schalter steht oberhalb der Referenzaktionen und beendet beim Umschalten einen Lauf. Die schreibgeschützte Tabelle zeigt „Messfläche“, „Score“, „Soll“ und „Ist“ auf dunklen alternierenden Zeilen mit horizontalen Trennlinien; sie ist 160 DIP hoch. Das 120 DIP hohe, schreibgeschützte und umbrechende Protokoll trägt Zeitstempel und folgt dem neuesten Eintrag. Die zusätzliche äußere Scrollfläche hält Schalter, Referenzprüfungen, Messwerte und Protokoll auch bei Mindestgröße erreichbar.
-
-## Do's and Don'ts
-
-### Do:
-
-- **Do** deutsche Aktionsbeschriftungen, native Kontrollzustände und die bestehende Segoe-UI-Hierarchie beibehalten.
-- **Do** Teamfarben konsistent zwischen Aktivierung und Bildmarkierungen verwenden und mit Text ergänzen.
-- **Do** Status, Stopp und Profilaktionen außerhalb der scrollenden Aufgabenflächen erhalten.
-- **Do** Fehler mit sichtbarer Erklärung und Tastaturfokus am zuständigen Feld korrigierbar machen.
-- **Do** Bildquelle, Referenzmodus und erforderliches Einschalten des Zeichnens erklären.
-
-### Don't:
-
-- **Don't** Farbe als einzige Zustands- oder Teaminformation verwenden.
-- **Don't** native helle Eingaben und Tabs als vollständig selbst gestaltetes dunkles Kontrolltheme dokumentieren.
-- **Don't** Teamaktivierung als automatisches Speichern darstellen oder Entwürfe als gespeichertes Profil beschriften.
-- **Don't** die vorhandene Windows-Schrift oder Anwendungsgrafik durch ein dekoratives neues Thema ersetzen.
+Die GUI-Prüfung erfasst alle vier Bereiche bei Standard- und Mindestgröße, Kalibrierung, Validierungsfokus, Hotkeykonflikte, Speicherzustand, Vorschau, Referenzbilder, Warten, schnelle Teamwechsel, Stopp und das Infofenster. Sie speichert keine Benutzerprofile und sendet keine Mauseingaben. `clicking-fixture.png` zeigt nur einen eingespeisten UI-Zustand. Neue Ansichten liegen lokal unter `artifacts/windows11-ui-confirm/`; die Veröffentlichung wird zusätzlich für beide portablen EXE-Varianten geprüft.
