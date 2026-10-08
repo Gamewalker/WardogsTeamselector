@@ -1,5 +1,7 @@
 # Prüfung des Release-Builds
 
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
 ## Automatischer Spielfokus (8. Oktober 2026)
 
 Die Einstellung **Spiel nach Teamaktivierung in den Vordergrund holen** ist standardmäßig aktiv, auch beim Laden alter Profile ohne diesen Wert. Die Profilprüfung deckt die dauerhaft gespeicherte Deaktivierung ab. Der GUI-Prüflauf prüft den Standardwert, die Übernahme der deaktivierten Option bei einer Teamaktivierung und das Weiterlaufen eines wartenden Versuchs beim Umschalten. Im GUI-Prüflauf selbst wird kein fremdes Fenster aktiviert.
@@ -43,3 +45,4 @@ Ausgeführt am 6. Oktober 2026 auf Windows x64.
 - Unabhängige Prüfung: kein wesentlicher Logikfehler gefunden; Kontrast des blauen Buttons korrigiert und mit 5,41:1 bestätigt.
 
 Es wurden keine echten Mauseingaben an Wardogs gesendet. Tatsächliche Spielaufnahme, HDR/exklusives Vollbild, reale UI-Skalierung und Akzeptanz der Eingaben durch das Spiel bleiben unbestätigt. Die EXE wurde auf diesem Rechner getestet, nicht auf einem frisch aufgesetzten Windows ohne .NET; die Veröffentlichung ist self-contained mit gebündelter Runtime.
+

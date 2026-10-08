@@ -1,5 +1,7 @@
 # WardogsTeamselector
 
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
 <!-- impeccable:product-schema 1 -->
 
 ## Platform
@@ -41,10 +43,12 @@ Zusätzliche Vorschauaufnahmen und PNG-Konvertierungen laufen nur in Einrichtung
 
 ## Belege
 
-Implementierung: `src/WardogsTeamselector/MainWindow.Layout.cs`, `MainWindow.cs` und `Automation/AutomationController.cs`. Referenzen: `Assets/reference.png` (3838 × 2158 Pixel) und das eingebettete HUD-Referenzbild im Anwendungsprojekt. `README.md` ist die aktuelle Bedienanleitung; `DESIGN.md` beschreibt die native visuelle Identität.
+Implementierung: `src/WardogsTeamselector/MainWindow.Layout.cs`, `MainWindow.cs` und `Automation/AutomationController.cs`. Referenzen: `Assets/reference.png` (3838 × 2158 Pixel) und das eingebettete HUD-Referenzbild im Anwendungsprojekt. [usage.md](usage.md) ist die ausführliche Bedienanleitung; `DESIGN.md` beschreibt die native visuelle Identität.
 
 Die aktuellen GUI-Prüfungen und Ansichten unter `artifacts/operator-status-with-runtime/` und `artifacts/operator-status-without-runtime/` erfassen vier Bereiche bei Standard- und Mindestgröße, Startzuordnung, Zeichenschutz, Teamflächenentwürfe, Validierungsfokus, doppelte Hotkeys, Speicherzustand, Vorschaulebenszyklus, den Testmodus nur in Diagnose, zentrierte Laufanzeige und F-Tasten, exklusive Teammarkierung beim Warten und Wechseln sowie deren Entfernen beim Stopp und die bedingt aktive Stopptaste. Referenzen und der Zustand ohne Spielfenster bleiben geprüft. Dabei werden keine Mauseingaben gesendet und keine Benutzerprofile gespeichert. `clicking-fixture.png` zeigt ausschließlich einen eingespeisten UI-Snapshot bei gestopptem Controller und belegt keinen realen Klicklauf. Die reale Aufnahme-/SendInput-Kompatibilität im Wardogs-Spiel bleibt mit einer tatsächlichen Spielaufnahme und echten Eingaben zu prüfen.
 
 ## Darstellung
 
 Die vom Nutzer bestätigte dunkle native Windows-Werkzeugoberfläche bleibt erhalten: Segoe UI, vorhandenes Anwendungssymbol, Teamfarben, klare deutsche Labels und native helle Kontrollen. Die Überarbeitung ordnet die Bedienung nach Aufgabe und erhält Status, Stopp und Profilaktionen unabhängig vom aktiven Bereich. Bestehende Bildassets bleiben unverändert.
+
+

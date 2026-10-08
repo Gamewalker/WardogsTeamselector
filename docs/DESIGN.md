@@ -77,6 +77,8 @@ components:
 
 # Design System: WardogsTeamselector
 
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
 ## Overview
 
 **Creative North Star: "Windows-Werkzeug neben dem Spiel"**
@@ -193,3 +195,4 @@ Der Testmodus-Schalter steht oberhalb der Referenzaktionen und beendet beim Umsc
 - **Don't** native helle Eingaben und Tabs als vollständig selbst gestaltetes dunkles Kontrolltheme dokumentieren.
 - **Don't** Teamaktivierung als automatisches Speichern darstellen oder Entwürfe als gespeichertes Profil beschriften.
 - **Don't** die vorhandene Windows-Schrift oder Anwendungsgrafik durch ein dekoratives neues Thema ersetzen.
+

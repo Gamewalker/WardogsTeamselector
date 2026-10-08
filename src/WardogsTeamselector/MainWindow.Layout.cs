@@ -15,7 +15,7 @@ namespace WardogsTeamselector;
 // FIRST VIEWPORT: Persistent status and conditional stop; operation leads with a
 // centered run display above team buttons with centered hotkeys and active markers.
 // FORM: User-specified four-area workflow, code-led within the established identity.
-// FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+// FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, docs/DESIGN.md, and every shipping raster carrying its provenance
 public sealed partial class MainWindow
 {
     private readonly TabControl pages = new();

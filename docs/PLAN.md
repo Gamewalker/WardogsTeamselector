@@ -1,6 +1,8 @@
 # WardogsTeamselector – Umsetzungsplan
 
-Status: Implementiert und als portable EXE veröffentlicht. Bild-, Steuerungs-, Profil- und Plattformprüfungen sowie GUI-Startprüfung erfolgreich; echte Wardogs-Aufnahme und akzeptierte Spieleingaben noch praktisch zu prüfen. Details und Benutzung in README.md.
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
+Status: Implementiert und als portable EXE veröffentlicht. Bild-, Steuerungs-, Profil- und Plattformprüfungen sowie GUI-Startprüfung erfolgreich; echte Wardogs-Aufnahme und akzeptierte Spieleingaben noch praktisch zu prüfen. Details und Benutzung in [usage.md](usage.md).
 
 ## Ziel und Technik
 
@@ -72,3 +74,5 @@ Technische Quellen:
 - https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview
 - https://learn.microsoft.com/en-us/windows/win32/hidpi/setting-the-default-dpi-awareness-for-a-process
 - https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput
+
+

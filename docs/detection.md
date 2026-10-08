@@ -1,5 +1,7 @@
 # Dialogerkennung
 
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
 `DialogDetector : IDialogDetector` prüft neun kleine, gleichmäßige Pixelbereiche und vier äußere Rahmenkanten. Alle Positionen basieren auf der gelieferten Referenz (3838 × 2158). Überschrift, Teamembleme und Spielerzahlen liegen außerhalb der Messflächen; gesperrte Teams beeinflussen die Freigabe nicht.
 
 `DialogDetector.GetProbeAreas(bitmapSize, settings)` liefert `DetectionProbeArea(Name, Bounds)` für das Vorschau-Overlay. `Bounds` sind lokale Pixelkoordinaten im aufgenommenen Bitmap, ohne Desktop-/Monitorursprung. Bei der Darstellung mit `Stretch=Uniform` müssen die Bitmapkoordinaten um den Vorschau-Skalierungsfaktor und den Letterbox-Versatz transformiert werden.
@@ -11,3 +13,4 @@ Pro Pixelbereich werden RGB-Mediane, Abweichung vom Referenzgrau und mediane Str
 Prüfung: `.tools\dotnet\dotnet.exe run --project tests/DetectionChecks/DetectionChecks.csproj` vom Repository-Stamm. Die PNG-Tests prüfen Referenz, 1080p, 1440p, 4K, veränderte Überschrift/Embleme/Zahlen, leere Flächen, entfernten bzw. verdeckten Dialog und Scale/Offset-Kalibrierung. Sie bestätigen proportional skalierte Bildgeometrie; tatsächliche UI-Skalierung, HDR, Gamma und Aufnahmemodus im Spiel müssen in der Live-Vorschau überprüft werden.
 
 Die Erkennung ist strukturell, nicht semantisch. Eine andere Anwendung mit exakt nachgebildetem Dialog kann dieselben Pixelwerte liefern. Daher muss die Steuerung zusätzlich Spielfenster, Vordergrund und gültige Zielgeometrie prüfen.
+

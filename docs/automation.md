@@ -1,5 +1,7 @@
 # Steuerung und Hotkeys
 
+[← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
+
 `AutomationController(IScreenService, IDialogDetector, IClickSink, IJoinedScreenDetector)` bietet
 `Start(Team, AppSettings)`, `Stop(string reason = "ESC")`, `Snapshot`,
 `event Action<AutomationSnapshot>? Updated` und `Dispose()`.
@@ -51,3 +53,4 @@ Sie prüfen ungültige Intervalle, Wartezustand, Stabilisierung, Fokus/Kalibrier
 Dialogverlust, Geometriewechsel, kopierte Einstellungen, parallele Teamstarts,
 die tatsächliche Zeituntergrenze, Testmodus, Aufnahmefehler und einen bewusst
 blockierten Eingabesink gegen synchronen Stopp.
+

@@ -14,11 +14,11 @@ def release_notes(base, head):
     revision = f"{base}..{head}" if base else head
     commits = command("git", "log", "--reverse", "--format=- %s (%h)", revision)
     if base:
-        files = command("git", "diff", "--name-only", "--diff-filter=AM", base, head,
-                        "--", ".github/release-notes/*.md")
+        files = command("git", "diff", "--name-only", "--find-renames", "--diff-filter=AM", base, head,
+                        "--", "docs/releases/*.md", ".github/release-notes/*.md")
     else:
         files = command("git", "ls-tree", "-r", "--name-only", head,
-                        "--", ".github/release-notes/")
+                        "--", "docs/releases/", ".github/release-notes/")
     explanations = [command("git", "show", f"{head}:{name}")
                     for name in files.splitlines() if name.endswith(".md")]
     body = "## Änderungen\n\n" + ("\n\n".join(explanations) if explanations else

@@ -9,6 +9,32 @@ from release import release_notes
 
 
 class ReleaseNotesTests(unittest.TestCase):
+    def test_moving_legacy_notes_does_not_repeat_them(self):
+        previous_directory = Path.cwd()
+        with tempfile.TemporaryDirectory() as directory:
+            try:
+                os.chdir(directory)
+                subprocess.run(['git', 'init', '-q'], check=True)
+                subprocess.run(['git', 'config', 'user.name', 'Release test'], check=True)
+                subprocess.run(['git', 'config', 'user.email', 'test@example.com'], check=True)
+                legacy = Path('.github/release-notes/old.md')
+                legacy.parent.mkdir(parents=True)
+                legacy.write_text('Earlier release explanation.', encoding='utf-8')
+                subprocess.run(['git', 'add', '.'], check=True)
+                subprocess.run(['git', 'commit', '-qm', 'Earlier release'], check=True)
+                self.assertIn('Earlier release explanation.', release_notes(None, 'HEAD'))
+                Path('docs/releases').mkdir(parents=True)
+                legacy.rename('docs/releases/old.md')
+                Path('docs/releases/new.md').write_text('New release explanation.', encoding='utf-8')
+                subprocess.run(['git', 'add', '-A'], check=True)
+                subprocess.run(['git', 'commit', '-qm', 'Move documentation'], check=True)
+                incremental = release_notes('HEAD~1', 'HEAD')
+                self.assertNotIn('Earlier release explanation.', incremental)
+                self.assertIn('New release explanation.', incremental)
+                self.assertIn('Earlier release explanation.', release_notes(None, 'HEAD'))
+            finally:
+                os.chdir(previous_directory)
+
     def test_initial_and_incremental_notes(self):
         previous_directory = Path.cwd()
         with tempfile.TemporaryDirectory() as directory:
@@ -17,7 +43,7 @@ class ReleaseNotesTests(unittest.TestCase):
                 subprocess.run(['git', 'init', '-q'], check=True)
                 subprocess.run(['git', 'config', 'user.name', 'Release test'], check=True)
                 subprocess.run(['git', 'config', 'user.email', 'test@example.com'], check=True)
-                notes = Path('.github/release-notes')
+                notes = Path('docs/releases')
                 notes.mkdir(parents=True)
                 (notes / 'first.md').write_text('### Erste Änderung\n\n- Teamklicks verbessert.', encoding='utf-8')
                 subprocess.run(['git', 'add', '.'], check=True)
