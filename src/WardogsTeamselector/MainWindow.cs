@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -43,6 +44,7 @@ public sealed partial class MainWindow : Window
     private bool uiUpdateQueued;
     private long lastUiUpdate;
     private RunState? lastUiState;
+    private Team? lastUiTeam;
     private string? lastUiReason;
     private readonly Dictionary<string, TextBox> fields = new();
     private readonly Dictionary<Team, ComboBox> keyBoxes = new();
@@ -76,7 +78,9 @@ public sealed partial class MainWindow : Window
         smokeMode = !registerGlobalHotkeys;
         Title = $"WardogsTeamselector · {BuildDescription}"; Width = 1180; Height = 820; MinWidth = 920; MinHeight = 660;
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/app.ico"));
-        Background = new SolidColorBrush(Color.FromRgb(19, 26, 30)); Foreground = Brushes.WhiteSmoke; FontFamily = new System.Windows.Media.FontFamily("Segoe UI"); FontSize = 14;
+        Background = BrushFrom(28, 30, 34); Foreground = Brushes.WhiteSmoke; FontFamily = new System.Windows.Media.FontFamily("Segoe UI"); FontSize = 14;
+        Resources.MergedDictionaries.Add(CreateTheme());
+        UseLayoutRounding = true;
         automation = new(screen, detector, new WindowsClickSink(), joinedDetector);
         automation.Updated += OnAutomation;
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
@@ -229,9 +233,9 @@ public sealed partial class MainWindow : Window
         {
             pendingUiSnapshot = snapshot;
             var now = Stopwatch.GetTimestamp();
-            bool changed = lastUiState != snapshot.State || lastUiReason != snapshot.Reason;
+            bool changed = lastUiState != snapshot.State || lastUiTeam != snapshot.Team || lastUiReason != snapshot.Reason;
             if (uiUpdateQueued || (!changed && lastUiUpdate != 0 && Stopwatch.GetElapsedTime(lastUiUpdate, now).TotalMilliseconds < (liveUpdatesEnabled ? 250 : 1000))) return;
-            uiUpdateQueued = true; lastUiUpdate = now; lastUiState = snapshot.State; lastUiReason = snapshot.Reason;
+            uiUpdateQueued = true; lastUiUpdate = now; lastUiState = snapshot.State; lastUiTeam = snapshot.Team; lastUiReason = snapshot.Reason;
         }
         Dispatcher.BeginInvoke(() =>
         {
@@ -438,8 +442,14 @@ public sealed partial class MainWindow : Window
         Dispatcher.BeginInvoke(() => { input.BringIntoView(); input.Focus(); if (input is TextBox box) box.SelectAll(); });
     }
     private static string Format(double n) => n.ToString("0.####", CultureInfo.CurrentCulture);
-    private static TextBlock Heading(string text) => new() { Text = text, Foreground = Brushes.WhiteSmoke, FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 12, 0, 9) };
-    private static Button Button(string text, Action action) { var b = new Button { Content = text, Foreground = Brushes.Black, Padding = new Thickness(12, 8, 12, 8), Margin = new Thickness(0, 0, 8, 4), MinHeight = 36 }; b.Click += (_, _) => action(); return b; }
+    private static TextBlock Heading(string text) => new() { Text = text, Foreground = Brushes.WhiteSmoke, FontSize = 17, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 24, 0, 12), TextWrapping = TextWrapping.Wrap };
+    private static Button Button(string text, Action action)
+    {
+        var b = new Button { Content = IconLabel(text, IconForAction(text)), Margin = new Thickness(0, 0, 8, 8) };
+        AutomationProperties.SetName(b, text);
+        b.Click += (_, _) => action();
+        return b;
+    }
     private static string TeamName(Team t) => t switch { Team.Blue => "Blau", Team.Red => "Rot", _ => "Grün" };
     private static Brush TeamBrush(Team t) => new SolidColorBrush(t switch { Team.Blue => Color.FromRgb(22, 112, 163), Team.Red => Color.FromRgb(164, 56, 53), _ => Color.FromRgb(34, 124, 77) });
     private sealed record MonitorChoice(string? Id, string Name);

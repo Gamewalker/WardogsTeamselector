@@ -70,11 +70,14 @@ public sealed partial class MainWindow
         DockPanel.SetDock(errorText, Dock.Top);
         root.Children.Add(errorText);
 
-        var footer = new Grid { Margin = new Thickness(0, 12, 0, 0) };
+        var footer = new Grid();
         footer.ColumnDefinitions.Add(new());
         footer.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        DockPanel.SetDock(footer, Dock.Bottom);
-        root.Children.Add(footer);
+        var footerSurface = Section(footer);
+        footerSurface.Padding = new Thickness(16, 12, 16, 12);
+        footerSurface.Margin = new Thickness(0, 14, 0, 0);
+        DockPanel.SetDock(footerSurface, Dock.Bottom);
+        root.Children.Add(footerSurface);
         profileText.VerticalAlignment = VerticalAlignment.Center;
         profileText.TextWrapping = TextWrapping.Wrap;
         profileText.Margin = new Thickness(0, 0, 16, 0);
@@ -82,6 +85,7 @@ public sealed partial class MainWindow
         var profileActions = new StackPanel { Orientation = Orientation.Horizontal };
         discardButton = Button("Änderungen verwerfen", DiscardChanges);
         saveButton = Button("Einstellungen speichern", () => SaveSettings());
+        UseAccent(saveButton);
         saveButton.Margin = new Thickness(0);
         profileActions.Children.Add(discardButton);
         profileActions.Children.Add(saveButton);
@@ -90,7 +94,7 @@ public sealed partial class MainWindow
 
         BuildPreviewPane();
         pages.Background = Background;
-        pages.Padding = new Thickness(16);
+        pages.Padding = new Thickness(20);
         pages.BorderBrush = BorderBrushColor;
         pages.Items.Add(Page("1. Einrichtung", BuildSetup()));
         pages.Items.Add(Page("2. Betrieb", BuildOperation()));
@@ -108,16 +112,15 @@ public sealed partial class MainWindow
     private UIElement BuildSetup()
     {
         var grid = Split(320);
-        var form = new StackPanel { Margin = new Thickness(0, 0, 20, 0) };
+        var form = new StackPanel();
         grid.Children.Add(Scroll(form));
-        Grid.SetColumn(setupPreviewSlot, 1);
+        Grid.SetColumn(setupPreviewSlot, 2);
         grid.Children.Add(setupPreviewSlot);
         form.Children.Add(PageTitle("Spiel verbinden", "Wardogs öffnen und den Teamauswahlbildschirm anzeigen."));
         AddField(form, "title", "Fenstertitel enthält", 0);
         AddField(form, "process", "Prozessname enthält (ohne .exe)", 0);
         form.Children.Add(Label("Monitor", monitor));
-        monitor.MinHeight = 32;
-        monitor.Foreground = Brushes.Black;
+        monitor.MinHeight = 38;
         monitor.SelectionChanged += (_, _) => MarkDirty();
         form.Children.Add(monitor);
         var connectionActions = new WrapPanel { Margin = new Thickness(0, 10, 0, 0) };
@@ -135,8 +138,7 @@ public sealed partial class MainWindow
         form.Children.Add(Label("Team für die Kalibrierung", selectedTeam));
         selectedTeam.ItemsSource = Enum.GetValues<Team>().Select(t => new TeamChoice(t, TeamName(t))).ToList();
         selectedTeam.DisplayMemberPath = "Name";
-        selectedTeam.MinHeight = 32;
-        selectedTeam.Foreground = Brushes.Black;
+        selectedTeam.MinHeight = 38;
         selectedTeam.SelectedIndex = 0;
         selectedTeam.SelectionChanged += (_, _) => ChangeSelectedTeam();
         form.Children.Add(selectedTeam);
@@ -168,6 +170,7 @@ public sealed partial class MainWindow
         form.Children.Add(calibrated);
         form.Children.Add(Hint("Nur für andere Seitenverhältnisse als 16:9 nötig. Erst bestätigen, wenn Bild und Klickflächen stimmen."));
         var finish = Button("Speichern & zum Betrieb", () => { if (SaveSettings()) ShowPage(1); });
+        UseAccent(finish);
         finish.Margin = new Thickness(0, 18, 0, 8);
         form.Children.Add(finish);
         return grid;
@@ -201,7 +204,7 @@ public sealed partial class MainWindow
         runMode.TextAlignment = TextAlignment.Center;
         runMode.Margin = new Thickness(0, 8, 0, 0);
         currentRun.Children.Add(runMode);
-        runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), Padding = new Thickness(20), Margin = new Thickness(0, 0, 0, 20) };
+        runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(8), Padding = new Thickness(24), Margin = new Thickness(0, 0, 0, 24) };
         body.Children.Add(runPanel);
 
         body.Children.Add(Hint("Ein Team aktivieren, dann zum Spiel wechseln. Die aktive Teamtaste bleibt markiert."));
@@ -213,20 +216,25 @@ public sealed partial class MainWindow
             var t = team;
             var button = Button("", () => StartTeam(t));
             var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            var teamIcon = IconPath(ActionIcon.Play, 20);
+            teamIcon.HorizontalAlignment = HorizontalAlignment.Center;
+            teamIcon.Margin = new Thickness(0, 0, 0, 8);
+            content.Children.Add(teamIcon);
             content.Children.Add(new TextBlock { Text = TeamName(t), FontSize = 18, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center });
             var key = new TextBlock { FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 4, 0, 4) };
             var state = new TextBlock { FontSize = 14, TextAlignment = TextAlignment.Center };
             teamKeyLabels[t] = key; teamStateLabels[t] = state;
             content.Children.Add(key); content.Children.Add(state);
             button.Content = content;
-            button.MinHeight = 112;
+            button.MinHeight = 144;
             button.HorizontalContentAlignment = HorizontalAlignment.Center;
             button.VerticalContentAlignment = VerticalAlignment.Center;
             button.Background = TeamBrush(t);
+            button.BorderBrush = TeamBrush(t);
             button.Foreground = Brushes.White;
             button.Margin = new Thickness(0);
             teamButtons[t] = button;
-            var frame = new Border { Child = button, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(3), Margin = new Thickness(0, 0, team == Team.Green ? 0 : 12, 0) };
+            var frame = new Border { Child = button, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(3), CornerRadius = new CornerRadius(9), Padding = new Thickness(2), Margin = new Thickness(0, 0, team == Team.Green ? 0 : 12, 0) };
             teamFrames[t] = frame;
             Grid.SetColumn(frame, (int)team);
             teams.Children.Add(frame);
@@ -250,9 +258,12 @@ public sealed partial class MainWindow
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new()); grid.ColumnDefinitions.Add(new());
-        var left = new StackPanel { Margin = new Thickness(0, 0, 28, 0) };
-        var right = new StackPanel(); Grid.SetColumn(right, 1);
-        grid.Children.Add(left); grid.Children.Add(right);
+        var left = new StackPanel();
+        var right = new StackPanel();
+        var leftSection = Section(left);
+        leftSection.Margin = new Thickness(0, 0, 20, 0);
+        var rightSection = Section(right); Grid.SetColumn(rightSection, 1);
+        grid.Children.Add(leftSection); grid.Children.Add(rightSection);
         left.Children.Add(PageTitle("Klickverhalten", "Diese Werte gelten für den nächsten aktivierten Lauf."));
         AddField(left, "min", "Minimales Klickintervall (ms)", 2);
         AddField(left, "max", "Maximales Klickintervall (ms)", 2);
@@ -260,7 +271,7 @@ public sealed partial class MainWindow
         left.Children.Add(Heading("Globale Tastenkürzel"));
         foreach (var team in Enum.GetValues<Team>())
         {
-            var box = new ComboBox { ItemsSource = Enumerable.Range(1, 24).Select(n => "F" + n).ToList(), MinHeight = 32, Foreground = Brushes.Black, Margin = new Thickness(0, 0, 0, 8) };
+            var box = new ComboBox { ItemsSource = Enumerable.Range(1, 24).Select(n => "F" + n).ToList(), MinHeight = 38, Margin = new Thickness(0, 0, 0, 8) };
             box.Margin = new Thickness(0);
             var inputFrame = new Border { Child = box, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(2), Margin = new Thickness(0, 0, 0, 6) };
             AutomationProperties.SetName(box, "Team " + TeamName(team));
@@ -307,7 +318,7 @@ public sealed partial class MainWindow
     private UIElement BuildDiagnostics()
     {
         var grid = Split(420);
-        var detail = new Grid { Margin = new Thickness(0, 0, 20, 0) };
+        var detail = new Grid();
         detail.RowDefinitions.Add(new() { Height = GridLength.Auto });
         detail.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         detail.RowDefinitions.Add(new() { Height = GridLength.Auto });
@@ -335,7 +346,8 @@ public sealed partial class MainWindow
         probes.Foreground = Foreground;
         probes.Background = SurfaceBrush;
         probes.RowBackground = SurfaceBrush;
-        probes.AlternatingRowBackground = BrushFrom(35, 45, 50);
+        probes.AlternatingRowBackground = BrushFrom(43, 46, 52);
+        probes.BorderBrush = BorderBrushColor;
         probes.GridLinesVisibility = DataGridGridLinesVisibility.Horizontal;
         probes.HorizontalGridLinesBrush = BorderBrushColor;
         foreach (var column in new[] { ("Messfläche", "Name", 140d), ("Score", "Score", 54d), ("Soll", "Expected", 95d), ("Ist", "Actual", 95d) })
@@ -345,7 +357,7 @@ public sealed partial class MainWindow
             probes.Columns.Add(new DataGridTextColumn { Header = column.Item1, Binding = binding, Width = column.Item3 });
         }
         var headerStyle = new Style(typeof(System.Windows.Controls.Primitives.DataGridColumnHeader));
-        headerStyle.Setters.Add(new Setter(Control.BackgroundProperty, BrushFrom(48, 62, 69)));
+        headerStyle.Setters.Add(new Setter(Control.BackgroundProperty, BrushFrom(48, 52, 58)));
         headerStyle.Setters.Add(new Setter(Control.ForegroundProperty, Brushes.WhiteSmoke));
         headerStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(6)));
         probes.ColumnHeaderStyle = headerStyle;
@@ -358,14 +370,16 @@ public sealed partial class MainWindow
         log.Padding = new Thickness(8);
         Grid.SetRow(log, 3); detail.Children.Add(log);
         grid.Children.Add(Scroll(detail));
-        Grid.SetColumn(diagnosticPreviewSlot, 1); grid.Children.Add(diagnosticPreviewSlot);
+        Grid.SetColumn(diagnosticPreviewSlot, 2); grid.Children.Add(diagnosticPreviewSlot);
         return grid;
     }
 
     private void BuildPreviewPane()
     {
         var info = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
-        info.Children.Add(Heading("Bild & Erkennungsstatus"));
+        var previewHeading = Heading("Bild & Erkennungsstatus");
+        previewHeading.Margin = new Thickness(0, 0, 0, 12);
+        info.Children.Add(previewHeading);
         previewSource.Foreground = Foreground;
         previewSource.TextWrapping = TextWrapping.Wrap;
         previewSource.FontWeight = FontWeights.SemiBold;
@@ -382,7 +396,7 @@ public sealed partial class MainWindow
         var legend = Hint("Teamfarben: Klickflächen  ·  Gelb: Dialogprüfung  ·  Cyan: HUD-Prüfung", 8);
         DockPanel.SetDock(legend, Dock.Bottom); previewPane.Children.Add(legend);
         previewHost.Background = Brushes.Black;
-        previewHost.MinHeight = 160;
+        previewHost.MinHeight = 64;
         previewHost.ClipToBounds = true;
         previewHost.Children.Add(preview);
         previewEmpty.TextWrapping = TextWrapping.Wrap;
@@ -393,7 +407,8 @@ public sealed partial class MainWindow
         previewEmpty.MaxWidth = 360;
         previewHost.Children.Add(previewEmpty);
         previewHost.Children.Add(overlay);
-        previewPane.Children.Add(previewHost);
+        var previewFrame = new Border { Child = previewHost, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(6) };
+        previewPane.Children.Add(previewFrame);
         previewHost.SizeChanged += (_, _) => DrawOverlay();
         overlay.MouseLeftButtonDown += PreviewDown;
         overlay.MouseMove += PreviewMove;
@@ -467,8 +482,9 @@ public sealed partial class MainWindow
         runReason.Text = current.Team == null && current.State == RunState.Stopped ? "Ein Team auswählen oder dessen F-Taste drücken." : current.Reason;
         counters.Text = $"{(testing ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
         stopButton.IsEnabled = running;
-        stopButton.Foreground = running ? Brushes.White : Brushes.DimGray;
-        stopButton.Background = running ? TeamBrush(Team.Red) : BrushFrom(230, 234, 236);
+        stopButton.Foreground = running ? Brushes.White : BrushFrom(174, 180, 190);
+        stopButton.Background = running ? TeamBrush(Team.Red) : SurfaceBrush;
+        stopButton.BorderBrush = running ? TeamBrush(Team.Red) : BorderBrushColor;
         stopButton.ToolTip = running ? "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel." : "Kein Lauf aktiv. Zuerst ein Team aktivieren.";
         drawRegion.IsEnabled = !running;
         foreach (var team in Enum.GetValues<Team>())
@@ -482,27 +498,30 @@ public sealed partial class MainWindow
 
     private static TabItem Page(string title, UIElement content) => new()
     {
-        Header = new TextBlock { Text = title, Foreground = Brushes.Black }, Content = content, Padding = new Thickness(16, 10, 16, 10),
-        Foreground = Brushes.WhiteSmoke, Background = BrushFrom(230, 234, 236)
+        Header = IconLabel(title, title[0] switch { '1' => ActionIcon.Setup, '2' => ActionIcon.Play, '3' => ActionIcon.Settings, _ => ActionIcon.Diagnose }),
+        Content = content, Padding = new Thickness(16, 11, 16, 11)
     };
 
     private static Grid Split(double leftWidth)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new() { Width = new GridLength(leftWidth) });
+        grid.ColumnDefinitions.Add(new() { Width = new GridLength(24) });
         grid.ColumnDefinitions.Add(new());
+        var separator = new Border { Background = BorderBrushColor, Width = 1, HorizontalAlignment = HorizontalAlignment.Center };
+        Grid.SetColumn(separator, 1); grid.Children.Add(separator);
         return grid;
     }
 
     private static ScrollViewer Scroll(UIElement content) => new()
     {
         Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 6, 0)
+        HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 16, 8)
     };
 
     private static StackPanel PageTitle(string title, string description)
     {
-        var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+        var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 18) };
         panel.Children.Add(new TextBlock { Text = title, FontSize = 21, FontWeight = FontWeights.SemiBold, Foreground = Brushes.WhiteSmoke, TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(Hint(description, 5));
         return panel;
@@ -522,7 +541,7 @@ public sealed partial class MainWindow
 
     private void AddField(Panel panel, string key, string name, int page)
     {
-        var box = new TextBox { MinHeight = 32, Padding = new Thickness(6), Foreground = Brushes.Black, Background = Brushes.White, Margin = new Thickness(0, 0, 0, 6) };
+        var box = new TextBox { Margin = new Thickness(0, 0, 0, 8) };
         fields[key] = box;
         fieldPages[key] = page;
         AutomationProperties.SetName(box, name);
@@ -539,8 +558,8 @@ public sealed partial class MainWindow
     };
 
     private static SolidColorBrush BrushFrom(byte red, byte green, byte blue) => new(Color.FromRgb(red, green, blue));
-    private static readonly Brush SurfaceBrush = BrushFrom(28, 38, 43);
-    private static readonly Brush BorderBrushColor = BrushFrom(65, 79, 85);
+    private static readonly Brush SurfaceBrush = BrushFrom(32, 35, 40);
+    private static readonly Brush BorderBrushColor = BrushFrom(62, 67, 74);
     private static readonly Brush ErrorBrush = BrushFrom(255, 161, 137);
     private static readonly Brush WarningBrush = BrushFrom(245, 204, 123);
 }
