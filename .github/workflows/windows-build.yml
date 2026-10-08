@@ -44,6 +44,25 @@ jobs:
           path: dist/WardogsTeamselector-win-x64-*.exe
           if-no-files-found: error
           retention-days: 30
+      - name: Check desktop UI and group fixtures without game inputs
+        shell: pwsh
+        run: |
+          $output = Join-Path $PWD 'artifacts/group-ui-smoke'
+          $exe = Join-Path $PWD 'dist/WardogsTeamselector-win-x64-with-runtime.exe'
+          $process = Start-Process -FilePath $exe -ArgumentList @('--ui-smoke', ('"' + $output + '"')) -PassThru
+          if (!$process.WaitForExit(180000)) { $process.Kill(); throw 'UI smoke timed out' }
+          $result = Join-Path $output 'result.txt'
+          if (!(Test-Path $result)) { throw 'UI smoke produced no result' }
+          $message = Get-Content -Raw $result
+          if ($process.ExitCode -ne 0 -or $message.Trim() -ne 'GUI smoke passed') { throw $message }
+      - name: Upload desktop UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WardogsTeamselector-group-ui
+          path: artifacts/group-ui-smoke/
+          if-no-files-found: ignore
+          retention-days: 14
 
   groups-backend:
     runs-on: ubuntu-latest
