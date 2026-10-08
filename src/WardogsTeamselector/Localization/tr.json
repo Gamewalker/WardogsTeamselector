@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Güncelleme başarıyla yüklendi.",
   "Update fehlgeschlagen: ": "Güncelleme başarısız oldu: ",
   "Sprache": "Dil",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "Dil tercihi kaydedilemedi."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "Dil tercihi kaydedilemedi.",
+  "Stopp": "Durdur"
 }

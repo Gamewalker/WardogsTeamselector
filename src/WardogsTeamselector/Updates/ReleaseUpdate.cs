@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace WardogsTeamselector.Updates;
 
-public sealed record UpdateAsset(long Build, long Id, long Size, string Sha256);
+public sealed record UpdateAsset(long Build, long Id, long Size, string Sha256, string? DownloadUrl = null);
 
 public static class ReleaseUpdate
 {
@@ -30,7 +30,7 @@ public static class ReleaseUpdate
             if (digest == null || !Regex.IsMatch(digest, "^sha256:[0-9a-fA-F]{64}$")) throw new InvalidDataException("Für dieses Release fehlt die SHA-256-Prüfsumme.");
             long size = asset.GetProperty("size").GetInt64(), id = asset.GetProperty("id").GetInt64();
             if (size < 2 || size > 512L * 1024 * 1024 || id <= 0) throw new InvalidDataException("Ungültiges Update-Asset.");
-            return new(build, id, size, digest[7..]);
+            return new(build, id, size, digest[7..], $"https://github.com/{Repository}/releases/download/{match.Value}/{name}");
         }
         throw new InvalidDataException("Die passende EXE-Variante fehlt im Release.");
     }
@@ -54,6 +54,14 @@ public static class ReleaseUpdate
 
     public static async Task<UpdateAsset?> CheckAsync(HttpClient client, long build, string variant, CancellationToken cancellation)
     {
+        // Release assets use GitHub's download CDN, without the anonymous REST API quota.
+        using var manifest = await client.GetAsync($"https://github.com/{Repository}/releases/latest/download/update.json", cancellation);
+        if (manifest.StatusCode != System.Net.HttpStatusCode.NotFound)
+        {
+            manifest.EnsureSuccessStatusCode();
+            return SelectAsset(await manifest.Content.ReadAsStringAsync(cancellation), build, variant);
+        }
+        // Older releases did not include the manifest yet.
         using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{Repository}/releases/latest");
         request.Headers.Accept.ParseAdd("application/vnd.github+json");
         using var response = await client.SendAsync(request, cancellation);
@@ -65,7 +73,7 @@ public static class ReleaseUpdate
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{Repository}/releases/assets/{asset.Id}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, asset.DownloadUrl ?? $"https://api.github.com/repos/{Repository}/releases/assets/{asset.Id}");
             request.Headers.Accept.ParseAdd("application/octet-stream");
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellation);
             response.EnsureSuccessStatusCode();

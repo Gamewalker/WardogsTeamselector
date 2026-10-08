@@ -16,13 +16,16 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(directory);
         LocalizeInterface();
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
-        Check(ButtonLabel(stopButton) == "Stop · ESC" && (profileText.Text.Contains("Default profile") || hasSavedProfile), "English header and profile");
+        Check(profileText.Text.Contains("Default profile") || hasSavedProfile, "English profile");
         SaveRender(Path.Combine(directory, "english-startup.png"));
         foreach (var language in Localization.Languages)
         {
             languageSelector.SelectedItem = language;
             LocalizeInterface();
-            Check(ButtonLabel(stopButton) == Localization.Text("Stopp · ESC"), "Stop label follows language: " + language.Code);
+            UpdateRunDisplay(new AutomationSnapshot(RunState.Waiting, Team.Blue, 0, 0, "", null, null));
+            LocalizeInterface();
+            Check(teamNameLabels[Team.Blue].Text == Localization.Text("Stopp"), "Stop label follows language: " + language.Code);
+            UpdateRunDisplay(automation.Snapshot);
         }
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
         LocalizeInterface();
@@ -63,7 +66,7 @@ public sealed partial class MainWindow
             dirty = false; LoadFields(); LocalizeInterface();
             Check(focusGame.IsChecked == true && operationFocusHint.Text == Localization.Text("Auto-Fokus ist an: Ein Team aktivieren, und die App holt das Spiel in den Vordergrund."), "Loading saved fields restores automatic focus hint: " + code);
         }
-        Check(!stopButton.IsEnabled, "Stop is disabled before activation");
+        Check(teamButtons.Values.All(button => button.Opacity == 1), "All teams fully visible before activation");
         Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(dryRun) && LogicalElements((DependencyObject)((TabItem)pages.Items[3]).Content).Contains(dryRun), "Test-mode control belongs exclusively to diagnosis");
         Check(operationState.TextAlignment == TextAlignment.Center && runReason.TextAlignment == TextAlignment.Center && counters.TextAlignment == TextAlignment.Center, "Current run is centered");
         Check(teamButtons.Values.All(button => button.HorizontalContentAlignment == HorizontalAlignment.Center) && teamKeyLabels.Values.All(label => label.TextAlignment == TextAlignment.Center), "Hotkeys are centered on team buttons");
@@ -80,13 +83,7 @@ public sealed partial class MainWindow
                 {
                     ShowPage(page); await Settle();
                     Check(!dirty && !regionDirty, "Translation and navigation preserve saved field state");
-                    var runControls = (Grid)stopButton.Parent;
-                    Check(runControls.Children.Contains(status) && DockPanel.GetDock(runControls) == Dock.Bottom, "Stop belongs to the persistent run-status bar");
-                    var statusPosition = status.TranslatePoint(new Point(), (UIElement)Content);
-                    var stopPosition = stopButton.TranslatePoint(new Point(), (UIElement)Content);
-                    Check(Math.Abs(statusPosition.Y + status.ActualHeight / 2 - stopPosition.Y - stopButton.ActualHeight / 2) < 1, "Stop is centered beside the current run status");
-                    Check(stopPosition.Y >= pages.TranslatePoint(new Point(0, pages.ActualHeight), (UIElement)Content).Y && stopPosition.Y + stopButton.ActualHeight <= profileText.TranslatePoint(new Point(), (UIElement)Content).Y, "Stop stays visible between task content and profile actions");
-                    Check(stopPosition.X + stopButton.ActualWidth <= ((FrameworkElement)Content).ActualWidth + 1, "Stop fits at minimum width in every task and language");
+                    Check(profileFooter.Visibility == (page == 1 ? Visibility.Collapsed : Visibility.Visible), "Save actions only appear in settings areas");
                     var languagePosition = languageSelector.TranslatePoint(new Point(), (UIElement)Content);
                     var aboutButton = ((StackPanel)languageSelector.Parent).Children.OfType<Button>().Single(button => button != headerUpdateButton);
                     var aboutPosition = aboutButton.TranslatePoint(new Point(), (UIElement)Content);
@@ -196,7 +193,8 @@ public sealed partial class MainWindow
         SaveRender(Path.Combine(directory, "arabic-waiting.png"));
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
         await Settle();
-        Check(stopButton.IsEnabled && teamStateLabels[Team.Blue].Text == "Aktiv · wartet" && teamStateLabels.Where(pair => pair.Key != Team.Blue).All(pair => pair.Value.Text == "Aktivieren"), "Exactly the active team is marked while waiting, and stop is enabled");
+        Check(teamStateLabels[Team.Blue].Text == "Aktiv · wartet" && teamStateLabels.Where(pair => pair.Key != Team.Blue).All(pair => pair.Value.Text == "Aktivieren"), "Exactly the active team is marked while waiting, and stop is enabled");
+        Check(teamNameLabels[Team.Blue].Text == "Stopp" && teamButtons[Team.Blue].Opacity == 1 && teamButtons.Where(pair => pair.Key != Team.Blue).All(pair => pair.Value.Opacity == 0.45), "Active team is stop action and other teams fade");
         SaveRender(Path.Combine(directory, "waiting.png"));
         Width = 1180; Height = 820; await Settle();
         SaveRender(Path.Combine(directory, "desktop-waiting.png"));
@@ -214,19 +212,23 @@ public sealed partial class MainWindow
         StartTeam(Team.Green); await Settle();
         Check(teamStateLabels[Team.Green].Text == "Aktiv · wartet" && teamStateLabels[Team.Red].Text == "Aktivieren", "Green is marked without retaining another active team");
         ShowPage(3); dryRun.IsChecked = false; await Settle();
-        Check(automation.Snapshot.State == RunState.Stopped && !stopButton.IsEnabled && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Changing test mode in diagnosis stops the run and clears markers");
+        Check(automation.Snapshot.State == RunState.Stopped && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Changing test mode in diagnosis stops the run and clears markers");
         dryRun.IsChecked = true;
         StartTeam(Team.Blue); await Settle();
-        stopButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        teamButtons[Team.Blue].RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
         await Settle();
-        Check(automation.Snapshot.State == RunState.Stopped && !stopButton.IsEnabled && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Stopping disables stop and clears the active team");
+        Check(automation.Snapshot.State == RunState.Stopped && teamStateLabels.Values.All(label => label.Text == "Aktivieren") && teamButtons.Values.All(button => button.Opacity == 1), "Stopping restores all team buttons");
         SaveRender(Path.Combine(directory, "stopped.png"));
 
         // UI-only snapshot fixture: the controller stays stopped and sends no input.
         OnAutomation(new AutomationSnapshot(RunState.Clicking, Team.Green, 12, 61, "Testmodus: Klick simuliert", null, null));
         await Settle();
-        Check(operationState.Text == "Klickt · Grün" && teamStateLabels[Team.Green].Text == "Aktiv · klickt" && stopButton.IsEnabled, "Clicking state has clear phase, team and active controls");
+        Check(operationState.Text == "Klickt · Grün" && teamStateLabels[Team.Green].Text == "Aktiv · klickt", "Clicking state has clear phase, team and active controls");
+        Check(teamNameLabels[Team.Green].Text == "Stopp", "Stop remains available during clicking");
         SaveRender(Path.Combine(directory, "clicking-fixture.png"));
+        OnAutomation(new AutomationSnapshot(RunState.Stopped, Team.Green, 12, 61, "Team erfolgreich ausgewählt", null, null));
+        await Settle();
+        Check(teamButtons.Values.All(button => button.Opacity == 1) && teamNameLabels[Team.Green].Text == "Grün", "Successful selection restores all team buttons");
         OnAutomation(automation.Snapshot); await Settle();
 
         ShowPage(3); LoadJoinedReference(); await Settle();

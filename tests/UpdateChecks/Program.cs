@@ -18,6 +18,14 @@ string Release(long build = 8, bool draft = false, bool prerelease = false, stri
     assets = new[] { new { name = "WardogsTeamselector-win-x64-with-runtime.exe", id = 123, size = 4, digest = digest ?? "sha256:" + new string('a', 64) } }
 });
 Check(ReleaseUpdate.SelectAsset(Release(), 7, "with-runtime")?.Build == 8, "New build selected");
+Check(ReleaseUpdate.SelectAsset(Release(), 7, "with-runtime")?.DownloadUrl == "https://github.com/Gamewalker/WardogsTeamselector/releases/download/build-8-abcdef1/WardogsTeamselector-win-x64-with-runtime.exe", "Download is pinned to the selected release on the public CDN");
+foreach (bool legacy in new[] { false, true })
+{
+    using var handler = new FakeRelease(Release(), legacy);
+    using var client = new HttpClient(handler);
+    Check((await ReleaseUpdate.CheckAsync(client, 7, "with-runtime", CancellationToken.None))?.Build == 8, "Manifest and legacy release checks select the update");
+    Check(handler.Requests == (legacy ? 2 : 1), "Manifest check avoids the rate-limited API; older releases use fallback");
+}
 Check(ReleaseUpdate.SelectAsset(Release(), 8, "with-runtime") == null, "Equal build ignored");
 Check(ReleaseUpdate.SelectAsset(Release(), 9, "with-runtime") == null, "Downgrade ignored");
 Check(ReleaseUpdate.SelectAsset(Release(draft: true), 7, "with-runtime") == null, "Draft ignored");
@@ -33,6 +41,10 @@ try
     string hash = Convert.ToHexString(SHA256.HashData(bytes));
     var asset = new UpdateAsset(8, 123, bytes.Length, hash);
     string download = Path.Combine(root, "download.exe");
+    using (var client = new HttpClient(new FakeDownload(bytes, cdn: true)))
+        await ReleaseUpdate.DownloadAsync(client, asset with { DownloadUrl = "https://github.com/Gamewalker/WardogsTeamselector/releases/download/build-8-abcdef1/WardogsTeamselector-win-x64-with-runtime.exe" }, download, CancellationToken.None);
+    Check(File.ReadAllBytes(download).SequenceEqual(bytes), "CDN download verified without API access");
+    File.Delete(download);
     using (var client = new HttpClient(new FakeDownload(bytes)))
         await ReleaseUpdate.DownloadAsync(client, asset, download, CancellationToken.None);
     Check(File.ReadAllBytes(download).SequenceEqual(bytes), "Download verified");
@@ -114,11 +126,24 @@ try
 finally { Directory.Delete(root, true); }
 Console.WriteLine($"UpdateChecks: {checks} checks passed.");
 
-sealed class FakeDownload(byte[] bytes) : HttpMessageHandler
+sealed class FakeRelease(string json, bool legacy) : HttpMessageHandler
+{
+    public int Requests { get; private set; }
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Requests++;
+        string expected = Requests == 1 ? "https://github.com/Gamewalker/WardogsTeamselector/releases/latest/download/update.json" : "https://api.github.com/repos/Gamewalker/WardogsTeamselector/releases/latest";
+        if (request.RequestUri?.AbsoluteUri != expected || (!legacy && Requests > 1)) throw new Exception("Unexpected release request");
+        return Task.FromResult(new HttpResponseMessage(legacy && Requests == 1 ? HttpStatusCode.NotFound : HttpStatusCode.OK) { Content = new StringContent(json) });
+    }
+}
+
+sealed class FakeDownload(byte[] bytes, bool cdn = false) : HttpMessageHandler
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        if (request.RequestUri?.AbsoluteUri != "https://api.github.com/repos/Gamewalker/WardogsTeamselector/releases/assets/123") throw new Exception("Unexpected download URL");
+        string expected = cdn ? "https://github.com/Gamewalker/WardogsTeamselector/releases/download/build-8-abcdef1/WardogsTeamselector-win-x64-with-runtime.exe" : "https://api.github.com/repos/Gamewalker/WardogsTeamselector/releases/assets/123";
+        if (request.RequestUri?.AbsoluteUri != expected) throw new Exception("Unexpected download URL");
         if (request.Headers.Accept.Single().MediaType != "application/octet-stream") throw new Exception("Missing binary download header");
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(bytes) });
     }

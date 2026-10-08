@@ -42,7 +42,9 @@ Das Tool holt das passende Spielfenster bei einer Teamaktivierung automatisch in
 
 Du kannst ein Team schon vor der Auswahl aktivieren. Nach dem ersten Klick versucht das Tool dasselbe Team weiter, bis die fünf weißen HUD-Balken unten rechts mindestens **0,5 Sekunden** stabil erkannt werden. Mit **ESC** oder **Stopp** kannst du jederzeit abbrechen.
 
-Die Tastenkürzel und Klickintervalle lassen sich unter **Konfiguration** anpassen. **Einstellungen speichern** sichert deine Änderungen für den nächsten Start.
+Während eines Laufs zeigt der aktive Teambutton **Stopp** und beendet den Lauf beim Anklicken. Die beiden anderen Teambuttons erscheinen blasser; ein Klick darauf wechselt das aktive Team. Nach erfolgreichem Beitritt oder Abbruch werden alle drei wieder normal angezeigt.
+
+Die Tastenkürzel und Klickintervalle lassen sich unter **Konfiguration** anpassen. **Einstellungen speichern** steht in Einrichtung, Konfiguration und Diagnose und sichert deine Änderungen für den nächsten Start.
 
 ## 💡 Gut zu wissen
 

@@ -12,7 +12,7 @@ namespace WardogsTeamselector;
 // THESIS: Four task areas guide setup, operation, configuration and diagnosis.
 // OWN-WORLD: Dark native Windows utility, Segoe UI, explicit labels and team colors.
 // STORY: Connect the game, check click areas, run a team, investigate only as needed.
-// FIRST VIEWPORT: Persistent status and conditional stop; operation leads with a
+// FIRST VIEWPORT: Operation leads with a
 // centered run display above team buttons with centered hotkeys and active markers.
 // FORM: User-specified four-area workflow, code-led within the established identity.
 // FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, docs/DESIGN.md, and every shipping raster carrying its provenance
@@ -27,7 +27,10 @@ public sealed partial class MainWindow
     private readonly System.Collections.Generic.Dictionary<Team, TextBlock> teamKeyLabels = new(), teamStateLabels = new();
     private readonly System.Collections.Generic.Dictionary<Team, Border> teamFrames = new();
     private readonly CheckBox drawRegion = new() { Content = "Teamfläche im Bild zeichnen" };
-    private Button saveButton = null!, discardButton = null!, stopButton = null!;
+    private Button saveButton = null!, discardButton = null!;
+    private Border profileFooter = null!;
+    private readonly System.Collections.Generic.Dictionary<Team, TextBlock> teamNameLabels = new();
+    private readonly System.Collections.Generic.Dictionary<Team, System.Windows.Shapes.Path> teamIcons = new();
     private Border runPanel = null!;
     private TextBlock operationFocusHint = null!;
 
@@ -55,14 +58,6 @@ public sealed partial class MainWindow
         identity.VerticalAlignment = VerticalAlignment.Center;
         identity.Children.Add(title);
         header.Children.Add(identity);
-        stopButton = Button("Stopp · ESC", () => automation.Stop("Manuell gestoppt"));
-        stopButton.Width = 154;
-        stopButton.Margin = new Thickness(16, 0, 0, 0);
-        stopButton.Background = TeamBrush(Team.Red);
-        stopButton.Foreground = Brushes.White;
-        stopButton.VerticalAlignment = VerticalAlignment.Center;
-        stopButton.IsEnabled = false;
-        stopButton.ToolTip = "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel.";
         var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         headerUpdateButton = Button("Update", InstallHeaderUpdate);
         headerUpdateButton.Margin = new Thickness(0, 0, 12, 0);
@@ -88,7 +83,7 @@ public sealed partial class MainWindow
         var footer = new Grid();
         footer.ColumnDefinitions.Add(new());
         footer.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        var footerSurface = Section(footer);
+        var footerSurface = profileFooter = Section(footer);
         footerSurface.Padding = new Thickness(16, 12, 16, 12);
         footerSurface.Margin = new Thickness(0, 14, 0, 0);
         DockPanel.SetDock(footerSurface, Dock.Bottom);
@@ -107,18 +102,6 @@ public sealed partial class MainWindow
         Grid.SetColumn(profileActions, 1);
         footer.Children.Add(profileActions);
 
-        // Run controls stay together and available independently of the selected task.
-        var runControls = new Grid { Margin = new Thickness(0, 14, 0, 0) };
-        runControls.ColumnDefinitions.Add(new());
-        runControls.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
-        status.VerticalAlignment = VerticalAlignment.Center;
-        status.TextWrapping = TextWrapping.Wrap;
-        runControls.Children.Add(status);
-        Grid.SetColumn(stopButton, 1);
-        runControls.Children.Add(stopButton);
-        DockPanel.SetDock(runControls, Dock.Bottom);
-        root.Children.Add(runControls);
-
         BuildPreviewPane();
         pages.Background = Background;
         pages.Padding = new Thickness(20);
@@ -132,6 +115,7 @@ public sealed partial class MainWindow
             if (e.Source != pages) return;
             CancelRegionDrag();
             UpdatePreviewLocation();
+            UpdateProfileFooter();
         };
         root.Children.Add(pages);
     }
@@ -242,13 +226,16 @@ public sealed partial class MainWindow
         {
             teams.ColumnDefinitions.Add(new());
             var t = team;
-            var button = Button("", () => StartTeam(t));
+            var button = Button("", () => ToggleTeam(t));
             var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
             var teamIcon = IconPath(ActionIcon.Play, 20);
+            teamIcons[t] = teamIcon;
             teamIcon.HorizontalAlignment = HorizontalAlignment.Center;
             teamIcon.Margin = new Thickness(0, 0, 0, 8);
             content.Children.Add(teamIcon);
-            content.Children.Add(new TextBlock { Text = TeamName(t), FontSize = 18, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center });
+            var name = new TextBlock { Text = TeamName(t), FontSize = 18, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center };
+            teamNameLabels[t] = name;
+            content.Children.Add(name);
             var key = new TextBlock { FontSize = 26, FontWeight = FontWeights.SemiBold, TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 4, 0, 4) };
             var state = new TextBlock { FontSize = 14, TextAlignment = TextAlignment.Center };
             teamKeyLabels[t] = key; teamStateLabels[t] = state;
@@ -478,6 +465,19 @@ public sealed partial class MainWindow
         previewEmpty.Visibility = Visibility.Visible;
     }
 
+    private void UpdateProfileFooter() => profileFooter.Visibility = pages.SelectedIndex == 1 ? Visibility.Collapsed : Visibility.Visible;
+
+    private void ToggleTeam(Team team)
+    {
+        var current = automation.Snapshot;
+        if (current.State != RunState.Stopped && current.Team == team)
+        {
+            automation.Stop("Manuell gestoppt");
+            UpdateRunDisplay(automation.Snapshot);
+        }
+        else StartTeam(team);
+    }
+
     private void UpdateProfileState()
     {
         profileText.Text = dirty ? "Ungespeicherte Änderungen" : hasSavedProfile ? "Einstellungen gespeichert" : "Standardprofil · noch nicht gespeichert";
@@ -511,18 +511,17 @@ public sealed partial class MainWindow
         runPanel.BorderBrush = running && current.Team is Team activeTeam ? TeamBrush(activeTeam) : BorderBrushColor;
         runReason.Text = current.Team == null && current.State == RunState.Stopped ? "Ein Team auswählen oder dessen F-Taste drücken." : current.Reason;
         counters.Text = $"{(testing ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
-        stopButton.IsEnabled = running;
-        stopButton.Foreground = running ? Brushes.White : BrushFrom(174, 180, 190);
-        stopButton.Background = running ? TeamBrush(Team.Red) : SurfaceBrush;
-        stopButton.BorderBrush = running ? TeamBrush(Team.Red) : BorderBrushColor;
-        stopButton.ToolTip = running ? "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel." : "Kein Lauf aktiv. Zuerst ein Team aktivieren.";
         drawRegion.IsEnabled = !running;
         foreach (var team in Enum.GetValues<Team>())
         {
             bool active = running && current.Team == team;
             teamFrames[team].BorderBrush = active ? Brushes.White : Brushes.Transparent;
+            teamButtons[team].Opacity = running && !active ? 0.45 : 1;
+            teamNameLabels[team].Text = active ? "Stopp" : TeamName(team);
+            teamIcons[team].Data = IconPath(active ? ActionIcon.Stop : ActionIcon.Play, 20).Data;
+            teamButtons[team].ToolTip = active ? "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel." : "Einmal drücken aktiviert das Team. ESC bricht ab.";
             teamStateLabels[team].Text = active ? current.State == RunState.Clicking ? "Aktiv · klickt" : "Aktiv · wartet" : "Aktivieren";
-            AutomationProperties.SetName(teamButtons[team], $"Team {TeamName(team)}, {teamKeyLabels[team].Text}, {teamStateLabels[team].Text}");
+            AutomationProperties.SetName(teamButtons[team], $"Team {TeamName(team)}, {teamKeyLabels[team].Text}, {(active ? "Stopp" : "Aktivieren")}");
         }
     }
 

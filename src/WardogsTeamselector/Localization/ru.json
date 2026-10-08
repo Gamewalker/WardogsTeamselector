@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Обновление успешно установлено.",
   "Update fehlgeschlagen: ": "Обновление не удалось: ",
   "Sprache": "Язык",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "Языковые настройки не удалось сохранить."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "Языковые настройки не удалось сохранить.",
+  "Stopp": "Стоп"
 }

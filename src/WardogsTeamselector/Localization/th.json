@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "ติดตั้งการอัปเดตสำเร็จแล้ว",
   "Update fehlgeschlagen: ": "การอัปเดตล้มเหลว: ",
   "Sprache": "ภาษา",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "ไม่สามารถบันทึกการตั้งค่าภาษาได้"
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "ไม่สามารถบันทึกการตั้งค่าภาษาได้",
+  "Stopp": "หยุด"
 }

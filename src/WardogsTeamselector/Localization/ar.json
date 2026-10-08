@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "تم تثبيت التحديث بنجاح.",
   "Update fehlgeschlagen: ": "فشل التحديث: ",
   "Sprache": "لغة",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "لا يمكن حفظ تفضيلات اللغة."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "لا يمكن حفظ تفضيلات اللغة.",
+  "Stopp": "توقف"
 }
