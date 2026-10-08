@@ -2,7 +2,7 @@
 
 Choose your Wardogs team with one keypress. This open-source Windows tool repeatedly clicks your selected team and stops when it detects that you have joined the game.
 
-## Download
+## 📥 Download
 
 **[Get the latest release →](https://github.com/Gamewalker/WardogsTeamselector/releases/latest)**
 
@@ -13,7 +13,7 @@ Under **Assets**, download a portable EXE and run it. No installation of the too
 
 Both variants have the same features and share your settings. You need **Windows x64** and Wardogs. Keep the EXE in a writable folder so it can install updates.
 
-## English video tour
+## 🎬 English video tour
 
 [![English tour of the current WardogsTeamselector interface](docs/media/wardogs-teamselector-demo-en.gif)](https://github.com/Gamewalker/WardogsTeamselector/raw/refs/heads/main/docs/media/wardogs-teamselector-demo-en.mp4)
 
@@ -23,7 +23,7 @@ Both variants have the same features and share your settings. You need **Windows
 
 The tour uses current app screenshots, embedded game reference images and a labeled waiting-state fixture in test mode. It demonstrates the interface, not a live game session or a successful join.
 
-## Quick start
+## 🚀 Quick start
 
 1. **Open Wardogs** and go to the team selection screen.
 2. In **Setup**, choose **Find game / load image**. Check that the colored team outlines and click points match the three team cards. Adjust the monitor, game area or team regions if necessary.
@@ -33,14 +33,14 @@ The tour uses current app screenshots, embedded game reference images and a labe
 
 By default, activating a team brings the matching game window to the foreground. You can disable this under **Configuration → Game focus**; then switch to the game yourself. If Windows prevents automatic focus, the attempt waits for you to bring the game to the foreground.
 
-## Team controls
+## ⌨️ Team controls
 
 | Default key | Action |
 | --- | --- |
-| **F6** | Activate Blue |
-| **F7** | Activate Red |
-| **F8** | Activate Green |
-| **ESC** | Stop the attempt immediately |
+| **F6** | 🔵 Activate Blue |
+| **F7** | 🔴 Activate Red |
+| **F8** | 🟢 Activate Green |
+| **ESC** | ⏹️ Stop the attempt immediately |
 
 You can activate a team before the selection screen appears. The tool waits for the game window, game focus and a stable selection dialog before the first click. After that, it keeps trying the same team even if dialog detection flickers or the dialog disappears. It stops successfully only when the five white HUD bars at the bottom right are detected continuously for at least **0.5 seconds** across at least three detections.
 
@@ -48,7 +48,7 @@ During an attempt, the active team button becomes **Stop**. Click it or press **
 
 In **Configuration**, choose three distinct **F1–F24** shortcuts and adjust the randomized click interval. The default is **50–70 ms**; supported values are **50–60,000 ms**, with the maximum at least as large as the minimum.
 
-## Current features
+## ✨ Current features
 
 - **Four task areas:** Setup for connecting and calibrating the game, Operation for selecting a team, Configuration for behavior and detection settings, and Diagnostics for test mode, reference checks, measurements, logs and exports.
 - **Windows 11 style:** a dark native WPF interface, clear team colors, keyboard focus indicators and a high-resolution app icon. The window title shows the current release build.
@@ -59,7 +59,7 @@ In **Configuration**, choose three distinct **F1–F24** shortcuts and adjust th
 
 Settings are stored per Windows user in `%LOCALAPPDATA%\WardogsTeamselector\`, including `settings.json`, `language.json` and `updates.json`.
 
-## Automatic updates
+## 🔄 Automatic updates
 
 Published release EXEs check for updates at startup and every **six hours**. The app reads the public release's `update.json` and downloads the matching runtime variant without consuming the anonymous GitHub API quota. Older releases without a manifest use an API fallback. Downloads are checked for size, Windows EXE format and SHA-256 checksum.
 
@@ -67,7 +67,7 @@ When a newer version is available, an **Update** button appears in the header be
 
 Your settings and runtime variant are preserved. The previous executable is kept beside the EXE as `<EXE>.previous`. Configuration also provides a manual update check and an option to disable automatic downloads. Local development builds and GUI smoke runs do not update automatically. If an old release is already blocked by API rate limits, download the latest release manually once. [More about updates (German)](docs/updates.md)
 
-## Help and troubleshooting
+## 📚 Help and troubleshooting
 
 Keep the game's selection screen unobstructed; a second monitor is useful. With a different aspect ratio, HDR or unusual UI scaling, check the preview and [calibration guide](docs/calibration.md) before enabling real clicks. For non-16:9 geometry, verify the game area and team regions and confirm the geometry in Setup.
 
@@ -82,7 +82,7 @@ The detailed guides below are currently **in German**:
 
 [Report a problem on GitHub](https://github.com/Gamewalker/WardogsTeamselector/issues) with the steps to reproduce, build number, runtime variant, status reason and, if possible, a diagnostic export. You can also start a report from About the app or Diagnostics.
 
-## Build from source
+## 🛠️ Build from source
 
 On Windows x64 with the **.NET 10 SDK**, run:
 
@@ -94,6 +94,6 @@ The script checks detection, HUD recognition, automation, configuration, localiz
 
 GitHub Actions builds both variants and publishes a release after a successful push to `main`. See [development](docs/development.md) and [testing](docs/TESTING.md) for details (German). The English video's [source and regeneration instructions](docs/media/demo-source/README.md) are also included.
 
-## License
+## 📜 License
 
 WardogsTeamselector is licensed under **GNU GPL v3.0**. See [LICENSE](LICENSE) for the full text and the [license guide (German)](docs/license.md) for more information.
