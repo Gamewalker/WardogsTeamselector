@@ -29,6 +29,21 @@ public sealed partial class MainWindow
         Check(Icon is System.Windows.Media.Imaging.BitmapSource { PixelWidth: >= 256, PixelHeight: >= 256 }, "HD app icon loaded");
         Check(Title.Contains(BuildDescription), "Current build is visible in window title");
         Check(!restartUpdateButton.IsEnabled, "Restart requires a verified update");
+        Check(headerUpdateButton.Visibility == Visibility.Collapsed && !headerUpdateButton.IsEnabled, "Header update action is hidden without a new version");
+        availableUpdate = new Updates.UpdateAsset(CurrentBuild + 1, 123, 4, new string('a', 64));
+        updateBusy = true;
+        UpdateHeaderUpdateButton();
+        Check(headerUpdateButton.Visibility == Visibility.Visible && !headerUpdateButton.IsEnabled, "Header shows a new version while downloading and prevents duplicate downloads");
+        updateBusy = false;
+        UpdateHeaderUpdateButton();
+        Check(headerUpdateButton.IsEnabled, "Failed downloads can be retried from the header");
+        InstallHeaderUpdate();
+        Check(!updateBusy && stagedUpdate == null && !restartAfterUpdate, "Smoke header action never downloads or restarts");
+        stagedUpdate = Path.Combine(directory, "missing-update-fixture.exe");
+        stagedAsset = availableUpdate;
+        UpdateHeaderUpdateButton();
+        Check(headerUpdateButton.IsEnabled, "Verified update can be installed from the header");
+        stagedUpdate = null; stagedAsset = null;
         Check(pages.Items.Count == 4, "Four task areas");
         Check(updateStatus.Text.Contains("GUI-Prüflauf") && !updateTimer.IsEnabled && stagedUpdate == null, "Smoke mode never checks or stages updates");
         Check(pages.SelectedIndex == (hasSavedProfile && startupSettingsError == null ? 1 : 0), "Startup follows saved profile");
@@ -63,10 +78,15 @@ public sealed partial class MainWindow
                     Check(Math.Abs(languagePosition.Y + languageSelector.ActualHeight / 2 - stopPosition.Y - stopButton.ActualHeight / 2) < 1, "Language selector is centered with header buttons");
                     var headerPosition = languageSelector.TranslatePoint(new Point(languageSelector.ActualWidth, 0), (UIElement)Content);
                     Check(headerPosition.X <= ((FrameworkElement)Content).ActualWidth + 1, "Language selector fits the header at minimum width");
+                    var identityTitle = (FrameworkElement)status.Parent;
+                    var identityEnd = identityTitle.TranslatePoint(new Point(identityTitle.ActualWidth, 0), (UIElement)Content);
+                    Check(identityEnd.X <= aboutPosition.X + 1, "Identity text does not overlap the update action at minimum width");
                     SaveRender(Path.Combine(directory, $"{code}-{size.Item1}-{page + 1}.png"));
                 }
             }
         }
+        DiscardStagedUpdate();
+        Check(headerUpdateButton.Visibility == Visibility.Collapsed && !headerUpdateButton.IsEnabled, "Discarding an update hides its header action");
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
         ShowPage(0); await Settle();
 

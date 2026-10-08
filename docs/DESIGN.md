@@ -65,4 +65,6 @@ Die Diagnose verwendet eine schreibgeschützte Tabelle mit dunklen Wechselzeilen
 
 ## Verifikation
 
+Der hervorgehobene Update-Button neben dem Infofenster erscheint nur bei einer erkannten neuen Version. Während des Downloads bleibt er gesperrt; danach installiert er das geprüfte Update mit Neustart. Bei Downloadfehlern ermöglicht er einen erneuten Versuch. Bei Mindestbreite kürzt die Kopfzeile Titel und Status mit Auslassungspunkten, damit die Aktionen frei bleiben. Der GUI-Prüflauf prüft Sichtbarkeit, Downloadsperre, Wiederholung und das Ausblenden nach dem Verwerfen; die Sprach- und Größenprüfungen erfassen auch den sichtbaren Update-Button.
+
 Die GUI-Prüfung erfasst alle vier Bereiche bei Standard- und Mindestgröße, Kalibrierung, Validierungsfokus, Hotkeykonflikte, Speicherzustand, Vorschau, Referenzbilder, Warten, schnelle Teamwechsel, Stopp und das Infofenster. Sie speichert keine Benutzerprofile und sendet keine Mauseingaben. `clicking-fixture.png` zeigt nur einen eingespeisten UI-Zustand. Neue Ansichten liegen lokal unter `artifacts/windows11-ui-confirm/`; die Veröffentlichung wird zusätzlich für beide portablen EXE-Varianten geprüft.
