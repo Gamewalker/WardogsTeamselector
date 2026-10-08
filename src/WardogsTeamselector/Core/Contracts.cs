@@ -7,6 +7,7 @@ namespace WardogsTeamselector.Core;
 
 public enum Team { Blue, Red, Green }
 public enum RunState { Stopped, Waiting, Clicking }
+public enum AutomationStopCause { None, Manual, Safety, Joined, GroupUpdate }
 public sealed record MonitorInfo(string Id, string Name, Rectangle Bounds, bool Primary);
 public sealed record TargetGeometry(Rectangle Bounds, IntPtr WindowHandle, bool IsForeground, string Description, bool IsCalibrated);
 public sealed record TeamRegion(Team Team, double X, double Y, double Width, double Height)
@@ -66,4 +67,4 @@ public interface IScreenService
 public interface IDialogDetector { DetectionResult Detect(CaptureFrame frame, AppSettings settings); }
 public interface IJoinedScreenDetector { DetectionResult Detect(CaptureFrame frame, AppSettings settings); }
 public interface IClickSink { void Click(Point position); }
-public sealed record AutomationSnapshot(RunState State, Team? Team, long ClickCount, int IntervalMs, string Reason, DetectionResult? Detection, TargetGeometry? Geometry, DetectionResult? JoinedDetection = null);
+public sealed record AutomationSnapshot(RunState State, Team? Team, long ClickCount, int IntervalMs, string Reason, DetectionResult? Detection, TargetGeometry? Geometry, DetectionResult? JoinedDetection = null, AutomationStopCause StopCause = AutomationStopCause.None);

@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wardogs-groups",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-06",
+  "workers_dev": true,
+  "durable_objects": {
+    "bindings": [{ "name": "GROUPS", "class_name": "GroupRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GroupRoom"] }],
+  "ratelimits": [{
+    "name": "CREATE_LIMIT",
+    "namespace_id": "1001",
+    "simple": { "limit": 3, "period": 60 }
+  }],
+  "observability": { "enabled": false }
+}

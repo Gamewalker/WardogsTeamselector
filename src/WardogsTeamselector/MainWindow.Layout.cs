@@ -58,6 +58,8 @@ public sealed partial class MainWindow
         identity.VerticalAlignment = VerticalAlignment.Center;
         identity.Children.Add(title);
         header.Children.Add(identity);
+        groupStopButton.IsEnabled = groupFollow.Enabled;
+        groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
         var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
         headerUpdateButton = Button("Update", InstallHeaderUpdate);
         headerUpdateButton.Margin = new Thickness(0, 0, 12, 0);
@@ -216,8 +218,15 @@ public sealed partial class MainWindow
         runMode.TextAlignment = TextAlignment.Center;
         runMode.Margin = new Thickness(0, 8, 0, 0);
         currentRun.Children.Add(runMode);
+        groupStopButton = Button("Stopp · ESC", () => StopAll("Manuell gestoppt"));
+        groupStopButton.Visibility = Visibility.Collapsed;
+        groupStopButton.HorizontalAlignment = HorizontalAlignment.Center;
+        currentRun.Children.Add(groupStopButton);
         runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(8), Padding = new Thickness(24), Margin = new Thickness(0, 0, 0, 24) };
         body.Children.Add(runPanel);
+
+        var operationBody = body;
+        body = new StackPanel();
 
         operationFocusHint = Hint("");
         body.Children.Add(operationFocusHint);
@@ -256,6 +265,7 @@ public sealed partial class MainWindow
             teams.Children.Add(frame);
         }
         body.Children.Add(teams);
+        BuildManualGroupActions(body);
 
         body.Children.Add(new Separator { Background = BorderBrushColor, Margin = new Thickness(0, 22, 0, 12) });
         operationSummary.Foreground = Muted;
@@ -267,7 +277,11 @@ public sealed partial class MainWindow
         links.Children.Add(Button("Diagnose / Testmodus", () => ShowPage(3)));
         body.Children.Add(links);
         body.Children.Add(Hint("Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. ESC, Fokusverlust und Aufnahmefehler stoppen den Lauf.", 18));
-        return Scroll(body);
+        operationTabs.Items.Add(new TabItem { Header = "Manuell", Content = Scroll(body) });
+        operationTabs.Items.Add(new TabItem { Header = "Gruppenmodus", Content = BuildGroupMode() });
+        operationTabs.SelectionChanged += (_, e) => { if (e.Source == operationTabs && operationTabs.SelectedIndex == 1 && !smokeMode) _ = RefreshSelectedGroupAsync(); };
+        operationBody.Children.Add(operationTabs);
+        return Scroll(operationBody);
     }
 
     private UIElement BuildConfiguration()
@@ -473,7 +487,7 @@ public sealed partial class MainWindow
         var current = automation.Snapshot;
         if (current.State != RunState.Stopped && current.Team == team)
         {
-            automation.Stop("Manuell gestoppt");
+            StopAll("Manuell gestoppt");
             UpdateRunDisplay(automation.Snapshot);
         }
         else StartTeam(team);
@@ -512,6 +526,8 @@ public sealed partial class MainWindow
         runPanel.BorderBrush = running && current.Team is Team activeTeam ? TeamBrush(activeTeam) : BorderBrushColor;
         runReason.Text = current.Team == null && current.State == RunState.Stopped ? "Ein Team auswählen oder dessen F-Taste drücken." : current.Reason;
         counters.Text = $"{(testing ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
+        groupStopButton.IsEnabled = groupFollow.Enabled;
+        groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
         drawRegion.IsEnabled = !running;
         foreach (var team in Enum.GetValues<Team>())
         {

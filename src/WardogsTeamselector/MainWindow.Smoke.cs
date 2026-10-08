@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using WardogsTeamselector.Core;
+using WardogsTeamselector.Groups;
 
 namespace WardogsTeamselector;
 
@@ -140,6 +141,25 @@ public sealed partial class MainWindow
             calibration.IsExpanded = false;
         }
         Check(overlay.Cursor != System.Windows.Input.Cursors.Cross, "Diagnosis does not offer region drawing");
+        Check(operationTabs.Items.Count == 2 && !groupFollow.Enabled && groupAuto.IsChecked != true, "Two join modes and Auto off at startup");
+        var fixtureOwner = new GroupMembership { ServiceUrl = "https://groups.example", GroupId = GroupMembership.NewId(), MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), InviteToken = GroupMembership.NewToken(), Name = "Freunde", DisplayName = "Ersteller", Role = "Owner", Status = "Approved" };
+        groupProfile.Groups.Add(fixtureOwner); ReloadGroupPickers();
+        groupPicker.SelectedItem = fixtureOwner;
+        selectedGroupSnapshot = new GroupSnapshot(1, fixtureOwner.GroupId, fixtureOwner.Name, 3, 1, "Red", "Approved", "Owner", fixtureOwner.MemberId, new() { new(fixtureOwner.MemberId, fixtureOwner.DisplayName, "Approved", "Owner", 0), new(GroupMembership.NewId(), "Mitspieler", "Pending", "Member", 0) });
+        groupStatus.Text = DescribeGroup(selectedGroupSnapshot); UpdateGroupControls();
+        ShowPage(1); operationTabs.SelectedIndex = 1;
+        Check(groupRequests.Items.Count == 1 && groupMembers.Items.Count == 1, "Requests are separate from confirmed members");
+        foreach (var size in new[] { ("desktop", 1180d, 820d), ("small", MinWidth, MinHeight) })
+        {
+            Width = size.Item2; Height = size.Item3; await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-groups.png"));
+        }
+        var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
+        groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
+        UpdateGroupControls(); Check(groupStopButton.IsEnabled, "Global Stop is available while Auto waits");
+        StopAll("ESC fixture");
+        Check(!groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp()), "Delayed online update cannot rearm after ESC");
+        groupProfile = new(); selectedGroupSnapshot = null; ReloadGroupPickers(); operationTabs.SelectedIndex = 0;
         ShowPage(0); drawRegion.IsChecked = true;
         await Settle();
         Check(overlay.Cursor == System.Windows.Input.Cursors.Cross, "Drawing requires explicit setup mode");

@@ -8,6 +8,7 @@
 - [Bildschirm und Kalibrierung](calibration.md) – Vorschau, Teamflächen und Erkennung
 - [Diagnose und Hilfe](troubleshooting.md) – Fehlerbehebung, Exporte und gespeicherte Einstellungen
 - [Automatische Updates](updates.md) – Updateprüfung, Installation und Wiederherstellung
+- [Gruppenmodus](groups.md) – Einladungen, Freigaben und gemeinsame Teamauswahl
 - [Lizenz](license.md) – GNU GPL v3.0 und vollständiger Lizenztext
 
 ## 🛠️ Entwicklung
@@ -19,6 +20,7 @@ Die Befehle in diesen Seiten werden vom Repository-Stamm aus ausgeführt. Quellc
 - [Produktbeschreibung](PRODUCT.md)
 - [Gestaltung](DESIGN.md)
 - [Umsetzungsplan](PLAN.md)
+- [Funktionsplan: Gruppenmodus und Online-Synchronisierung](group-mode-plan.md)
 - [Dialogerkennung](detection.md)
 - [Steuerung und Hotkeys](automation.md)
 

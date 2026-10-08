@@ -164,6 +164,25 @@ await stopTask;
 var delivered = blockingSink.Count;
 await Task.Delay(120);
 Check(blockingSink.Count == delivered, "Input delivered after synchronized Stop");
+
+// Group Auto uses this worker to observe the next selection after HUD success.
+control.Stop("Observe only", AutomationStopCause.GroupUpdate); detector.Match = true; hud.Match = false;
+var beforeObservation = detector.Calls; count = sink.Count;
+control.Observe(Settings());
+await Until(() => detector.Calls > beforeObservation && control.Snapshot.Detection?.IsMatch == true, "Idle observation never detected the next dialog");
+await Task.Delay(300);
+Check(sink.Count == count && control.Snapshot.State == RunState.Stopped, "Observation sent input or activated a run");
+control.Start(Team.Green, Settings());
+await Until(() => control.Snapshot.State == RunState.Clicking, "Group-style restart did not validate the dialog");
+hud.Match = true;
+await Until(() => control.Snapshot.State == RunState.Stopped && control.Snapshot.StopCause == AutomationStopCause.Joined, "HUD success lacks typed stop cause");
+count = sink.Count;
+await Task.Delay(300); Check(sink.Count == count, "Idle HUD observation restarted clicking");
+control.Observe(null); control.Stop("ESC");
+Check(control.Snapshot.StopCause == AutomationStopCause.Manual, "Explicit stop must remain distinguishable from HUD success");
+screen.Fail = true; control.Observe(Settings());
+await Until(() => control.Snapshot.StopCause == AutomationStopCause.Safety, "Observer failure did not produce a safety stop");
+screen.Fail = false; control.Observe(null);
 Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, continuous clicking beyond former absence timeout, mandatory HUD confirmation/flicker/focus/overlap, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
 
 sealed class FakeScreen : IScreenService

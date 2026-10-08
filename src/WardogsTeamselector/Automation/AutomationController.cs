@@ -18,6 +18,8 @@ public sealed class AutomationController : IDisposable
     private readonly CancellationTokenSource lifetime = new();
     private readonly Task worker;
     private Session? active;
+    private AppSettings? observation;
+    private long lastObservation;
     private long lastClickTimestamp;
     private bool disposed;
     private AutomationSnapshot snapshot = new(RunState.Stopped, null, 0, 0, "Bereit", null, null);
@@ -44,15 +46,22 @@ public sealed class AutomationController : IDisposable
     }
 
     /// <summary>Synchronizes with input delivery: after return no input from the stopped run can be sent.</summary>
-    public void Stop(string reason = "ESC")
+    public void Stop(string reason = "ESC", AutomationStopCause cause = AutomationStopCause.Manual)
     {
-        lock (gate) StopLocked(reason);
+        lock (gate) StopLocked(reason, cause);
     }
 
-    private void StopLocked(string reason)
+    private void StopLocked(string reason, AutomationStopCause cause = AutomationStopCause.Safety)
     {
         active = null;
-        Publish(snapshot with { State = RunState.Stopped, Reason = reason });
+        Publish(snapshot with { State = RunState.Stopped, Reason = reason, StopCause = cause });
+    }
+
+    /// <summary>Use the same worker for sparse, input-free observation between Auto attempts.</summary>
+    public void Observe(AppSettings? settings)
+    {
+        var copy = settings == null ? null : Copy(settings); copy?.Validate();
+        lock (gate) { observation = copy; lastObservation = 0; }
     }
 
     private async Task RunAsync()
@@ -64,6 +73,7 @@ public sealed class AutomationController : IDisposable
                 Session? session;
                 lock (gate) session = active;
                 if (session is not null) Sample(session);
+                else SampleObservation();
                 await Task.Delay(20, lifetime.Token).ConfigureAwait(false);
             }
         }
@@ -127,7 +137,7 @@ public sealed class AutomationController : IDisposable
                             if (session.Started) StopLocked("Fokus oder Spielbereich vor Beitrittsbestätigung geändert");
                             return;
                         }
-                        StopLocked("HUD: Beitritt erkannt");
+                        StopLocked("HUD: Beitritt erkannt", AutomationStopCause.Joined);
                         return;
                     }
                 }
@@ -171,6 +181,33 @@ public sealed class AutomationController : IDisposable
         catch (Exception ex)
         {
             lock (gate) if (active == session) StopLocked($"Aufnahme/Steuerung fehlgeschlagen: {ex.Message}");
+        }
+    }
+
+    private void SampleObservation()
+    {
+        AppSettings? config;
+        lock (gate)
+        {
+            config = observation;
+            if (config == null || active != null || (lastObservation != 0 && Stopwatch.GetElapsedTime(lastObservation).TotalMilliseconds < 250)) return;
+            lastObservation = Stopwatch.GetTimestamp();
+        }
+        try
+        {
+            var target = screen.ResolveTarget(config);
+            if (target == null)
+            {
+                lock (gate) if (active == null && observation == config) Publish(snapshot with { Detection = null, JoinedDetection = null, Geometry = null });
+                return;
+            }
+            using var frame = screen.Capture(target);
+            var dialog = detector.Detect(frame, config); var hud = joinedDetector.Detect(frame, config);
+            lock (gate) if (active == null && observation == config) Publish(snapshot with { Detection = dialog, JoinedDetection = hud, Geometry = target });
+        }
+        catch (Exception)
+        {
+            lock (gate) if (active == null && observation == config) { observation = null; StopLocked("Beobachtung fehlgeschlagen", AutomationStopCause.Safety); }
         }
     }
 

@@ -21,7 +21,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks')) {
+          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks', 'GroupChecks', 'GroupStorageChecks')) {
             dotnet run --project "tests/$name/$name.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "Checks failed: $name" }
           }
@@ -44,6 +44,29 @@ jobs:
           path: dist/WardogsTeamselector-win-x64-*.exe
           if-no-files-found: error
           retention-days: 30
+
+  groups-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: npm run test:client
+      - run: npm run check
+        env:
+          WRANGLER_SEND_METRICS: 'false'
 
   release:
     needs: build

@@ -86,13 +86,14 @@ public sealed partial class MainWindow : Window
         automation.Updated += OnAutomation;
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
         Build(); LoadFields();
+        InitializeGroups();
         LocalizeInterface();
         Loaded += (_, _) => localizationTimer.Start();
         Loaded += (_, _) => InitializeUpdates();
         Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
         UpdatePreviewLocation();
-        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += StartTeam; hotkeys.EscapePressed += () => automation.Stop("ESC – abgebrochen"); RegisterKeys(); };
+        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += StartTeam; hotkeys.EscapePressed += () => StopAll("ESC – abgebrochen"); RegisterKeys(); };
         Loaded += async (_, _) => { if (startupSettingsError != null) ShowError(startupSettingsError); await RefreshPreview(); UpdatePreviewTimer(); };
         timer.Tick += async (_, _) => await RefreshPreview();
         Closing += (_, e) =>
@@ -102,9 +103,9 @@ public sealed partial class MainWindow : Window
                 var choice = LocalizedMessageBox.Show(this, "Änderungen vor dem Schließen speichern?", "Ungespeicherte Einstellungen", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (choice == MessageBoxResult.Cancel || (choice == MessageBoxResult.Yes && !SaveSettings())) { e.Cancel = true; return; }
             }
-            closing = true; timer.Stop(); localizationTimer.Stop(); automation.Dispose(); hotkeys?.Dispose();
+            closing = true; timer.Stop(); localizationTimer.Stop(); DisposeGroups(); automation.Dispose(); hotkeys?.Dispose();
         };
-        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) automation.Stop("ESC – abgebrochen"); };
+        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) StopAll("ESC – abgebrochen"); };
     }
 
     private void LoadFields()
@@ -216,6 +217,7 @@ public sealed partial class MainWindow : Window
     }
     private void StartTeam(Team team)
     {
+        StopGroupFollow();
         try
         {
             if (startupSettingsError != null) throw new InvalidOperationException(startupSettingsError);
@@ -433,7 +435,7 @@ public sealed partial class MainWindow : Window
     private void ShowError(string message) { errorText.Text = message; errorText.Visibility = Visibility.Visible; AddLog("Fehler: " + message); }
     private void ClearError() { errorText.Text = ""; errorText.Visibility = Visibility.Collapsed; }
     private void AddLog(string message) { logLines.Add(DateTime.Now.ToString("HH:mm:ss.fff") + "  " + message); if (logLines.Count > 500) logLines.RemoveAt(0); log.Text = string.Join(Environment.NewLine, logLines); log.ScrollToEnd(); }
-    private void MarkDirty(bool stopRun = true) { if (loadingFields) return; dirty = true; if (stopRun && automation.Snapshot.State != RunState.Stopped) automation.Stop("Einstellungen bearbeitet"); UpdateProfileState(); }
+    private void MarkDirty(bool stopRun = true) { if (loadingFields) return; dirty = true; if (stopRun) { StopGroupFollow(); if (automation.Snapshot.State != RunState.Stopped) automation.Stop("Einstellungen bearbeitet"); } UpdateProfileState(); }
     private void Changed(object sender, RoutedEventArgs e) => MarkDirty();
     private double Number(string key)
     {

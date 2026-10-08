@@ -1,0 +1,114 @@
+using System.Diagnostics;
+using System.Net;
+using System.Text.Json;
+using WardogsTeamselector.Groups;
+
+var checks = 0;
+void Check(bool condition, string label) { if (!condition) throw new Exception(label); checks++; }
+void Reject(Action action, string label) { bool rejected = false; try { action(); } catch (Exception) { rejected = true; } Check(rejected, label); }
+GroupMembership Membership() => new() { ServiceUrl = "https://groups.example", GroupId = GroupMembership.NewId(), MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), Name = "Freunde", DisplayName = "Spieler", Status = "Approved" };
+GroupSnapshot Snapshot(GroupMembership group, long revision = 1, long selection = 1, string? team = "Blue", string status = "Approved") => new(1, group.GroupId, group.Name, revision, selection, team, status, "Member", group.MemberId, new());
+
+var group = Membership(); var follower = new GroupFollowCoordinator(); var now = Stopwatch.GetTimestamp();
+var generation = follower.Begin(group, true);
+Check(!follower.CanRun(generation, now), "Cannot start before authorized state");
+Check(follower.Apply(generation, Snapshot(group), now), "First team publication changes selection");
+Check(follower.CanRun(generation, now), "Current approved selection can start");
+Check(!follower.Apply(generation, Snapshot(group), now), "Duplicate state does not restart");
+Check(!follower.Apply(generation, Snapshot(group, 2), now), "Membership revision does not restart selection");
+Check(follower.Apply(generation, Snapshot(group, 3, 2, "Red"), now), "New selection replaces team");
+Check(follower.Team == "Red", "Latest team retained");
+Check(!follower.Apply(generation, Snapshot(group, 1), now), "Older revision ignored");
+Check(follower.Team == "Red", "Old message cannot replace new team");
+follower.Disconnected(generation); Check(!follower.CanRun(generation, now), "Disconnected state cannot start");
+follower.Apply(generation, Snapshot(group, 3, 2, "Red"), now); Check(follower.CanRun(generation, now), "Fresh snapshot restores online gate");
+Check(!follower.CanRun(generation, now + Stopwatch.Frequency * 76), "Stale online lease prevents clicks");
+follower.Stop(); Check(!follower.Apply(generation, Snapshot(group, 4, 3, "Green"), now), "ESC generation rejects delayed messages");
+Check(!follower.CanRun(generation, now), "ESC cannot auto-rearm");
+var other = Membership(); var newer = follower.Begin(other, true);
+Check(!follower.Apply(generation, Snapshot(group, 5, 4), now), "Group switch rejects old connection");
+Check(!follower.Apply(newer, Snapshot(group, 5, 4), now), "Other group ID rejected even with current generation");
+follower.Apply(newer, Snapshot(other, 1, 0, null), now); Check(follower.Enabled && !follower.CanRun(newer, now), "Auto may wait for no selection");
+follower.Apply(newer, Snapshot(other, 2, 1, "Blue", "Removed"), now); Check(!follower.CanRun(newer, now), "Removal revokes click gate");
+
+var invite = GroupMembership.NewToken();
+var parsed = GroupServiceAddress.ParseInvitation($"https://groups.example/invite/{group.GroupId}#{invite}");
+Check(parsed.ServiceUrl == group.ServiceUrl && parsed.GroupId == group.GroupId && parsed.InviteToken == invite, "Invitation retains secret fragment");
+Reject(() => GroupServiceAddress.ParseInvitation($"http://groups.example/invite/{group.GroupId}#{invite}"), "Nonlocal HTTP rejected");
+Reject(() => GroupServiceAddress.ParseInvitation($"https://user:secret@groups.example/invite/{group.GroupId}#{invite}"), "URL credentials rejected");
+Reject(() => GroupServiceAddress.ParseInvitation($"https://groups.example/invite/{group.GroupId}?token={invite}"), "Query-string credentials rejected");
+Reject(() => GroupServiceAddress.Normalize("https://groups.example/path"), "Service URL path rejected");
+Check(GroupServiceAddress.Normalize("http://localhost:8787") == "http://localhost:8787", "Local development service accepted");
+Reject(() => (Snapshot(group) with { GroupId = other.GroupId }).Validate(group), "Cross-group snapshot rejected");
+Reject(() => (Snapshot(group) with { ProtocolVersion = 2 }).Validate(group), "Unsupported protocol rejected");
+Reject(() => (Snapshot(group) with { Team = "Orange" }).Validate(group), "Unknown team rejected");
+
+var profile = new GroupProfile { ServiceUrl = group.ServiceUrl, Groups = new() { group } };
+group.PendingToken = GroupMembership.NewToken(); group.PendingCredentialOperation = GroupMembership.NewId();
+var recovered = GroupRecoveryCodec.Import(GroupRecoveryCodec.Export(profile));
+Check(recovered.Groups[0].Token == group.Token && recovered.Groups[0].PendingToken == group.PendingToken, "Recovery includes interrupted credential replacement");
+Check(recovered.Groups[0].MemberId == group.MemberId, "Recovery retains identity");
+Reject(() => GroupRecoveryCodec.Import("WDG2:invalid"), "Unsupported recovery code rejected");
+Reject(() => GroupRecoveryCodec.Export(new GroupProfile { Groups = new() { group, group } }), "Duplicate memberships rejected");
+
+var handler = new FakeHandler(request =>
+{
+    Check(request.Headers.Authorization?.Parameter == group.Token, "Authentication stays in request header");
+    Check(!request.RequestUri!.ToString().Contains(group.Token), "No token in request URL");
+    return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(Snapshot(group), GroupJson.Options)) };
+});
+using (var api = new GroupApiClient(handler)) Check((await api.GetAsync(group)).Team == "Blue", "Authorized API state parsed");
+using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.Forbidden) { Content = new StringContent("{\"code\":\"membership_revoked\",\"message\":\"secret provider text\"}") })))
+{
+    try { await api.GetAsync(group); Check(false, "Revocation expected"); }
+    catch (GroupApiException ex) { Check(ex.AccessRevoked && !ex.Message.Contains("secret"), "Provider text cannot leak into diagnostics"); }
+}
+using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.Found) { Headers = { Location = new Uri("https://other.example") }, Content = new StringContent("") })))
+{
+    try { await api.GetAsync(group); Check(false, "Redirect must fail"); } catch (GroupApiException) { Check(true, "Redirect does not forward credentials"); }
+}
+using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.OK) { Content = new StringContent(new string('x', 65537)) })))
+{
+    try { await api.GetAsync(group); Check(false, "Large response must fail"); } catch (GroupApiException ex) { Check(ex.Code == "invalid_response", "Response size bounded"); }
+}
+Console.WriteLine($"GroupChecks: {checks} checks passed.");
+
+if (args.Length == 2 && args[0] == "--live")
+{
+    var owner = Membership(); owner.ServiceUrl = GroupServiceAddress.Normalize(args[1]); owner.Role = "Owner"; owner.InviteToken = GroupMembership.NewToken();
+    var member = Membership(); member.ServiceUrl = owner.ServiceUrl; member.GroupId = owner.GroupId; member.Status = "Pending";
+    using var realApi = new GroupApiClient();
+    await realApi.CreateAsync(owner);
+    try
+    {
+        await realApi.JoinAsync(member, owner.InviteToken);
+        await realApi.ActionAsync(owner, "approve", new { operationId = GroupMembership.NewId(), memberId = member.MemberId });
+        using var sync = new GroupSyncClient(realApi, member);
+        var updates = new System.Collections.Concurrent.ConcurrentQueue<(GroupSnapshot State, long Time)>();
+        var connectionReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var revoked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        sync.Updated += value => updates.Enqueue((value, Stopwatch.GetTimestamp()));
+        sync.ConnectionChanged += (online, _) => { if (online) connectionReady.TrySetResult(); };
+        sync.AccessRevoked += _ => revoked.TrySetResult();
+        sync.Start(); await connectionReady.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await realApi.ActionAsync(owner, "publish", new { operationId = GroupMembership.NewId(), team = "Red" });
+        var waiting = Stopwatch.StartNew();
+        while (!updates.Any(x => x.State.Team == "Red") && waiting.Elapsed.TotalSeconds < 10) await Task.Delay(20);
+        Check(updates.Any(x => x.State.Team == "Red"), "Real .NET WebSocket receives immediate publication");
+        Console.WriteLine("Live client: connected and Red received; checking the scheduled minute sync.");
+        var heartbeatStart = Stopwatch.GetTimestamp();
+        waiting.Restart();
+        while (!updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 45) && waiting.Elapsed.TotalSeconds < 65) await Task.Delay(100);
+        Check(updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 45), "Real minute sync refreshes unchanged authorized state");
+        await realApi.ActionAsync(owner, "remove", new { operationId = GroupMembership.NewId(), memberId = member.MemberId });
+        await revoked.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Check(true, "Real removal revokes .NET WebSocket membership");
+        Console.WriteLine("Live client: minute sync and removal passed.");
+    }
+    finally { await realApi.ActionAsync(owner, "delete", new { operationId = GroupMembership.NewId() }); }
+}
+
+sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(respond(request));
+}
