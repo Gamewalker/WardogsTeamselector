@@ -34,6 +34,7 @@ internal static class Program
             own.Close();
         }
         Check(service.ResolveTarget(new AppSettings { WindowTitleContains = "NoWindow_" + Guid.NewGuid().ToString("N") }) is null, "missing game never authorizes geometry");
+        Check(!service.TryBringGameToForeground(new AppSettings { WindowTitleContains = "NoWindow_" + Guid.NewGuid().ToString("N") }), "missing game cannot receive focus");
 
         var title = "WardogsPhysicalCheck_" + Guid.NewGuid().ToString("N");
         var start = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true };
@@ -52,6 +53,7 @@ internal static class Program
             Check(geometry!.IsCalibrated, "16:9 client initially calibrated");
             settings.ProcessNameContains = "wrong-process";
             Check(service.ResolveTarget(settings) is null, "title match cannot bypass process filter");
+            Check(!service.TryBringGameToForeground(settings), "focus respects the process filter");
             settings.ProcessNameContains = child.ProcessName;
             var monitor = monitors.Single(m => m.Bounds.Contains(expected));
             settings.MonitorId = monitor.Id;
@@ -67,6 +69,19 @@ internal static class Program
             settings.ManualBounds = new Rectangle(expected.X - 10, expected.Y, 200, 150);
             Check(service.ResolveTarget(settings) is null, "manual bounds cannot escape game client");
             settings.ManualBounds = null;
+            using (var competitor = new Form { Text = "WardogsFocusCheck", ClientSize = new Size(240, 120) })
+            {
+                competitor.Show(); competitor.Activate(); Application.DoEvents();
+                if (GetForegroundWindow() == competitor.Handle)
+                    Check(service.TryBringGameToForeground(settings) && service.ResolveTarget(settings)?.IsForeground == true, "game foreground transfer from another window");
+                else Console.WriteLine("NOTE: Windows denied test-window focus; foreground transfer assertion skipped.");
+                competitor.Close();
+            }
+            ShowWindow(geometry.WindowHandle, 6); // SW_MINIMIZE
+            Check(IsIconic(geometry.WindowHandle) && service.ResolveTarget(settings) is null, "minimized game excluded from capture");
+            bool activated = service.TryBringGameToForeground(settings);
+            Check(!IsIconic(geometry.WindowHandle) && service.ResolveTarget(settings) is not null, "activation restores minimized game");
+            Check(activated == (service.ResolveTarget(settings)?.IsForeground == true), "foreground result reports actual focus");
             geometry = service.ResolveTarget(settings)!;
             using var frame = service.Capture(geometry);
             Check(frame.Bitmap.Size == expected.Size, "GDI capture physical dimensions");
@@ -112,4 +127,7 @@ internal static class Program
         if (!success) throw new InvalidOperationException("FAIL: " + description);
         count++; Console.WriteLine("PASS: " + description);
     }
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool ShowWindow(IntPtr window, int command);
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool IsIconic(IntPtr window);
 }

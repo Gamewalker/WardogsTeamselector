@@ -266,6 +266,13 @@ public sealed partial class MainWindow
             left.Children.Add(Label("Team " + TeamName(team), box)); left.Children.Add(inputFrame);
         }
         left.Children.Add(Hint("Drei verschiedene F-Tasten wählen. Ein Tastendruck aktiviert; ESC beendet immer und wird an das Spiel weitergegeben."));
+        left.Children.Add(Heading("Spielfokus"));
+        focusGame.Foreground = Foreground;
+        focusGame.Content = new TextBlock { Text = "Spiel nach Teamaktivierung in den Vordergrund holen", TextWrapping = TextWrapping.Wrap };
+        focusGame.Checked += (_, _) => MarkDirty(false);
+        focusGame.Unchecked += (_, _) => MarkDirty(false);
+        left.Children.Add(focusGame);
+        left.Children.Add(Hint("Gilt für Teambuttons und Teamhotkeys. Zum dauerhaften Deaktivieren ausschalten und Einstellungen speichern.", 6));
         left.Children.Add(Heading("Vorschau & Leistung"));
         liveUpdates.Content = "Live-Vorschau automatisch aktualisieren";
         liveUpdates.Foreground = Foreground;
@@ -290,6 +297,7 @@ public sealed partial class MainWindow
         right.Children.Add(Hint("Einstellungen werden für diesen Windows-Benutzer gespeichert. Ungespeicherte Änderungen bleiben in der Fußleiste sichtbar."));
         right.Children.Add(Button("Standardwerte laden …", ResetSettings));
         right.Children.Add(Hint("Setzt auch die Teamflächen und Tastenkürzel zurück. Die gespeicherte Datei wird erst beim Speichern ersetzt.", 6));
+        right.Children.Add(BuildUpdates());
         return Scroll(grid);
     }
 

@@ -29,6 +29,7 @@ public sealed class AppSettings
     public int MaxIntervalMs { get; set; } = 70;
     public double DetectionThreshold { get; set; } = 0.90;
     public bool LivePreviewEnabled { get; set; } = true;
+    public bool FocusGameOnTeamActivation { get; set; } = true;
     public string? MonitorId { get; set; }
     public string WindowTitleContains { get; set; } = "wardogs";
     public string ProcessNameContains { get; set; } = "wardogs";

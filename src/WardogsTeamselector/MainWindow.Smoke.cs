@@ -16,12 +16,14 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(directory);
         Check(Icon != null, "App icon loaded");
         Check(pages.Items.Count == 4, "Four task areas");
+        Check(updateStatus.Text.Contains("GUI-Prüflauf") && !updateTimer.IsEnabled && stagedUpdate == null, "Smoke mode never checks or stages updates");
         Check(pages.SelectedIndex == (hasSavedProfile && startupSettingsError == null ? 1 : 0), "Startup follows saved profile");
 
         // Use an in-memory fixture: smoke mode never writes the user's profile or registers hotkeys.
         settings = new AppSettings(); startupSettingsError = null; dirty = false;
         LoadFields(); ApplyHotkeys(settings);
         Check(!dirty && !regionDirty, "Loading fields does not create unsaved edits");
+        Check(focusGame.IsChecked == true && ReadFields().FocusGameOnTeamActivation, "Game focus defaults to enabled");
         Check(!stopButton.IsEnabled, "Stop is disabled before activation");
         Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(dryRun) && LogicalElements((DependencyObject)((TabItem)pages.Items[3]).Content).Contains(dryRun), "Test-mode control belongs exclusively to diagnosis");
         Check(operationState.TextAlignment == TextAlignment.Center && runReason.TextAlignment == TextAlignment.Center && counters.TextAlignment == TextAlignment.Center, "Current run is centered");
@@ -41,6 +43,11 @@ public sealed partial class MainWindow
                 Check(page is not (0 or 3) || previewPane.Parent == (page == 0 ? setupPreviewSlot : diagnosticPreviewSlot), "Preview belongs to selected task");
                 SaveRender(Path.Combine(directory, $"{size.Item1}-{page + 1}.png"));
             }
+            ShowPage(2);
+            Check(LogicalElements((DependencyObject)((TabItem)pages.Items[2]).Content).Contains(automaticUpdates), "Update controls belong to configuration");
+            LogicalElements((DependencyObject)((TabItem)pages.Items[2]).Content).OfType<ScrollViewer>().First().ScrollToEnd();
+            await Settle();
+            SaveRender(Path.Combine(directory, $"{size.Item1}-updates.png"));
             ShowPage(0);
             var expanders = LogicalElements((DependencyObject)Content).OfType<Expander>().ToArray();
             var coordinates = expanders.Single(e => (string)e.Header == "Teamfläche als Prozentwerte");
@@ -106,9 +113,12 @@ public sealed partial class MainWindow
         Width = MinWidth; Height = MinHeight; await Settle();
         foreach (int page in new[] { 0, 2, 3, 1 }) ShowPage(page);
         Check(automation.Snapshot.State == RunState.Waiting, "Navigating between tasks preserves an active run");
+        focusGame.IsChecked = false;
+        Check(!ReadFields().FocusGameOnTeamActivation && dirty && automation.Snapshot.State == RunState.Waiting, "Disabling game focus applies to next activation without stopping the current run");
         liveUpdates.IsChecked = false; await RefreshPreview();
         Check(!timer.IsEnabled && preview.Source == null && probes.ItemsSource == null && automation.Snapshot.State == RunState.Waiting, "Disabling preview frees detail resources without stopping automation");
         StartTeam(Team.Red); await Settle();
+        Check(!settings.FocusGameOnTeamActivation, "Team activation respects disabled game focus");
         Check(teamStateLabels[Team.Red].Text == "Aktiv · wartet" && teamStateLabels[Team.Blue].Text == "Aktivieren", "Switching teams moves the active marker");
         SaveRender(Path.Combine(directory, "red-waiting.png"));
         StartTeam(Team.Green); await Settle();

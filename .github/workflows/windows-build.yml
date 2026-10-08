@@ -21,7 +21,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks')) {
+          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'UpdateChecks')) {
             dotnet run --project "tests/$name/$name.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "Checks failed: $name" }
           }
@@ -33,7 +33,7 @@ jobs:
       - name: Publish Windows x64 EXEs with and without runtime
         shell: pwsh
         run: |
-          ./build.ps1
+          ./build.ps1 -ReleaseBuild ${{ github.run_number }}
           foreach ($variant in @('with-runtime', 'without-runtime')) {
             if (!(Test-Path "dist/WardogsTeamselector-win-x64-$variant.exe")) { throw "Published EXE missing: $variant" }
           }

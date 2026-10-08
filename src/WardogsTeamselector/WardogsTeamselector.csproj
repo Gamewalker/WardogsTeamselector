@@ -9,4 +9,9 @@
   <ItemGroup><EmbeddedResource Include="Assets\reference.png" LogicalName="WardogsTeamselector.Reference" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="Assets\joined.png" LogicalName="WardogsTeamselector.Joined" /></ItemGroup>
   <ItemGroup><Resource Include="Assets\app.ico" /></ItemGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="ReleaseBuild" Value="$(ReleaseBuild)" />
+    <AssemblyMetadata Include="UpdateVariant" Value="$(UpdateVariant)" />
+    <EmbeddedResource Include="Updates\InstallUpdate.ps1" LogicalName="WardogsTeamselector.InstallUpdate" />
+  </ItemGroup>
 </Project>

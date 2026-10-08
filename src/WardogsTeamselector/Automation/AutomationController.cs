@@ -188,6 +188,7 @@ public sealed class AutomationController : IDisposable
         MinIntervalMs = value.MinIntervalMs, MaxIntervalMs = value.MaxIntervalMs,
         DetectionThreshold = value.DetectionThreshold, MonitorId = value.MonitorId,
         LivePreviewEnabled = value.LivePreviewEnabled,
+        FocusGameOnTeamActivation = value.FocusGameOnTeamActivation,
         WindowTitleContains = value.WindowTitleContains, ProcessNameContains = value.ProcessNameContains, DryRun = value.DryRun,
         GeometryCalibrated = value.GeometryCalibrated, ManualBounds = value.ManualBounds,
         DetectionOffsetX = value.DetectionOffsetX, DetectionOffsetY = value.DetectionOffsetY,

@@ -50,6 +50,7 @@ public sealed partial class MainWindow : Window
     private readonly ComboBox monitor = new(), selectedTeam = new();
     private readonly CheckBox dryRun = new() { Content = "Testmodus – keine Mauseingaben", IsChecked = true }, calibrated = new() { Content = "Geometrie für dieses Profil geprüft" };
     private readonly CheckBox liveUpdates = new() { Content = "Live-Bild und Detaildiagnose aktualisieren", IsChecked = true };
+    private readonly CheckBox focusGame = new() { Content = "Spiel nach Teamaktivierung in den Vordergrund holen", IsChecked = true };
     private readonly TextBlock status = new(), geometryText = new(), detectionText = new(), errorText = new(), counters = new();
     private readonly TextBlock joinedText = new() { Foreground = Muted, Margin = new Thickness(0, 4, 0, 0) };
     private readonly System.Windows.Controls.Image preview = new() { Stretch = Stretch.Uniform };
@@ -80,6 +81,8 @@ public sealed partial class MainWindow : Window
         automation.Updated += OnAutomation;
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
         Build(); LoadFields();
+        Loaded += (_, _) => InitializeUpdates();
+        Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
         UpdatePreviewLocation();
         SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += StartTeam; hotkeys.EscapePressed += () => automation.Stop("ESC – abgebrochen"); RegisterKeys(); };
@@ -105,6 +108,7 @@ public sealed partial class MainWindow : Window
         fields["min"].Text = settings.MinIntervalMs.ToString(); fields["max"].Text = settings.MaxIntervalMs.ToString(); fields["title"].Text = settings.WindowTitleContains;
         fields["process"].Text = settings.ProcessNameContains;
         liveUpdates.IsChecked = settings.LivePreviewEnabled;
+        focusGame.IsChecked = settings.FocusGameOnTeamActivation;
         fields["threshold"].Text = Format(settings.DetectionThreshold * 100); fields["offsetx"].Text = Format(settings.DetectionOffsetX * 100); fields["offsety"].Text = Format(settings.DetectionOffsetY * 100); fields["scale"].Text = Format(settings.DetectionScale);
         fields["bounds"].Text = settings.ManualBounds is Rectangle r ? $"{r.X},{r.Y},{r.Width},{r.Height}" : ""; dryRun.IsChecked = settings.DryRun; calibrated.IsChecked = settings.GeometryCalibrated;
         foreach (var t in Enum.GetValues<Team>()) keyBoxes[t].SelectedIndex = settings.Hotkeys[t] - 0x70;
@@ -147,6 +151,7 @@ public sealed partial class MainWindow : Window
             s.ManualBounds = new(values[0], values[1], values[2], values[3]);
         }
         s.LivePreviewEnabled = liveUpdatesEnabled;
+        s.FocusGameOnTeamActivation = focusGame.IsChecked == true;
         s.Validate(); return s;
     }
     private void RefreshMonitors() => RefreshMonitors(true);
@@ -212,6 +217,8 @@ public sealed partial class MainWindow : Window
             catch (Exception ex) { AddLog("Tastenkürzel nicht verfügbar: " + ex.Message); }
             settings = next; LoadRegion(); referenceMode = false; ClearError(); ShowPage(1);
             UpdateProfileState(); automation.Start(team, next);
+            if (!smokeMode && next.FocusGameOnTeamActivation && !screen.TryBringGameToForeground(next))
+                AddLog("Spielfenster konnte nicht in den Vordergrund geholt werden. Zum Spiel wechseln; die Teamaktivierung wartet auf Spielfokus.");
         }
         catch (Exception ex) { ShowError(ex.Message); }
     }
