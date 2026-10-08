@@ -26,4 +26,3 @@ Die Plattformprüfungen werden in CI nur kompiliert: Ihre Ausführung und die GU
 Für verständliche Release-Beschreibungen neue Änderungen in einer eigenen Markdown-Datei unter `docs/releases/` erläutern. Das Release übernimmt nur neue oder geänderte Beschreibungen seit dem letzten veröffentlichten Release sowie die Commit-Titel. Beide EXEs sind dauerhaft unter **Releases** verfügbar, unabhängig von der 30-Tage-Aufbewahrung der Actions-Artefakte.
 
 Weitere Details: [Prüfungen und Ergebnisse](TESTING.md), [Produktbeschreibung](PRODUCT.md), [Gestaltung](DESIGN.md), [Umsetzungsplan](PLAN.md), [Dialogerkennung](detection.md) und [Steuerung und Hotkeys](automation.md).
-

@@ -53,4 +53,3 @@ Sie prüfen ungültige Intervalle, Wartezustand, Stabilisierung, Fokus/Kalibrier
 Dialogverlust, Geometriewechsel, kopierte Einstellungen, parallele Teamstarts,
 die tatsächliche Zeituntergrenze, Testmodus, Aufnahmefehler und einen bewusst
 blockierten Eingabesink gegen synchronen Stopp.
-

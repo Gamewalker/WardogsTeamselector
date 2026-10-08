@@ -74,5 +74,3 @@ Technische Quellen:
 - https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview
 - https://learn.microsoft.com/en-us/windows/win32/hidpi/setting-the-default-dpi-awareness-for-a-process
 - https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput
-
-

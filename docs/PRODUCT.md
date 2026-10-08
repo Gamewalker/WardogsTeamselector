@@ -50,5 +50,3 @@ Die aktuellen GUI-Prüfungen und Ansichten unter `artifacts/operator-status-with
 ## Darstellung
 
 Die vom Nutzer bestätigte dunkle native Windows-Werkzeugoberfläche bleibt erhalten: Segoe UI, vorhandenes Anwendungssymbol, Teamfarben, klare deutsche Labels und native helle Kontrollen. Die Überarbeitung ordnet die Bedienung nach Aufgabe und erhält Status, Stopp und Profilaktionen unabhängig vom aktiven Bereich. Bestehende Bildassets bleiben unverändert.
-
-

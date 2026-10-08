@@ -21,4 +21,3 @@
 - **Einstellungen werden nicht übernommen:** Fehlerhinweis korrigieren und **Einstellungen speichern** wählen. Eine Teamaktivierung speichert Änderungen nicht automatisch.
 
 Noch Fragen? [Ein Problem auf GitHub melden](https://github.com/Gamewalker/WardogsTeamselector/issues). Hilfreich sind der angezeigte Statusgrund, die verwendete EXE-Variante und ein Diagnoseexport.
-

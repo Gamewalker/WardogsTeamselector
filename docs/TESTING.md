@@ -45,4 +45,3 @@ Ausgeführt am 6. Oktober 2026 auf Windows x64.
 - Unabhängige Prüfung: kein wesentlicher Logikfehler gefunden; Kontrast des blauen Buttons korrigiert und mit 5,41:1 bestätigt.
 
 Es wurden keine echten Mauseingaben an Wardogs gesendet. Tatsächliche Spielaufnahme, HDR/exklusives Vollbild, reale UI-Skalierung und Akzeptanz der Eingaben durch das Spiel bleiben unbestätigt. Die EXE wurde auf diesem Rechner getestet, nicht auf einem frisch aufgesetzten Windows ohne .NET; die Veröffentlichung ist self-contained mit gebündelter Runtime.
-
