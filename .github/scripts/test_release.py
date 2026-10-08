@@ -1,14 +1,30 @@
 """Check that release notes cover exactly the changes since the prior release."""
 import os
+import json
+import hashlib
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 
-from release import release_notes
+from release import release_notes, write_update_manifest
 
 
 class ReleaseNotesTests(unittest.TestCase):
+    def test_manifest_matches_both_published_binaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            assets = [Path(directory) / f"WardogsTeamselector-win-x64-{variant}.exe"
+                      for variant in ("with-runtime", "without-runtime")]
+            for index, asset in enumerate(assets):
+                asset.write_bytes(b"MZ" + bytes([index]))
+            manifest = json.loads(write_update_manifest(assets, "build-23-abcdef1").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["tag_name"], "build-23-abcdef1")
+            self.assertFalse(manifest["draft"] or manifest["prerelease"])
+            for asset, entry in zip(assets, manifest["assets"]):
+                self.assertEqual(entry["name"], asset.name)
+                self.assertEqual(entry["size"], asset.stat().st_size)
+                self.assertEqual(entry["digest"], "sha256:" + hashlib.sha256(asset.read_bytes()).hexdigest())
+
     def test_moving_legacy_notes_does_not_repeat_them(self):
         previous_directory = Path.cwd()
         with tempfile.TemporaryDirectory() as directory:

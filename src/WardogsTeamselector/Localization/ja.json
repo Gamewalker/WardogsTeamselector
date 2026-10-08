@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "アップデートは正常にインストールされました。",
   "Update fehlgeschlagen: ": "更新に失敗しました: ",
   "Sprache": "言語",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "言語設定を保存できませんでした。"
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "言語設定を保存できませんでした。",
+  "Stopp": "停止・ESC"
 }

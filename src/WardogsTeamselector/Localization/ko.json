@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "업데이트가 성공적으로 설치되었습니다.",
   "Update fehlgeschlagen: ": "업데이트 실패: ",
   "Sprache": "언어",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "언어 기본 설정을 저장할 수 없습니다."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "언어 기본 설정을 저장할 수 없습니다.",
+  "Stopp": "정지"
 }

@@ -1,5 +1,6 @@
 """Publish both EXE variants with notes since the last published release."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import subprocess
@@ -31,6 +32,18 @@ def release_notes(base, head):
     return body
 
 
+def write_update_manifest(assets, tag):
+    manifest = assets[0].parent / "update.json"
+    manifest.write_text(json.dumps({
+        "tag_name": tag, "draft": False, "prerelease": False,
+        "assets": [{"name": asset.name, "id": index + 1,
+                    "size": asset.stat().st_size,
+                    "digest": "sha256:" + hashlib.sha256(asset.read_bytes()).hexdigest()}
+                   for index, asset in enumerate(assets)]
+    }), encoding="utf-8")
+    return manifest
+
+
 def main():
     head = os.environ["GITHUB_SHA"]
     tag = f"build-{os.environ['GITHUB_RUN_NUMBER']}-{head[:7]}"
@@ -39,6 +52,7 @@ def main():
     for asset in assets:
         if not asset.is_file():
             raise RuntimeError(f"Published EXE missing: {asset}")
+    assets.append(write_update_manifest(assets, tag))
     releases = json.loads(command("gh", "release", "list", "--limit", "100",
                                   "--exclude-drafts", "--exclude-pre-releases",
                                   "--json", "tagName"))

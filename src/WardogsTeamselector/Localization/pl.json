@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Aktualizacja została pomyślnie zainstalowana.",
   "Update fehlgeschlagen: ": "Aktualizacja nie powiodła się: ",
   "Sprache": "Język",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "Nie można zapisać preferencji językowych."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "Nie można zapisać preferencji językowych.",
+  "Stopp": "Zatrzymaj"
 }

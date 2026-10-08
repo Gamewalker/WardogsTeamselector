@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Mise à jour installée avec succès.",
   "Update fehlgeschlagen: ": "Échec de la mise à jour : ",
   "Sprache": "Langue",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "La préférence linguistique n'a pas pu être enregistrée."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "La préférence linguistique n'a pas pu être enregistrée.",
+  "Stopp": "Arrêter"
 }

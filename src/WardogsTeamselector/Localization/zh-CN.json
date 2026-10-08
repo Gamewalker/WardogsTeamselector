@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "更新安装成功。",
   "Update fehlgeschlagen: ": "更新失败： ",
   "Sprache": "语言",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "无法保存语言首选项。"
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "无法保存语言首选项。",
+  "Stopp": "停止·ESC"
 }

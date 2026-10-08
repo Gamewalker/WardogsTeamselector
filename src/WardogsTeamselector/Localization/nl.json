@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Update succesvol geïnstalleerd.",
   "Update fehlgeschlagen: ": "Update mislukt: ",
   "Sprache": "Taal",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "De taalvoorkeur kan niet worden opgeslagen."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "De taalvoorkeur kan niet worden opgeslagen.",
+  "Stopp": "Stoppen"
 }

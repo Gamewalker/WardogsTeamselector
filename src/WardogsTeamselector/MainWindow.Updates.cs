@@ -103,7 +103,15 @@ public sealed partial class MainWindow
             if (restart) RestartForUpdate();
         }
         catch (OperationCanceledException) { if (!closing) updateStatus.Text = "Updateprüfung abgebrochen oder Zeitlimit erreicht."; }
-        catch (System.Net.Http.HttpRequestException) { updateStatus.Text = "Updateprüfung nicht möglich. Internetverbindung prüfen; später wird erneut geprüft."; }
+        catch (System.Net.Http.HttpRequestException ex)
+        {
+            updateStatus.Text = ex.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.TooManyRequests
+                ? "GitHub begrenzt gerade die Updateanfragen. Bitte später erneut prüfen."
+                : ex.StatusCode is { } code
+                    ? $"Updateserver antwortet mit HTTP {(int)code}. Bitte später erneut prüfen."
+                    : "Updateserver nicht erreichbar. Verbindung prüfen; später wird erneut geprüft.";
+            AddLog(updateStatus.Text + " " + ex.Message);
+        }
         catch (InvalidDataException ex) { updateStatus.Text = ex.Message; }
         catch { updateStatus.Text = "Update konnte nicht vorbereitet werden. Die bisherige Version bleibt verfügbar."; }
         finally

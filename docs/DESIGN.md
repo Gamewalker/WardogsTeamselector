@@ -39,17 +39,17 @@ Die eigenen Vektor-Icons verwenden ein gemeinsames 24er-Koordinatensystem, 1,7 D
 
 ## Flächen und Abstände
 
-Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Info, Sprachauswahl und bei verfügbarer neuer Version die Update-Aktion. Direkt über der Profilfußleiste stehen Laufstatus und Stopp zusammen in einer festen Leiste: der umbrechende Status links, die Stopptaste rechts. Diese Laufsteuerung bleibt in allen vier Bereichen sichtbar. Die feste Profilfußleiste hat eine eigene gerahmte Fläche und 16 × 12 DIP Innenabstand.
+Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Info, Sprachauswahl und bei verfügbarer neuer Version die Update-Aktion. Laufstatus und Abbruch sind im Betrieb zusammengefasst. Die Profilfußleiste mit Speichern und Verwerfen erscheint nur in Einrichtung, Konfiguration und Diagnose; sie hat 16 × 12 DIP Innenabstand.
 
 Einrichtung verwendet eine 320-DIP-Spalte, Diagnose eine 420-DIP-Spalte. Ein eigener 24-DIP-Zwischenraum mit mittiger 1-DIP-Linie trennt Formulare und Bildvorschau. Konfiguration verwendet zwei gleich breite, gerahmte Flächen mit 18 DIP Innenabstand und 20 DIP Abstand zueinander. Gruppenüberschriften haben 24 DIP Abstand davor und 12 DIP danach.
 
-Scrollbereiche reservieren zusätzlich 16 DIP rechts und 8 DIP unten für Abstand zwischen Inhalt und Scrollleiste. Die dunklen Scrollleisten sind 14 DIP breit und unterstützen Ziehen, Seitenklicks, Mausrad und Tastatur. Formulare scrollen unabhängig von der Bildvorschau. Status, Stopp und Profilaktionen bleiben erreichbar.
+Scrollbereiche reservieren zusätzlich 16 DIP rechts und 8 DIP unten für Abstand zwischen Inhalt und Scrollleiste. Die dunklen Scrollleisten sind 14 DIP breit und unterstützen Ziehen, Seitenklicks, Mausrad und Tastatur. Formulare scrollen unabhängig von der Bildvorschau. Der Betrieb bietet Stopp direkt auf dem aktiven Teambutton; Profilaktionen stehen in den Bereichen mit Einstellungen.
 
 ## Kontrollen und Zustände
 
 Buttons haben mindestens 40 DIP Höhe, 14 × 9 DIP Innenabstand, 6 DIP Rundung und einen feinen Rahmen. Sekundäre Aktionen sind dunkel mit heller Schrift. Profil speichern und Einrichtung abschließen tragen die hellblaue Akzentfarbe mit dunkler Schrift. Hover hellt die Fläche leicht auf, Drücken dunkelt sie ab. Tastaturfokus zeigt einen 2-DIP-Akzentrahmen. Deaktivierte Buttons verwenden eine gedämpfte dunkle Fläche und lesbare graue Schrift.
 
-Die drei Teamtasten sind mindestens 144 DIP hoch und behalten ihre Blau-, Rot- und Grünflächen sowie weiße Schrift. Nur das laufende Team erhält einen weißen 3-DIP-Außenrahmen und „Aktiv · wartet“ oder „Aktiv · klickt“. Schnelle Teamwechsel aktualisieren die Anzeige unmittelbar, auch bei abgeschalteter Vorschau. Stopp ist nur während eines Laufs aktiv und dann rot.
+Die drei Teamtasten sind mindestens 144 DIP hoch und behalten ihre Blau-, Rot- und Grünflächen sowie weiße Schrift. Nur das laufende Team erhält einen weißen 3-DIP-Außenrahmen, den Hauptschriftzug „Stopp“, ein Stoppsymbol und „Aktiv · wartet“ oder „Aktiv · klickt“. Die anderen Teambuttons haben 45 % Deckkraft und bleiben für Teamwechsel verfügbar. Nach erfolgreichem Beitritt oder Abbruch werden alle Teambuttons wieder vollständig sichtbar und zeigen ihre Teamnamen. Schnelle Teamwechsel aktualisieren die Anzeige auch bei abgeschalteter Vorschau.
 
 Eingaben sind dunkel, mindestens 38 DIP hoch und haben 10 × 8 DIP Innenabstand sowie 5 DIP Rundung. Textfelder zeigen bei Fokus eine Akzentlinie; der Fehlerrahmen bleibt erhalten. Auswahlfelder verwenden dunkle Popups, helle Schrift und unterscheidbare Auswahl- und Hoverflächen. Checkboxen haben eine 18-DIP-Kontur mit 4 DIP Rundung und eine hellblaue Markierung. Expander zeigen eine Trennlinie und einen Richtungswinkel.
 

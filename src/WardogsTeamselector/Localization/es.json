@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Actualización instalada correctamente.",
   "Update fehlgeschlagen: ": "La actualización falló: ",
   "Sprache": "Idioma",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "No se pudo guardar la preferencia de idioma."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "No se pudo guardar la preferencia de idioma.",
+  "Stopp": "Detener"
 }

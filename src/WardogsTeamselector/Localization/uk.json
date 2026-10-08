@@ -325,5 +325,6 @@
   "Update erfolgreich installiert.": "Оновлення успішно встановлено.",
   "Update fehlgeschlagen: ": "Помилка оновлення: ",
   "Sprache": "Мова",
-  "Die Sprachauswahl konnte nicht gespeichert werden.": "Не вдалося зберегти налаштування мови."
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "Не вдалося зберегти налаштування мови.",
+  "Stopp": "Зупинка"
 }
