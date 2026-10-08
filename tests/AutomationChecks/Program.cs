@@ -183,6 +183,18 @@ Check(control.Snapshot.StopCause == AutomationStopCause.Manual, "Explicit stop m
 screen.Fail = true; control.Observe(Settings());
 await Until(() => control.Snapshot.StopCause == AutomationStopCause.Safety, "Observer failure did not produce a safety stop");
 screen.Fail = false; control.Observe(null);
+
+// The input worker must enforce lease expiry without relying on UI timers.
+hud.Match = false; detector.Match = true;
+control.Start(Team.Blue, Settings(), Stopwatch.GetTimestamp() + Stopwatch.Frequency / 3);
+await Until(() => control.Snapshot.State == RunState.Clicking, "Leased group run did not start");
+await Until(() => control.Snapshot.State == RunState.Stopped && control.Snapshot.StopCause == AutomationStopCause.GroupUpdate, "Expired lease did not stop on the input worker");
+count = sink.Count; await Task.Delay(150); Check(sink.Count == count, "Expired lease continued input");
+control.Start(Team.Blue, Settings(), Stopwatch.GetTimestamp() + Stopwatch.Frequency / 3);
+await Until(() => control.Snapshot.State == RunState.Clicking, "Lease renewal run did not start");
+control.RenewOnlineLease(Stopwatch.GetTimestamp() + Stopwatch.Frequency);
+await Task.Delay(400); Check(control.Snapshot.State == RunState.Clicking, "Fresh authorized renewal did not extend the lease");
+control.Stop();
 Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, continuous clicking beyond former absence timeout, mandatory HUD confirmation/flicker/focus/overlap, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
 
 sealed class FakeScreen : IScreenService

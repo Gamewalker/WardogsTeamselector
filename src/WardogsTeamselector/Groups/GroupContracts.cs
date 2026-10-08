@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -14,6 +15,7 @@ public sealed record GroupMember(string Id, string DisplayName, string Status, s
 }
 public sealed record GroupSnapshot(int ProtocolVersion, string GroupId, string Name, long Revision, long SelectionVersion, string? Team, string YourStatus, string YourRole, string MemberId, List<GroupMember> Members)
 {
+    [JsonIgnore] public long ReceivedAt { get; init; }
     public void Validate(GroupMembership membership)
     {
         if (ProtocolVersion != 1 || GroupId != membership.GroupId || MemberId != membership.MemberId || Revision < 1 || SelectionVersion < 0 || Team is not (null or "Blue" or "Red" or "Green") || YourStatus is not ("Approved" or "Pending" or "Rejected" or "Removed") || YourRole is not ("Owner" or "Member") || string.IsNullOrWhiteSpace(Name) || Name.Length > 48 || Members == null || Members.Count > 200)
@@ -42,7 +44,7 @@ public sealed class GroupMembership
     public void Validate()
     {
         ServiceUrl = GroupServiceAddress.Normalize(ServiceUrl);
-        if (!ValidId(GroupId) || !ValidId(MemberId) || !ValidToken(Token) || (InviteToken != null && !ValidToken(InviteToken)) || (PendingToken != null && !ValidToken(PendingToken)) || (PendingCredentialOperation != null && !ValidId(PendingCredentialOperation)) || string.IsNullOrWhiteSpace(Name) || Name.Length > 48 || string.IsNullOrWhiteSpace(DisplayName) || DisplayName.Length > 48 || Role is not ("Owner" or "Member") || Status is not ("Approved" or "Pending" or "Rejected" or "Removed")) throw new ArgumentException("Ungültige gespeicherte Gruppenmitgliedschaft.");
+        if (!ValidId(GroupId) || !ValidId(MemberId) || !ValidToken(Token) || (InviteToken != null && !ValidToken(InviteToken)) || (PendingToken != null && !ValidToken(PendingToken)) || (PendingCredentialOperation != null && !ValidId(PendingCredentialOperation)) || string.IsNullOrWhiteSpace(Name) || Name.Length > 48 || Name.Any(char.IsControl) || string.IsNullOrWhiteSpace(DisplayName) || DisplayName.Length > 48 || DisplayName.Any(char.IsControl) || Role is not ("Owner" or "Member") || Status is not ("Approved" or "Pending" or "Rejected" or "Removed")) throw new ArgumentException("Ungültige gespeicherte Gruppenmitgliedschaft.");
     }
     public static bool ValidId(string value) => value.Length == 32 && System.Text.RegularExpressions.Regex.IsMatch(value, "\\A[a-f0-9]{32}\\z");
     public static bool ValidToken(string value) => value.Length == 43 && System.Text.RegularExpressions.Regex.IsMatch(value, "\\A[A-Za-z0-9_-]{43}\\z");

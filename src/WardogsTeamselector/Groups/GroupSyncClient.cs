@@ -83,7 +83,7 @@ public sealed class GroupSyncClient : IDisposable
                 message.Write(chunk, 0, received.Count);
             } while (!received.EndOfMessage);
             var snapshot = JsonSerializer.Deserialize<GroupSnapshot>(message.ToArray(), GroupJson.Options) ?? throw new GroupApiException("Leere Gruppennachricht.", "invalid_response");
-            snapshot.Validate(group); Updated?.Invoke(snapshot); ConnectionChanged?.Invoke(true, "Verbunden · Zustandsprüfung mindestens jede Minute");
+            snapshot.Validate(group); Updated?.Invoke(snapshot with { ReceivedAt = System.Diagnostics.Stopwatch.GetTimestamp() }); ConnectionChanged?.Invoke(true, "Verbunden · Zustandsprüfung mindestens jede Minute");
         }
     }
     public void Dispose() { lifetime.Cancel(); /* Do not block WPF waiting for callbacks. */ }

@@ -260,7 +260,7 @@ public sealed partial class MainWindow
             groupSync.AccessRevoked += ex => Dispatcher.BeginInvoke(() =>
             {
                 if (closing || generation != groupFollow.Generation) return;
-                group.Status = "Removed"; SaveGroups(); StopAll("Mitgliedschaft beendet"); ReloadGroupPickers(); groupStatus.Text = ex.Message;
+                group.Status = "Removed"; StopAll("Mitgliedschaft beendet"); SaveGroups(); ReloadGroupPickers(); groupStatus.Text = ex.Message;
             });
             groupSync.Updated += update => Dispatcher.BeginInvoke(() => { if (!closing) ApplyFollowedGroup(generation, group, update); });
             groupSync.ConnectionChanged += (online, reason) => Dispatcher.BeginInvoke(() =>
@@ -278,14 +278,15 @@ public sealed partial class MainWindow
     {
         if (generation != groupFollow.Generation || !groupFollow.Enabled || closing) return;
         if (snapshot.Revision < groupFollow.Revision) return;
-        var changed = groupFollow.Apply(generation, snapshot, Stopwatch.GetTimestamp());
+        var changed = groupFollow.Apply(generation, snapshot, snapshot.ReceivedAt == 0 ? Stopwatch.GetTimestamp() : snapshot.ReceivedAt);
         group.Apply(snapshot);
         try { SaveGroups(); } catch { StopAll("Gruppenspeicher nicht verfügbar"); groupStatus.Text = "Gruppenspeicher nicht verfügbar · Auto wurde gestoppt."; return; }
         selectedGroupSnapshot = snapshot;
         groupStatus.Text = DescribeGroup(snapshot) + "\nOnline · Zustandsprüfung mindestens jede Minute";
         if (snapshot.YourStatus != "Approved") { StopAll("Mitgliedschaft beendet"); ReloadGroupPickers(); return; }
         if (changed) { automation.Stop("Gruppenauswahl aktualisiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; lastGroupObservation = 0; }
-        if (followedSettings != null) automation.Observe(followedSettings);
+        automation.RenewOnlineLease(groupFollow.OnlineLeaseDeadline);
+        if (followedSettings != null) automation.Observe(snapshot.Team == null ? null : followedSettings);
         UpdateGroupControls();
     }
     private void TickGroupFollow()
@@ -307,7 +308,7 @@ public sealed partial class MainWindow
         lastGroupObservation = timestamp;
         if (++stableGroupDialog < 3) return;
         stableGroupDialog = 0;
-        if (groupFollow.CanRun(groupFollow.Generation, timestamp) && Enum.TryParse<Team>(groupFollow.Team, out var team)) automation.Start(team, followedSettings);
+        if (groupFollow.CanRun(groupFollow.Generation, timestamp) && Enum.TryParse<Team>(groupFollow.Team, out var team)) automation.Start(team, followedSettings, groupFollow.OnlineLeaseDeadline);
     }
     private async Task ShareAndJoinAsync()
     {

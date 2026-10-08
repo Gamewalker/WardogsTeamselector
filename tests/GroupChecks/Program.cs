@@ -50,6 +50,9 @@ Check(recovered.Groups[0].Token == group.Token && recovered.Groups[0].PendingTok
 Check(recovered.Groups[0].MemberId == group.MemberId, "Recovery retains identity");
 Reject(() => GroupRecoveryCodec.Import("WDG2:invalid"), "Unsupported recovery code rejected");
 Reject(() => GroupRecoveryCodec.Export(new GroupProfile { Groups = new() { group, group } }), "Duplicate memberships rejected");
+var oldName = group.DisplayName; group.DisplayName = "Name\nwith newline";
+Reject(() => GroupRecoveryCodec.Export(profile), "Control characters in names rejected before saving credentials");
+group.DisplayName = oldName;
 
 var handler = new FakeHandler(request =>
 {
@@ -70,6 +73,10 @@ using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.Foun
 using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.OK) { Content = new StringContent(new string('x', 65537)) })))
 {
     try { await api.GetAsync(group); Check(false, "Large response must fail"); } catch (GroupApiException ex) { Check(ex.Code == "invalid_response", "Response size bounded"); }
+}
+using (var api = new GroupApiClient(new FakeHandler(_ => new(HttpStatusCode.Forbidden) { Content = new StringContent("[]") })))
+{
+    try { await api.GetAsync(group); Check(false, "Forbidden expected"); } catch (GroupApiException ex) { Check(ex.AccessRevoked, "Unexpected JSON error shape retains authorization failure"); }
 }
 Console.WriteLine($"GroupChecks: {checks} checks passed.");
 

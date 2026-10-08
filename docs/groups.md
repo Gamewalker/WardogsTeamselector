@@ -30,7 +30,7 @@ Im **Gruppenmodus** eine bestätigte Gruppe auswählen. **Einmal beitreten** ver
 
 **ESC**, **Stopp**, das Ausschalten von Auto, Gruppenwechsel und manuelle Teamtasten beenden das aktive Folgen. Spätere Online-Updates starten es nicht neu. Nach App-Neustart ist Auto aus. Bei Fokusverlust, Aufnahmefehler oder veränderter Geometrie muss Auto erneut aktiviert werden.
 
-Bei Verbindungsabbruch pausiert der Gruppenlauf. Bei wiederhergestellter Verbindung wird ein neuer Zustand geladen; Auto kann dann wieder auf den nächsten Dialog warten. Ausbleibende Zustandsantworten beenden die Freigabe, statt unbegrenzt eine alte Auswahl zu verwenden.
+Bei Verbindungsabbruch pausiert der Gruppenlauf. Bei wiederhergestellter Verbindung wird ein neuer Zustand geladen; Auto kann dann wieder auf den nächsten Dialog warten. Ausbleibende Zustandsantworten beenden die Freigabe, statt unbegrenzt eine alte Auswahl zu verwenden. Diese zeitliche Freigabe wird direkt vor Eingaben im Klickworker geprüft, auch wenn die Oberfläche beschäftigt ist.
 
 ## Mitglieder und Wiederherstellung
 

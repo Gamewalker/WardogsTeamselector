@@ -41,14 +41,14 @@ public sealed class GroupApiClient : IDisposable
         if (!response.IsSuccessStatusCode)
         {
             string code = response.StatusCode switch { HttpStatusCode.Unauthorized => "unauthorized", HttpStatusCode.Forbidden => "membership_revoked", HttpStatusCode.Gone => "group_deleted", HttpStatusCode.TooManyRequests => "rate_limit", _ => "service_error" };
-            try { using var error = JsonDocument.Parse(buffer.ToArray()); if (error.RootElement.TryGetProperty("code", out var value) && value.ValueKind == JsonValueKind.String) code = value.GetString() ?? code; } catch (JsonException) { }
+            try { using var error = JsonDocument.Parse(buffer.ToArray()); if (error.RootElement.ValueKind == JsonValueKind.Object && error.RootElement.TryGetProperty("code", out var value) && value.ValueKind == JsonValueKind.String) code = value.GetString() ?? code; } catch (JsonException) { }
             // Display only known local messages, never provider errors containing request URLs/tokens.
             throw new GroupApiException(ErrorMessage(code), code);
         }
         try
         {
             var snapshot = JsonSerializer.Deserialize<GroupSnapshot>(buffer.ToArray(), GroupJson.Options) ?? throw new JsonException();
-            snapshot.Validate(group); return snapshot;
+            snapshot.Validate(group); return snapshot with { ReceivedAt = System.Diagnostics.Stopwatch.GetTimestamp() };
         }
         catch (JsonException) { throw new GroupApiException("Ungültige Antwort des Gruppendienstes.", "invalid_response"); }
     }

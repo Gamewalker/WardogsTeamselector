@@ -32,7 +32,7 @@ public sealed class AutomationController : IDisposable
         worker = Task.Run(RunAsync);
     }
 
-    public void Start(Team team, AppSettings settings)
+    public void Start(Team team, AppSettings settings, long? onlineLeaseDeadline = null)
     {
         var copy = Copy(settings);
         copy.Validate();
@@ -40,7 +40,7 @@ public sealed class AutomationController : IDisposable
         lock (gate)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
-            active = new Session(team, copy);
+            active = new Session(team, copy) { OnlineLeaseDeadline = onlineLeaseDeadline };
             Publish(new(RunState.Waiting, team, 0, 0, "Warte auf stabilen Dialog und Spielfokus", null, null));
         }
     }
@@ -64,6 +64,11 @@ public sealed class AutomationController : IDisposable
         lock (gate) { observation = copy; lastObservation = 0; }
     }
 
+    public void RenewOnlineLease(long deadline)
+    {
+        lock (gate) if (active?.OnlineLeaseDeadline != null) active.OnlineLeaseDeadline = deadline;
+    }
+
     private async Task RunAsync()
     {
         try
@@ -84,6 +89,11 @@ public sealed class AutomationController : IDisposable
     {
         try
         {
+            lock (gate)
+            {
+                if (active != session) return;
+                if (LeaseExpired(session)) { StopLocked("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); return; }
+            }
             var target = screen.ResolveTarget(session.Settings);
             if (target is null)
             {
@@ -170,6 +180,8 @@ public sealed class AutomationController : IDisposable
                 }
                 if ((DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100) { session.Stable = 0; if (session.Started) StopLocked("Bildschirmaufnahme zu alt"); return; }
                 var point = session.Settings.Regions.Single(r => r.Team == session.Team).Center(target.Bounds);
+                // Enforce the group lease on the input worker, even if WPF is busy.
+                if (LeaseExpired(session)) { StopLocked("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); return; }
                 if (!session.Settings.DryRun) sink.Click(point);
                 lastClickTimestamp = Stopwatch.GetTimestamp();
                 session.Started = true;
@@ -212,6 +224,7 @@ public sealed class AutomationController : IDisposable
     }
 
     private static bool SameGeometry(TargetGeometry a, TargetGeometry b) => a.Bounds == b.Bounds && a.WindowHandle == b.WindowHandle && a.IsCalibrated == b.IsCalibrated;
+    private static bool LeaseExpired(Session session) => session.OnlineLeaseDeadline is long deadline && Stopwatch.GetTimestamp() >= deadline;
     private void Publish(AutomationSnapshot value)
     {
         snapshot = value;
@@ -255,6 +268,7 @@ public sealed class AutomationController : IDisposable
         public int Interval;
         public bool Started;
         public long Count;
+        public long? OnlineLeaseDeadline;
         public TargetGeometry? Geometry;
     }
 }

@@ -116,7 +116,7 @@ flowchart LR
 - Schreibaktionen erhalten eine `operationId`, damit Wiederholungen nach Timeouts keine doppelten Veröffentlichungen oder Anfragen erzeugen. Der Server begrenzt die Aufbewahrung dieser Kennungen.
 - Zustandsabfrage, WebSocket-Verbindungsaufbau und jede schreibende Aktion prüfen die aktuelle Mitgliedschaft und Rolle serverseitig. Einladungsrechte können keine Auswahl ändern oder Mitglieder freigeben.
 - Entfernen schließt auch vorhandene Verbindungen. Im seltenen Fall eines unbemerkten Verbindungsabbruchs begrenzt eine maximal 75 Sekunden gültige Online-Freigabe die weitere lokale Gruppensteuerung. Eine Zustandsabfrage hat einen Timeout von zehn Sekunden; bei Timeout wird der Gruppenlauf pausiert. Die Freigabe wird nur nach Prüfung der aktuellen Mitgliedschaft erneuert; Transport-Pings allein verlängern sie nicht.
-- Nach Ablauf dieser Freigabe stoppt der lokale Lauf. Sofortiger Entzug auf einem vollständig offline befindlichen PC ist technisch nicht möglich. Manipulierte Clients können weiterhin eigenständig manuell klicken; entzogen wird der Zugang zum Gruppendienst.
+- Nach Ablauf dieser Freigabe stoppt der lokale Lauf. Die Freigabe wird direkt im Eingabeworker durchgesetzt; blockierte UI-Timer können sie nicht verlängern. Der Zeitstempel stammt vom tatsächlichen Nachrichteneingang, nicht von der späteren UI-Verarbeitung. Sofortiger Entzug auf einem vollständig offline befindlichen PC ist technisch nicht möglich. Manipulierte Clients können weiterhin eigenständig manuell klicken; entzogen wird der Zugang zum Gruppendienst.
 - Wiederverbindungsversuche verwenden steigende Wartezeiten mit Zufallsanteil. Bei Kontingentfehlern gelten längere Pausen statt einer schnellen Wiederholungsschleife.
 
 ### Zugangsdaten und Speicher

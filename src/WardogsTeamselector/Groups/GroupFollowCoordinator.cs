@@ -15,6 +15,7 @@ public sealed class GroupFollowCoordinator
     public long Revision { get; private set; }
     public long SelectionVersion { get; private set; }
     private long lastReceipt;
+    public long OnlineLeaseDeadline => lastReceipt + System.Diagnostics.Stopwatch.Frequency * 75;
     public long Begin(GroupMembership group, bool auto)
     {
         Stop(); GroupId = group.GroupId; ServiceUrl = group.ServiceUrl; Auto = auto; Enabled = true;
@@ -24,7 +25,7 @@ public sealed class GroupFollowCoordinator
     public void Disconnected(long generation) { if (Generation == generation) Online = false; }
     public bool Apply(long generation, GroupSnapshot snapshot, long timestamp)
     {
-        if (!Enabled || generation != Generation || snapshot.GroupId != GroupId || snapshot.Revision < Revision) return false;
+        if (!Enabled || generation != Generation || snapshot.GroupId != GroupId || snapshot.Revision < Revision || (snapshot.Revision == Revision && timestamp < lastReceipt)) return false;
         if (snapshot.YourStatus != "Approved") { Online = false; Team = null; return true; }
         var changed = snapshot.SelectionVersion != SelectionVersion || snapshot.Team != Team;
         Revision = snapshot.Revision; SelectionVersion = snapshot.SelectionVersion; Team = snapshot.Team;
