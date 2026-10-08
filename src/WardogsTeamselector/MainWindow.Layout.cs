@@ -58,7 +58,10 @@ public sealed partial class MainWindow
         stopButton.IsEnabled = false;
         stopButton.ToolTip = "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel.";
         var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        headerActions.Children.Add(Button("Über die App", ShowAboutWindow));
+        var aboutButton = Button("Über die App", ShowAboutWindow);
+        aboutButton.Margin = new Thickness(0);
+        aboutButton.VerticalAlignment = VerticalAlignment.Center;
+        headerActions.Children.Add(aboutButton);
         headerActions.Children.Add(stopButton);
         headerActions.Children.Add(BuildLanguageSelector());
         Grid.SetColumn(headerActions, 1);

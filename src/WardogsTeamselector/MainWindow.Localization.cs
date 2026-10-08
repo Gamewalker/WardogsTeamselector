@@ -26,8 +26,9 @@ public sealed partial class MainWindow
         languageSelector.DisplayMemberPath = "Name";
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == Localization.CurrentLanguage);
         languageSelector.Width = 155;
-        languageSelector.MinHeight = 38;
-        languageSelector.Margin = new Thickness(12, 0, 0, 8);
+        languageSelector.MinHeight = 40;
+        languageSelector.Margin = new Thickness(12, 0, 0, 0);
+        languageSelector.VerticalAlignment = VerticalAlignment.Center;
         languageSelector.ToolTip = "Sprache";
         AutomationProperties.SetName(languageSelector, "Sprache");
         languageSelector.SelectionChanged += (_, _) =>

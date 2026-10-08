@@ -55,6 +55,12 @@ public sealed partial class MainWindow
                 {
                     ShowPage(page); await Settle();
                     Check(!dirty && !regionDirty, "Translation and navigation preserve saved field state");
+                    var headerButtons = ((StackPanel)stopButton.Parent).Children.OfType<Button>().ToArray();
+                    var aboutPosition = headerButtons[0].TranslatePoint(new Point(), (UIElement)Content);
+                    var stopPosition = stopButton.TranslatePoint(new Point(), (UIElement)Content);
+                    Check(Math.Abs(aboutPosition.Y - stopPosition.Y) < 1 && Math.Abs(headerButtons[0].ActualHeight - stopButton.ActualHeight) < 1, "Header buttons share top and bottom edges");
+                    var languagePosition = languageSelector.TranslatePoint(new Point(), (UIElement)Content);
+                    Check(Math.Abs(languagePosition.Y + languageSelector.ActualHeight / 2 - stopPosition.Y - stopButton.ActualHeight / 2) < 1, "Language selector is centered with header buttons");
                     var headerPosition = languageSelector.TranslatePoint(new Point(languageSelector.ActualWidth, 0), (UIElement)Content);
                     Check(headerPosition.X <= ((FrameworkElement)Content).ActualWidth + 1, "Language selector fits the header at minimum width");
                     SaveRender(Path.Combine(directory, $"{code}-{size.Item1}-{page + 1}.png"));
