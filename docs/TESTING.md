@@ -2,6 +2,14 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Mehrsprachige Oberfläche (8. Oktober 2026)
+
+`LocalizationChecks` besteht mit 13.176 Prüfungen für alle 20 Sprachkataloge: gleiche Schlüssel, nicht leere Übersetzungen, unveränderte Platzhalter und dynamische Werte, Sprachwechsel und Rückwechsel, Englisch als Standard, unbekannte Sprachcodes, arabische Leserichtung, unveränderte Fensterfilter und Pfade sowie Sprachpräferenz-Roundtrip und Wiederherstellung nach beschädigter JSON-Datei. Persistenzprüfungen verwenden ausschließlich temporäre Dateien; Benutzerpräferenzen bleiben unverändert. Die Prüfung ist in `build.ps1 -Tests` und GitHub Actions eingebunden.
+
+Beide Runtime-Varianten wurden unter `dist/multilingual-final` ohne Warnungen und Fehler veröffentlicht. Der GUI-Prüflauf jeder Einzeldatei-EXE besteht mit jeweils 54 Aufnahmen unter `artifacts/languages-release-with-runtime` und `artifacts/languages-release-without-runtime`. Geprüft werden die englische Startsprache, alle 20 auswählbaren Sprachen, der Erhalt ungespeicherter Eingaben und eines wartenden Laufs beim Sprachwechsel sowie arabische Leserichtung. Alle vier Bereiche sind auf Englisch, Arabisch und Chinesisch in 1180 × 820 und 920 × 660 DIP erfasst; die Kopfzeile bleibt bei Mindestgröße innerhalb des Fensters. Die aktuellen Windows-11-Steuerelemente sowie Update-Neustart und Buildtitel aus `main` sind enthalten. Kleine englische, arabische und chinesische Ansichten wurden visuell kontrolliert.
+
+Alle vorhandenen Bild-, Steuerungs- und Profilprüfungen bestehen; nach Übernahme des Update-Neustarts bestehen alle 54 Updateprüfungen. Die Plattformprüfung besteht mit 23 Checks; Windows verweigerte den Test-Fokuswechsel, sodass diese einzelne Assertion übersprungen wurde. Keine Mauseingaben wurden an das Spiel gesendet. Die Sprachkataloge enthalten maschinell erzeugte Übersetzungen mit kontextuell überarbeiteten englischen Bedienbegriffen; die Prüfungen bestätigen technische Vollständigkeit, keine muttersprachliche Prüfung aller Übersetzungen.
+
 ## Update-Neustart und sichtbare Buildnummer (8. Oktober 2026)
 
 Alle 54 Updateprüfungen bestanden. Der echte PowerShell-Helfer installiert und startet dabei eine harmlose Test-EXE aus einem Pfad mit Leerzeichen, Apostroph und Unicode. Prüfsummenfehler verhindern den Neustart; ein fehlgeschlagener Prozessstart erhält die erfolgreiche Installation und meldet den nötigen manuellen Start. Die bisherigen Prüfungen für Backup, gesperrte bzw. geänderte EXEs und Helferbereinigung bestehen weiterhin.

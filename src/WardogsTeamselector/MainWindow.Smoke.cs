@@ -16,13 +16,13 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(directory);
         LocalizeInterface();
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
-        Check((string)stopButton.Content == "Stop · ESC" && (profileText.Text.Contains("Default profile") || hasSavedProfile), "English header and profile");
+        Check(ButtonLabel(stopButton) == "Stop · ESC" && (profileText.Text.Contains("Default profile") || hasSavedProfile), "English header and profile");
         SaveRender(Path.Combine(directory, "english-startup.png"));
         foreach (var language in Localization.Languages)
         {
             languageSelector.SelectedItem = language;
             LocalizeInterface();
-            Check((string)stopButton.Content == Localization.Text("Stopp · ESC"), "Stop label follows language: " + language.Code);
+            Check(ButtonLabel(stopButton) == Localization.Text("Stopp · ESC"), "Stop label follows language: " + language.Code);
         }
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
         LocalizeInterface();
@@ -218,6 +218,9 @@ public sealed partial class MainWindow
     {
         if (!condition) throw new InvalidOperationException("GUI check failed: " + message);
     }
+
+    private static string ButtonLabel(Button button) => button.Content is string label ? label
+        : LogicalElements(button).OfType<TextBlock>().Single().Text;
 
     private static System.Collections.Generic.IEnumerable<DependencyObject> LogicalElements(DependencyObject root)
     {
