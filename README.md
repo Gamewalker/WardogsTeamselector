@@ -4,6 +4,14 @@ Windows-Werkzeug für die wiederholte Teamauswahl. Zwei portable EXE-Varianten: 
 
 Beide fertig gebauten EXE-Varianten werden als Assets im [öffentlichen GitHub-Release](https://github.com/Gamewalker/WardogsTeamselector/releases/latest) bereitgestellt. Der Quellcode enthält Buildskript und Prüfungen; SDK, lokale Vorschauartefakte und Buildausgaben sind nicht im Repository enthalten.
 
+## Kurze Videotour
+
+Die 21 Sekunden lange Vorschau zeigt Betrieb, Einrichtung, Konfiguration und Diagnose anhand von Aufnahmen der Oberfläche im Testmodus. Die Spielvorschau verwendet ein statisches Referenzbild.
+
+[![Videotour durch die Oberfläche von WardogsTeamselector](docs/media/wardogs-teamselector-demo.gif)](https://github.com/Gamewalker/WardogsTeamselector/raw/refs/heads/main/docs/media/wardogs-teamselector-demo.mp4)
+
+[Video als MP4 ansehen oder herunterladen](https://github.com/Gamewalker/WardogsTeamselector/raw/refs/heads/main/docs/media/wardogs-teamselector-demo.mp4) · 21 Sekunden · ohne Ton
+
 ## Automatische Updates
 
 Release-EXEs prüfen beim Start und alle sechs Stunden die neueste stabile GitHub-Veröffentlichung und laden eine neuere Version automatisch herunter. Die Runtime-Variante bleibt erhalten. Downloads werden anhand von Größe, EXE-Kennung und GitHubs SHA-256-Prüfsumme geprüft. Erst beim regulären Beenden ersetzt ein unsichtbarer Helfer die EXE; beim nächsten Start läuft die neue Version. Laufende Teamklicks werden durch die Prüfung nicht unterbrochen. Die bisherige EXE bleibt als `<EXE>.previous` im selben Ordner erhalten. Benutzereinstellungen bleiben erhalten.
