@@ -94,6 +94,7 @@ public sealed partial class MainWindow
         footer.Children.Add(profileText);
         var profileActions = new StackPanel { Orientation = Orientation.Horizontal };
         discardButton = Button("Änderungen verwerfen", DiscardChanges);
+        discardButton.Margin = new Thickness(0, 0, 8, 0);
         saveButton = Button("Einstellungen speichern", () => SaveSettings());
         UseAccent(saveButton);
         saveButton.Margin = new Thickness(0);
