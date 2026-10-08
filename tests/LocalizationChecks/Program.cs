@@ -32,6 +32,9 @@ foreach (var language in Localization.Languages)
 Localization.SetLanguage("en");
 Check(Localization.Text("Einstellungen speichern") == "Save settings", "Wrong English label.");
 Check(Localization.Text("Wartet · Blau") == "Waiting · Blue", "Team name or phase not translated.");
+Check(Localization.Text("Gruppenmodus") == "Group mode", "Group mode has an English label.");
+Check(Localization.Text("Gruppe: Rot · Bestätigt") == "Group: Rot · Approved", "Group name is user data and must stay literal.");
+Check(Localization.Text("Auswahl: Rot") == "Selection: Red", "Shared team uses translated team name.");
 Check(Localization.Text("Blau und Rot verwenden F6. Für Rot eine andere F-Taste wählen.").Contains("Blue and Red"), "Dynamic validation did not translate team names.");
 Check(Localization.Text("23:01:02.003  Warte auf Spielfenster").StartsWith("23:01:02.003  "), "Log timestamp modified.");
 Check(Localization.Text("C:\\Users\\Example\\my-profile.json") == "C:\\Users\\Example\\my-profile.json", "Unknown data changed.");

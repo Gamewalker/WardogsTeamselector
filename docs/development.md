@@ -26,3 +26,9 @@ Die Plattformprüfungen werden in CI nur kompiliert: Ihre Ausführung und die GU
 Für verständliche Release-Beschreibungen neue Änderungen in einer eigenen Markdown-Datei unter `docs/releases/` erläutern. Das Release übernimmt nur neue oder geänderte Beschreibungen seit dem letzten veröffentlichten Release sowie die Commit-Titel. Beide EXEs sind dauerhaft unter **Releases** verfügbar, unabhängig von der 30-Tage-Aufbewahrung der Actions-Artefakte.
 
 Weitere Details: [Prüfungen und Ergebnisse](TESTING.md), [Produktbeschreibung](PRODUCT.md), [Gestaltung](DESIGN.md), [Umsetzungsplan](PLAN.md), [Dialogerkennung](detection.md) und [Steuerung und Hotkeys](automation.md).
+
+## Gruppenbackend und Client-Protokoll
+
+Das Backend liegt unter [`backend/`](../backend/README.md). `npm test` prüft Gruppenrechte und Worker-Verhalten ohne Live-Konto. `npm run test:client` verbindet den echten .NET-Client mit einem lokalen Worker und prüft einschließlich des minütlichen Zustandsabgleichs; benötigt zusätzlich .NET 10. `GroupChecks` läuft auch auf Linux. `GroupStorageChecks` prüft unter Windows den echten DPAPI-Speicher in einem temporären Ordner.
+
+Der Cloudflare-Worker wird separat und ausschließlich über `npm run deploy:free` bereitgestellt. Die CI macht nur einen Dry-Run. Die Dienstadresse ist im Tool konfigurierbar, damit für die spätere Bereitstellung keine neue EXE nötig ist. Eine öffentliche Adresse muss HTTPS verwenden; lokales HTTP ist nur für Loopback zugelassen.

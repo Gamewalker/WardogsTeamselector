@@ -9,11 +9,12 @@ Benötigt Node.js 24:
 ```sh
 npm ci
 npm test
+npm run test:client
 npm run check
 npm run dev
 ```
 
-Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lokale HTTP-Adresse ist im Windows-Client erlaubt; öffentliche Dienste benötigen HTTPS. Die Tests verwenden echte Worker- und Durable-Object-Instanzen in Miniflare und benötigen keine Cloudflare-Zugangsdaten.
+Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lokale HTTP-Adresse ist im Windows-Client erlaubt; öffentliche Dienste benötigen HTTPS. Die Tests verwenden echte Worker- und Durable-Object-Instanzen in Miniflare und benötigen keine Cloudflare-Zugangsdaten. `test:client` benötigt zusätzlich das .NET-10-SDK und prüft den tatsächlichen Desktop-HTTP-/WebSocket-Client einschließlich des geplanten Minutenabgleichs; der Lauf dauert etwa eine Minute.
 
 ## Ausschließlich kostenlos bereitstellen
 

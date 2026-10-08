@@ -8,7 +8,8 @@ namespace WardogsTeamselector.Groups;
 
 public sealed record GroupMember(string Id, string DisplayName, string Status, string Role, long RequestedAt)
 {
-    [JsonIgnore] public string Label => $"{DisplayName} · {Id[..Math.Min(6, Id.Length)]} · {StatusLabel(Status)}";
+    public static Func<string, string> TranslateDisplay { get; set; } = value => value;
+    [JsonIgnore] public string Label => $"{DisplayName} · {Id[..Math.Min(6, Id.Length)]} · {TranslateDisplay(StatusLabel(Status))}";
     public static string StatusLabel(string status) => status switch { "Approved" => "Bestätigt", "Pending" => "Wartet auf Bestätigung", "Rejected" => "Abgelehnt", "Removed" => "Entfernt", _ => "Unbekannt" };
 }
 public sealed record GroupSnapshot(int ProtocolVersion, string GroupId, string Name, long Revision, long SelectionVersion, string? Team, string YourStatus, string YourRole, string MemberId, List<GroupMember> Members)
@@ -33,7 +34,7 @@ public sealed class GroupMembership
     public bool RegistrationPending { get; set; }
     public string? PendingToken { get; set; }
     public string? PendingCredentialOperation { get; set; }
-    [JsonIgnore] public string Label => $"{Name} · {GroupMember.StatusLabel(Status)}{(Role == "Owner" ? " · Ersteller" : "")}";
+    [JsonIgnore] public string Label => $"{Name} · {GroupMember.TranslateDisplay(GroupMember.StatusLabel(Status))}{(Role == "Owner" ? " · " + GroupMember.TranslateDisplay("Ersteller") : "")}";
     [JsonIgnore] public string InvitationLink => $"{ServiceUrl}/invite/{GroupId}#{InviteToken}";
     public void Apply(GroupSnapshot snapshot) { snapshot.Validate(this); Name = snapshot.Name; Role = snapshot.YourRole; Status = snapshot.YourStatus; }
     public static string NewId() => Guid.NewGuid().ToString("N");

@@ -35,6 +35,7 @@ public sealed partial class MainWindow
         {
             if (languageSelector.SelectedItem is not Localization.Language language) return;
             Localization.SetLanguage(language.Code);
+            if (groupJoinButton != null) ReloadGroupPickers();
             LocalizeInterface();
             if (!smokeMode)
             {
@@ -61,6 +62,8 @@ public sealed partial class MainWindow
             void Visit(DependencyObject element)
             {
                 if (!visited.Add(element)) return;
+                // Group and player names are user data; their labels localize only status/role.
+                if (element is FrameworkElement { DataContext: Groups.GroupMembership or Groups.GroupMember }) return;
                 LocalizeProperty(element, FrameworkElement.ToolTipProperty);
                 LocalizeProperty(element, AutomationProperties.NameProperty);
                 // Language names are always shown in their own language.

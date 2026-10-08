@@ -4,6 +4,8 @@
 
 Unter **Betrieb** gibt es die Tabs **Manuell** und **Gruppenmodus**. Bildschirmkalibrierung, Klickintervalle, Testmodus und Spielfokus bleiben auf jedem PC separat eingestellt.
 
+Die neuen Gruppenmeldungen stehen auf Deutsch und Englisch zur Verfügung. In den weiteren vorhandenen Oberflächensprachen verwenden die neuen Gruppenmeldungen zunächst Englisch; die bisherigen Übersetzungen bleiben erhalten. Selbst eingegebene Gruppen- und Spielernamen werden nicht übersetzt.
+
 ## Gruppe erstellen und einladen
 
 1. Unter **Gruppenmodus → Gruppendienst einrichten** die HTTPS-Adresse des bereitgestellten Dienstes speichern. Solange der Cloudflare-Dienst noch nicht bereitgestellt ist, funktioniert weiterhin der manuelle Modus.

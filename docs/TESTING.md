@@ -2,6 +2,16 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Gruppenmodus (8. Oktober 2026, Featurebranch)
+
+- Backend: elf Tests mit echten Worker-/Durable-Object-Instanzen in Miniflare bestanden. Geprüft sind Freigaberechte, Schreibschutz für Mitglieder, idempotente Anlage und Veröffentlichung, WebSocket-Updates und Zustandsantworten, Entfernung mit Verbindungsschließung, Einladungstausch, Löschung, Austritt, Zugangscodewechsel, Eingabe-/Anfragegrenzen und Wiederherstellung nach Objekt-Eviction. Zwei dieser Tests prüfen zusätzlich, dass der Deployment-Guard Paid-Tarife und unklare Tarifantworten ablehnt.
+- Client: 37 plattformunabhängige Prüfungen bestanden, einschließlich Generationen nach ESC/Gruppenwechsel, alter Revisionen, abgelaufener Online-Freigabe, Wiederherstellung und HTTP-Antwortgrenzen.
+- Tatsächlicher .NET-HTTP-/WebSocket-Client gegen den lokalen Worker: Beitrittsanfrage, Freigabe, sofortiges Rot-Update, automatischer Zustandsabgleich nach etwa 55 Sekunden und Entfernung mit endgültigem Zugriffsentzug bestanden. Keine Cloudflare-Zugangsdaten und keine Spieleingaben verwendet.
+- Sprachprüfungen: 18.379 Prüfungen über die bestehenden 20 Kataloge bestanden. Gruppennamen bleiben wörtlich; geteilte Teamfarben und Statusmeldungen werden übersetzt. Neue Gruppenmeldungen sind Deutsch/Englisch, weitere Kataloge verwenden hierfür Englisch.
+- Windows-WPF-Anwendung sowie erweiterte AutomationChecks und GroupStorageChecks von Linux aus für Windows ohne Warnungen oder Fehler kompiliert. Worker-Deployment-Dry-Run mit SQLite-Migration und Free-kompatiblen Bindings bestanden.
+
+Die Ausführung der Windows-Bild-/Automations-/DPAPI-Prüfungen und die interaktive GUI-Prüfung benötigen Windows; sie wurden auf diesem Linux-Executor nicht ausgeführt. Die CI führt die Windows-Prüfungen aus. Der erweiterte GUI-Smoke-Lauf besitzt Gruppenfixtures und erfasst beide Betriebsmodi; ein tatsächlicher Windows-Screenshotlauf steht noch aus. Die Cloudflare-Live-Bereitstellung ist auf Wunsch des Nutzers bis zum nächsten verfügbaren Zugang verschoben. Es wurde kein Tarif geändert und keine neue App-Version veröffentlicht.
+
 ## Stopp neben dem Laufstatus (8. Oktober 2026)
 
 `build.ps1 -Tests -OutputDirectory dist/stop-placement` besteht und veröffentlicht beide Runtime-Varianten ohne Warnungen oder Fehler. Die Plattformprüfung besteht mit 23 Checks; Windows verweigert den Test-Fokuswechsel, weshalb diese einzelne Assertion übersprungen wird.

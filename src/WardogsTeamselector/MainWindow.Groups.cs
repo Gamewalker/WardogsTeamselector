@@ -128,6 +128,7 @@ public sealed partial class MainWindow
     }
     private void InitializeGroups()
     {
+        GroupMember.TranslateDisplay = Localization.Text;
         if (!smokeMode)
         {
             try { groupProfile = GroupMembershipStore.Load(); }
@@ -236,7 +237,7 @@ public sealed partial class MainWindow
         }
         catch (Exception) { if (SelectedGroup == group) groupStatus.Text = "Gruppendienst nicht erreichbar. Mit „Aktualisieren“ erneut versuchen."; }
     }
-    private static string DescribeGroup(GroupSnapshot snapshot) => $"{snapshot.Name} · {GroupMember.StatusLabel(snapshot.YourStatus)}\n" + (snapshot.YourStatus == "Approved" ? snapshot.Team == null ? "Noch keine Teamauswahl veröffentlicht." : $"Auswahl: {TeamName(Enum.Parse<Team>(snapshot.Team))}" : "Der Ersteller muss deine Anfrage bestätigen.");
+    private static string DescribeGroup(GroupSnapshot snapshot) => $"Gruppe: {snapshot.Name} · {GroupMember.StatusLabel(snapshot.YourStatus)}\n" + (snapshot.YourStatus == "Approved" ? snapshot.Team == null ? "Noch keine Teamauswahl veröffentlicht." : $"Auswahl: {TeamName(Enum.Parse<Team>(snapshot.Team))}" : "Der Ersteller muss deine Anfrage bestätigen.");
     private async Task BeginGroupFollowAsync(bool auto)
     {
         if (startupSettingsError != null) throw new ArgumentException(startupSettingsError);
