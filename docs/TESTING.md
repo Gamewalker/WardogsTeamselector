@@ -2,6 +2,12 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Herkunft und Fehlereinreichung (8. Oktober 2026)
+
+`build.ps1 -Tests -OutputDirectory dist/project-info` war erfolgreich und baute beide Runtime-Varianten ohne Warnungen oder Fehler. Alle Bild-, Steuerungs-, Profil- und 33 Updateprüfungen bestanden. Die Plattformprüfung bestand mit 23 Checks; Windows verweigerte im Test den Vordergrundwechsel, weshalb diese einzelne Assertion übersprungen wurde.
+
+Der GUI-Prüflauf der EXE mit Runtime bestand. Die Kopfzeile, der zusätzliche Fehlerbutton unter Diagnose und das Herkunftsfenster wurden visuell geprüft, einschließlich Mindestgröße und gescrolltem Fensterende. Screenshots stehen unter `artifacts/project-info-smoke`. Es wurde kein GitHub-Issue abgeschickt und kein Diagnoseexport übertragen.
+
 ## Automatischer Spielfokus (8. Oktober 2026)
 
 Die Einstellung **Spiel nach Teamaktivierung in den Vordergrund holen** ist standardmäßig aktiv, auch beim Laden alter Profile ohne diesen Wert. Die Profilprüfung deckt die dauerhaft gespeicherte Deaktivierung ab. Der GUI-Prüflauf prüft den Standardwert, die Übernahme der deaktivierten Option bei einer Teamaktivierung und das Weiterlaufen eines wartenden Versuchs beim Umschalten. Im GUI-Prüflauf selbst wird kein fremdes Fenster aktiviert.

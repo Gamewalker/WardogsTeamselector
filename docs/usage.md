@@ -4,6 +4,8 @@
 
 ## Die vier Bereiche
 
+**Über die App** in der Kopfzeile zeigt Herkunft, GitHub-Projekt, GPL-v3.0-Lizenz und Build-Informationen. **Fehler auf GitHub melden** öffnet ein vorbereitetes Issue im Browser; der Button steht auch unter **Diagnose**. Ergänze Reproduktionsschritte, erwartetes und tatsächliches Ergebnis sowie möglichst Statusgrund und Diagnoseexport. Zum Abschicken auf GitHub ist eine Anmeldung erforderlich.
+
 Die Oberfläche hat vier Bereiche. Neue Profile starten in **Einrichtung**, vorhandene gültige Profile direkt in **Betrieb**. Ein ungültiges gespeichertes Profil öffnet die Einrichtung mit einem Fehlerhinweis.
 
 1. **Einrichtung:** Wardogs öffnen. Titel und Prozessname müssen standardmäßig `wardogs` enthalten; die Filter und den Monitor bei Bedarf anpassen. **Spiel suchen / Bild laden** übernimmt die Eingaben für die Vorschau. Im Auswahlbildschirm die Teamrahmen und ihre Klickpunkte prüfen. Zum Ändern das gewünschte Team wählen und **Teamfläche im Bild zeichnen** einschalten, oder **Teamfläche als Prozentwerte** aufklappen. Änderungen werden auch beim Teamwechsel und beim Speichern übernommen. Mit **Speichern & zum Betrieb** die Einrichtung abschließen.

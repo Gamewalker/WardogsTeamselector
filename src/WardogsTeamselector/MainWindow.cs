@@ -444,15 +444,16 @@ public sealed partial class MainWindow : Window
     private static Brush TeamBrush(Team t) => new SolidColorBrush(t switch { Team.Blue => Color.FromRgb(22, 112, 163), Team.Red => Color.FromRgb(164, 56, 53), _ => Color.FromRgb(34, 124, 77) });
     private sealed record MonitorChoice(string? Id, string Name);
     private sealed record TeamChoice(Team Team, string Name);
-    private void SaveRender(string path)
+    private void SaveRender(string path, Window? window = null)
     {
         // Render the actual client surface; Window bounds also include non-rendered OS chrome.
-        var content = (FrameworkElement)Content;
+        window ??= this;
+        var content = (FrameworkElement)window.Content;
         var bounds = new Rect(0, 0, content.ActualWidth, content.ActualHeight);
         var visual = new DrawingVisual();
         using (var drawing = visual.RenderOpen())
         {
-            drawing.DrawRectangle(Background, null, bounds);
+            drawing.DrawRectangle(window.Background, null, bounds);
             drawing.DrawRectangle(new VisualBrush(content), null, bounds);
         }
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(bounds.Width), (int)Math.Ceiling(bounds.Height), 96, 96, PixelFormats.Pbgra32);

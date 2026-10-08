@@ -57,8 +57,11 @@ public sealed partial class MainWindow
         stopButton.VerticalAlignment = VerticalAlignment.Center;
         stopButton.IsEnabled = false;
         stopButton.ToolTip = "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel.";
-        Grid.SetColumn(stopButton, 1);
-        header.Children.Add(stopButton);
+        var headerActions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        headerActions.Children.Add(Button("Über die App", ShowAboutWindow));
+        headerActions.Children.Add(stopButton);
+        Grid.SetColumn(headerActions, 1);
+        header.Children.Add(headerActions);
 
         errorText.Foreground = ErrorBrush;
         errorText.TextWrapping = TextWrapping.Wrap;
@@ -321,6 +324,7 @@ public sealed partial class MainWindow
         references.Children.Add(Button("Dialogreferenz prüfen", LoadReference));
         references.Children.Add(Button("HUD-Referenz prüfen", LoadJoinedReference));
         references.Children.Add(Button("Diagnose exportieren", ExportLog));
+        references.Children.Add(Button("Fehler auf GitHub melden", () => OpenProjectLink(BugReportUrl())));
         heading.Children.Add(references);
         heading.Children.Add(Heading("Messflächen · Soll / Ist"));
         detail.Children.Add(heading);

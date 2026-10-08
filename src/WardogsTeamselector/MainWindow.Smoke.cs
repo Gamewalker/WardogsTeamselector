@@ -146,6 +146,15 @@ public sealed partial class MainWindow
         Check(previewEmpty.Visibility == Visibility.Visible && previewSource.Text == "Spielfenster fehlt", "Single capture exposes missing-window empty state");
         SaveRender(Path.Combine(directory, "missing-window.png"));
         Check(errorText.Visibility == Visibility.Collapsed, "Expected validation errors cleared");
+        var about = BuildAboutWindow();
+        about.Show(); await Settle();
+        SaveRender(Path.Combine(directory, "about.png"), about);
+        about.Width = about.MinWidth; about.Height = about.MinHeight;
+        await Settle();
+        SaveRender(Path.Combine(directory, "about-small.png"), about);
+        ((ScrollViewer)about.Content).ScrollToEnd(); await Settle();
+        SaveRender(Path.Combine(directory, "about-small-bottom.png"), about);
+        about.Close();
         File.WriteAllText(Path.Combine(directory, "checks.txt"), "PASS: startup routing, four areas, both sizes, navigation, drawing, region drafts, validation, hotkeys, dirty state, preview lifecycle, diagnosis-only test mode, centered run and hotkeys, exclusive active-team markers, waiting/switching/stopping and UI-only clicking snapshot, conditional stop, reference checks and empty state. No mouse input sent; no profile saved. clicking-fixture.png uses a UI snapshot fixture while the controller is stopped.");
     }
 
