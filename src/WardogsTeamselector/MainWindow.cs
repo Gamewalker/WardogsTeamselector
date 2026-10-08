@@ -75,7 +75,7 @@ public sealed partial class MainWindow : Window
     {
         smokeMode = !registerGlobalHotkeys;
         Localization.SetLanguage(smokeMode ? "en" : Localization.LoadPreference());
-        Title = "WardogsTeamselector"; Width = 1180; Height = 820; MinWidth = 920; MinHeight = 660;
+        Title = $"WardogsTeamselector · {BuildDescription}"; Width = 1180; Height = 820; MinWidth = 920; MinHeight = 660;
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/app.ico"));
         Background = new SolidColorBrush(Color.FromRgb(19, 26, 30)); Foreground = Brushes.WhiteSmoke; FontFamily = new System.Windows.Media.FontFamily("Segoe UI"); FontSize = 14;
         automation = new(screen, detector, new WindowsClickSink(), joinedDetector);

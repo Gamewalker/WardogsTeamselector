@@ -4,6 +4,13 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using WardogsTeamselector.Updates;
 
+// The installer launches this executable as a harmless restart fixture.
+if (Environment.GetEnvironmentVariable("WARDOGS_UPDATE_RESTART_MARKER") is string marker)
+{
+    File.WriteAllText(marker, Environment.CurrentDirectory);
+    return;
+}
+
 int checks = 0;
 void Check(bool result, string description) { if (!result) throw new Exception(description); checks++; }
 string Release(long build = 8, bool draft = false, bool prerelease = false, string? digest = null) => JsonSerializer.Serialize(new {
@@ -52,21 +59,33 @@ try
         Check(File.Exists(download), "Real public release downloaded and SHA-256 verified");
         File.Delete(download);
     }
-    foreach (var scenario in new[] { "success", "corrupt", "changed", "locked" })
+    foreach (var scenario in new[] { "success", "corrupt", "changed", "locked", "restart", "restart-corrupt", "restart-failed" })
     {
         string directory = Path.Combine(root, scenario + " apostrophe' space ä 漢字");
         Directory.CreateDirectory(directory);
         string source = Path.Combine(directory, "new.exe"), target = Path.Combine(directory, "app.exe");
         byte[] original = [(byte)'M', (byte)'Z', 9, 9];
-        File.WriteAllBytes(source, bytes); File.WriteAllBytes(target, original);
+        bool restart = scenario.StartsWith("restart");
+        bool success = scenario is "success" or "restart" or "restart-failed";
+        byte[] updateBytes = restart && scenario != "restart-failed" ? File.ReadAllBytes(Environment.ProcessPath!) : bytes;
+        if (scenario == "restart-corrupt") original = updateBytes;
+        if (restart)
+        {
+            foreach (string dependency in Directory.GetFiles(AppContext.BaseDirectory, "UpdateChecks.*").Where(path => !path.EndsWith(".exe")))
+                File.Copy(dependency, Path.Combine(directory, Path.GetFileName(dependency)));
+        }
+        File.WriteAllBytes(source, updateBytes); File.WriteAllBytes(target, original);
         string script = Path.Combine(directory, "install.ps1"), job = script + ".json", result = Path.Combine(directory, "result.txt");
         File.Copy(installer, script);
         File.WriteAllText(job, JsonSerializer.Serialize(new {
             ProcessId = int.MaxValue, Source = source, Target = target, Backup = target + ".previous", Script = script,
-            Sha256 = scenario == "corrupt" ? new string('0', 64) : hash,
+            Sha256 = scenario is "corrupt" or "restart-corrupt" ? new string('0', 64) : Convert.ToHexString(SHA256.HashData(updateBytes)),
+            Restart = restart,
             TargetSha256 = scenario == "changed" ? new string('0', 64) : Convert.ToHexString(SHA256.HashData(original)), Result = result
         }));
         var start = UpdateInstaller.CreateStartInfo(script, job);
+        string restartMarker = Path.Combine(directory, "restarted.txt");
+        if (restart) start.Environment["WARDOGS_UPDATE_RESTART_MARKER"] = restartMarker;
         Check(!start.Environment.ContainsKey("PSModulePath"), "Installer reconstructs Windows PowerShell module paths");
         using var lockedFile = scenario == "locked" ? new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None) : null;
         using var process = Process.Start(start)!;
@@ -74,10 +93,22 @@ try
         lockedFile?.Dispose();
         string installerResult = File.Exists(result) ? File.ReadAllText(result).Trim() : "Installer produced no result file.";
         Check(process.ExitCode == 0, $"Installer completed: {scenario}. {installerResult}");
-        Check(File.ReadAllBytes(target).SequenceEqual(scenario == "success" ? bytes : original), $"Safe replacement: {scenario}. {installerResult}");
-        Check(installerResult.Contains(scenario == "success" ? "erfolgreich" : "fehlgeschlagen"), $"Result: {scenario}. {installerResult}");
-        if (scenario == "success") Check(File.ReadAllBytes(target + ".previous").SequenceEqual(original), "Original backed up");
+        Check(File.ReadAllBytes(target).SequenceEqual(success ? updateBytes : original), $"Safe replacement: {scenario}. {installerResult}");
+        Check(installerResult.Contains(success ? "erfolgreich" : "fehlgeschlagen"), $"Result: {scenario}. {installerResult}");
+        if (success) Check(File.ReadAllBytes(target + ".previous").SequenceEqual(original), "Original backed up");
         Check(!File.Exists(job) && !File.Exists(script), "Helper cleaned up");
+        if (scenario == "restart")
+        {
+            for (int attempt = 0; attempt < 100 && !File.Exists(restartMarker); attempt++) await Task.Delay(100);
+            Check(File.Exists(restartMarker), "Installed app restarted");
+            Check(File.ReadAllText(restartMarker) == directory, "Restart uses app directory");
+        }
+        if (scenario == "restart-corrupt")
+        {
+            await Task.Delay(1000);
+            Check(!File.Exists(restartMarker), "Failed update never restarts");
+        }
+        if (scenario == "restart-failed") Check(installerResult.Contains("Neustart fehlgeschlagen"), "Restart failure preserves successful installation and explains manual recovery");
     }
 }
 finally { Directory.Delete(root, true); }

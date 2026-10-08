@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$Job)
 $ErrorActionPreference = 'Stop'
 $jobData = Get-Content -LiteralPath $Job -Raw -Encoding UTF8 | ConvertFrom-Json
+$installed = $false
 try {
     $parent = Get-Process -Id $jobData.ProcessId -ErrorAction SilentlyContinue
     if ($parent) { $parent.WaitForExit() }
@@ -35,4 +36,11 @@ try {
     Remove-Item -LiteralPath $jobData.Script
     if ($locked) { $mutex.ReleaseMutex() }
     if ($mutex) { $mutex.Dispose() }
+}
+if ($installed -and $jobData.Restart) {
+    try {
+        Start-Process -FilePath $jobData.Target -WorkingDirectory ([IO.Path]::GetDirectoryName($jobData.Target)) -WindowStyle Normal
+    } catch {
+        Set-Content -LiteralPath $jobData.Result -Value ('Update erfolgreich installiert. Automatischer Neustart fehlgeschlagen; App bitte manuell starten: ' + $_.Exception.Message) -Encoding UTF8
+    }
 }
