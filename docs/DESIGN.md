@@ -39,7 +39,7 @@ Die eigenen Vektor-Icons verwenden ein gemeinsames 24er-Koordinatensystem, 1,7 D
 
 ## Flächen und Abstände
 
-Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Laufstatus, Info und Stopp. Die feste Profilfußleiste hat eine eigene gerahmte Fläche und 16 × 12 DIP Innenabstand.
+Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Info, Sprachauswahl und bei verfügbarer neuer Version die Update-Aktion. Direkt über der Profilfußleiste stehen Laufstatus und Stopp zusammen in einer festen Leiste: der umbrechende Status links, die Stopptaste rechts. Diese Laufsteuerung bleibt in allen vier Bereichen sichtbar. Die feste Profilfußleiste hat eine eigene gerahmte Fläche und 16 × 12 DIP Innenabstand.
 
 Einrichtung verwendet eine 320-DIP-Spalte, Diagnose eine 420-DIP-Spalte. Ein eigener 24-DIP-Zwischenraum mit mittiger 1-DIP-Linie trennt Formulare und Bildvorschau. Konfiguration verwendet zwei gleich breite, gerahmte Flächen mit 18 DIP Innenabstand und 20 DIP Abstand zueinander. Gruppenüberschriften haben 24 DIP Abstand davor und 12 DIP danach.
 
