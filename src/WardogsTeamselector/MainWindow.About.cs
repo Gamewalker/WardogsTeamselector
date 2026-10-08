@@ -58,7 +58,6 @@ public sealed partial class MainWindow
         close.HorizontalAlignment = HorizontalAlignment.Right;
         panel.Children.Add(close);
         dialog.Content = Scroll(panel);
-        dialog.LayoutUpdated += (_, _) => LocalizeInterface(dialog);
         LocalizeInterface(dialog);
         return dialog;
     }

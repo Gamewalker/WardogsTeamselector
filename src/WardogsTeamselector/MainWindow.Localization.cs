@@ -7,6 +7,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Markup;
+using System.Windows.Threading;
 
 namespace WardogsTeamselector;
 
@@ -15,10 +16,12 @@ public sealed partial class MainWindow
     private readonly ComboBox languageSelector = new();
     private readonly ConditionalWeakTable<DependencyObject, Dictionary<DependencyProperty, LocalizedValue>> localizedValues = new();
     private bool localizing;
+    private readonly DispatcherTimer localizationTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private sealed record LocalizedValue(string Source, string Display);
 
     private UIElement BuildLanguageSelector()
     {
+        localizationTimer.Tick += (_, _) => LocalizeInterface();
         languageSelector.ItemsSource = Localization.Languages;
         languageSelector.DisplayMemberPath = "Name";
         languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == Localization.CurrentLanguage);
@@ -26,8 +29,8 @@ public sealed partial class MainWindow
         languageSelector.MinHeight = 36;
         languageSelector.Margin = new Thickness(12, 0, 0, 4);
         languageSelector.Foreground = Brushes.Black;
-        languageSelector.ToolTip = "Language";
-        AutomationProperties.SetName(languageSelector, "Language");
+        languageSelector.ToolTip = "Sprache";
+        AutomationProperties.SetName(languageSelector, "Sprache");
         languageSelector.SelectionChanged += (_, _) =>
         {
             if (languageSelector.SelectedItem is not Localization.Language language) return;
@@ -37,7 +40,7 @@ public sealed partial class MainWindow
             {
                 try { Localization.SavePreference(language.Code); }
                 catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
-                { ShowError(Localization.Text("Language preference could not be saved.")); }
+                { ShowError("Die Sprachauswahl konnte nicht gespeichert werden."); }
             }
         };
         return languageSelector;
@@ -65,7 +68,8 @@ public sealed partial class MainWindow
                 if (element is TextBlock text)
                 {
                     LocalizeProperty(text, TextBlock.TextProperty);
-                    text.FlowDirection = Localization.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+                    var direction = Localization.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+                    if (text.FlowDirection != direction) text.FlowDirection = direction;
                 }
                 if (element is TextBox box && box.IsReadOnly) LocalizeProperty(box, TextBox.TextProperty);
                 if (element is ContentControl) LocalizeProperty(element, ContentControl.ContentProperty);
@@ -73,7 +77,8 @@ public sealed partial class MainWindow
                 if (element is Window window)
                 {
                     LocalizeProperty(window, Window.TitleProperty);
-                    window.Language = XmlLanguage.GetLanguage(Localization.CurrentLanguage);
+                    if (window.Language.IetfLanguageTag != Localization.CurrentLanguage)
+                        window.Language = XmlLanguage.GetLanguage(Localization.CurrentLanguage);
                 }
                 if (element is DataGrid table)
                     foreach (var column in table.Columns) LocalizeProperty(column, DataGridColumn.HeaderProperty);

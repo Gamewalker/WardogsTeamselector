@@ -35,6 +35,8 @@ Check(Localization.Text("Wartet · Blau") == "Waiting · Blue", "Team name or ph
 Check(Localization.Text("Blau und Rot verwenden F6. Für Rot eine andere F-Taste wählen.").Contains("Blue and Red"), "Dynamic validation did not translate team names.");
 Check(Localization.Text("23:01:02.003  Warte auf Spielfenster").StartsWith("23:01:02.003  "), "Log timestamp modified.");
 Check(Localization.Text("C:\\Users\\Example\\my-profile.json") == "C:\\Users\\Example\\my-profile.json", "Unknown data changed.");
+Check(Localization.Text("Rotterdam") == "Rotterdam", "Word prefix in unknown data changed.");
+Check(Localization.Text("Klickintervall: 50–70 ms  ·  Fenster: Spiel\nBeitritt: fünf HUD-Balken für mindestens 0,5 s  ·  Stopp: ESC").Contains("Window: Spiel"), "User-entered game filter was translated.");
 Localization.SetLanguage("invalid");
 Check(Localization.CurrentLanguage == "en", "Unsupported language must fall back to English.");
 Localization.SetLanguage("ar"); Check(Localization.IsRightToLeft, "Arabic must use RTL text.");

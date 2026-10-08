@@ -319,6 +319,10 @@
   "Ereignisprotokoll": "Ereignisprotokoll",
   "PNG-Bild|*.png": "PNG-Bild|*.png",
   "Textdatei|*.txt": "Textdatei|*.txt",
-  "Language": "Language",
-  "Language preference could not be saved.": "Language preference could not be saved."
+  "Update installieren und neu starten": "Update installieren und neu starten",
+  "Build {0} ist geprüft. Jetzt installieren und neu starten oder beim Beenden installieren lassen.": "Build {0} ist geprüft. Jetzt installieren und neu starten oder beim Beenden installieren lassen.",
+  "Update erfolgreich installiert.": "Update erfolgreich installiert.",
+  "Update fehlgeschlagen: ": "Update fehlgeschlagen: ",
+  "Sprache": "Sprache",
+  "Die Sprachauswahl konnte nicht gespeichert werden.": "Die Sprachauswahl konnte nicht gespeichert werden."
 }

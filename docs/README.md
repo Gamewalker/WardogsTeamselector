@@ -27,6 +27,7 @@ Die Befehle in diesen Seiten werden vom Repository-Stamm aus ausgeführt. Quellc
 Die veröffentlichten Versionen mit Downloads findest du unter [GitHub Releases](https://github.com/Gamewalker/WardogsTeamselector/releases). Die Beschreibungen einzelner Änderungen liegen in [releases/](releases/).
 
 - [Automatischer Spielfokus](releases/automatic-game-focus.md)
+- [Mehrsprachige Oberfläche](releases/multilingual-interface.md)
 - [Automatische Updates](releases/automatic-updates.md)
 - [Update-Helfer und PowerShell](releases/update-powershell-compatibility.md)
 - [Rückmeldung im Betrieb](releases/operator-feedback.md)

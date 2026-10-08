@@ -16,7 +16,7 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(directory);
         LocalizeInterface();
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
-        Check((string)stopButton.Content == "Stop · ESC" && profileText.Text.Contains("Default profile") || (string)stopButton.Content == "Stop · ESC" && hasSavedProfile, "English header and profile");
+        Check((string)stopButton.Content == "Stop · ESC" && (profileText.Text.Contains("Default profile") || hasSavedProfile), "English header and profile");
         SaveRender(Path.Combine(directory, "english-startup.png"));
         foreach (var language in Localization.Languages)
         {
@@ -44,6 +44,25 @@ public sealed partial class MainWindow
         Check(teamButtons.Values.All(button => button.HorizontalContentAlignment == HorizontalAlignment.Center) && teamKeyLabels.Values.All(label => label.TextAlignment == TextAlignment.Center), "Hotkeys are centered on team buttons");
         ShowPage(0); LoadReference(); await Settle();
         Check(detectionText.Text.Contains("Dialog: erkannt"), "Embedded dialog reference detected");
+
+        foreach (var code in new[] { "en", "ar", "zh-CN" })
+        {
+            languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == code);
+            foreach (var size in new[] { ("desktop", 1180d, 820d), ("small", MinWidth, MinHeight) })
+            {
+                Width = size.Item2; Height = size.Item3;
+                for (int page = 0; page < pages.Items.Count; page++)
+                {
+                    ShowPage(page); await Settle();
+                    Check(!dirty && !regionDirty, "Translation and navigation preserve saved field state");
+                    var headerPosition = languageSelector.TranslatePoint(new Point(languageSelector.ActualWidth, 0), (UIElement)Content);
+                    Check(headerPosition.X <= ((FrameworkElement)Content).ActualWidth + 1, "Language selector fits the header at minimum width");
+                    SaveRender(Path.Combine(directory, $"{code}-{size.Item1}-{page + 1}.png"));
+                }
+            }
+        }
+        languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == "de");
+        ShowPage(0); await Settle();
 
         foreach (var size in new[] { ("desktop", 1180d, 820d), ("small", MinWidth, MinHeight) })
         {
@@ -186,8 +205,10 @@ public sealed partial class MainWindow
 
     private async Task Settle()
     {
+        LocalizeInterface();
         UpdateLayout();
         await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+        LocalizeInterface();
         UpdateLayout();
     }
 

@@ -24,6 +24,17 @@ internal static class Localization
     private static readonly Dictionary<string, Dictionary<string, string>> catalogs = new();
     private static readonly Dictionary<string, string> cache = new();
     private static readonly Regex placeholder = new(@"\{(\d+)\}");
+    private static readonly Dictionary<string, int[]> translatedArguments = new()
+    {
+        ["{0} verwenden F{1}. Für {2} eine andere F-Taste wählen."] = new[] { 0, 2 },
+        ["Dialog: {0} · Score {1}"] = new[] { 0 },
+        ["Folgescreen: {0} · Score {1}"] = new[] { 0 },
+        ["{0}\n{1}×{2} px · Ursprung ({3},{4}) · Fokus: {5} · Geometrie: {6}"] = new[] { 0, 5, 6 },
+        ["{0}: {1}  ·  Letztes Intervall: {2}"] = new[] { 0 },
+        ["Team {0}, {1}, {2}"] = new[] { 0, 2 },
+        ["{0}: {1} | Soll {2} | Ist {3}"] = new[] { 0, 2, 3 },
+        ["Aufnahme/Steuerung fehlgeschlagen: {0}"] = new[] { 0 }
+    };
     private static readonly string[] sources = Catalog("de").Keys.OrderByDescending(s => placeholder.Replace(s, "").Length).ToArray();
     private static readonly (string Source, Regex Pattern)[] templates = sources
         .Where(s => placeholder.IsMatch(s))
@@ -65,15 +76,22 @@ internal static class Localization
             var match = pattern.Match(source);
             if (!match.Success) continue;
             var format = catalog.GetValueOrDefault(key, Catalog("en").GetValueOrDefault(key, key));
-            return placeholder.Replace(format, m => Translate(match.Groups["p" + m.Groups[1].Value].Value, depth + 1));
+            return placeholder.Replace(format, m =>
+            {
+                string value = match.Groups["p" + m.Groups[1].Value].Value;
+                // Numeric values, paths and user-entered window filters stay literal.
+                int index = int.Parse(m.Groups[1].Value);
+                return (translatedArguments.TryGetValue(key, out var arguments) && arguments.Contains(index)) || (key.StartsWith("## Fehlerbeschreibung", StringComparison.Ordinal) && index < 2)
+                    ? Translate(value, depth + 1) : value;
+            });
         }
         // Original messages also compose prefixes with exception details, team names,
         // timestamps and paths. Translate known pieces, preserving unknown user data.
         foreach (var key in sources.Where(s => !placeholder.IsMatch(s) && s.Trim().Length >= 3))
         {
-            if (source.StartsWith(key, StringComparison.Ordinal))
+            if (source.StartsWith(key, StringComparison.Ordinal) && (source.Length == key.Length || char.IsWhiteSpace(key[^1]) || !char.IsLetterOrDigit(source[key.Length])))
                 return catalog.GetValueOrDefault(key, key) + Translate(source[key.Length..], depth + 1);
-            if (source.EndsWith(key, StringComparison.Ordinal))
+            if (source.EndsWith(key, StringComparison.Ordinal) && (source.Length == key.Length || char.IsWhiteSpace(key[0]) || !char.IsLetterOrDigit(source[source.Length - key.Length - 1])))
                 return Translate(source[..^key.Length], depth + 1) + catalog.GetValueOrDefault(key, key);
         }
         if (source.Contains('\n')) return string.Join("\n", source.Split('\n').Select(s => Translate(s, depth + 1)));

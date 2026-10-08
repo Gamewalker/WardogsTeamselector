@@ -82,8 +82,8 @@ public sealed partial class MainWindow : Window
         automation.Updated += OnAutomation;
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
         Build(); LoadFields();
-        LayoutUpdated += (_, _) => LocalizeInterface();
         LocalizeInterface();
+        Loaded += (_, _) => localizationTimer.Start();
         Loaded += (_, _) => InitializeUpdates();
         Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
@@ -98,7 +98,7 @@ public sealed partial class MainWindow : Window
                 var choice = LocalizedMessageBox.Show(this, "Änderungen vor dem Schließen speichern?", "Ungespeicherte Einstellungen", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (choice == MessageBoxResult.Cancel || (choice == MessageBoxResult.Yes && !SaveSettings())) { e.Cancel = true; return; }
             }
-            closing = true; timer.Stop(); automation.Dispose(); hotkeys?.Dispose();
+            closing = true; timer.Stop(); localizationTimer.Stop(); automation.Dispose(); hotkeys?.Dispose();
         };
         PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) automation.Stop("ESC – abgebrochen"); };
     }
@@ -245,6 +245,7 @@ public sealed partial class MainWindow : Window
             if (current.State != RunState.Stopped) CancelRegionDrag();
             if (liveUpdatesEnabled && !referenceMode && current.Detection != null) UpdateDetection(current.Detection, current.JoinedDetection);
             if (logLines.LastOrDefault()?.EndsWith(current.Reason) != true) AddLog(current.Reason);
+            LocalizeInterface();
         });
     }
     private void SetLiveUpdates(bool enabled)
@@ -411,8 +412,20 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex) { ShowError(ex.Message); }
     }
-    private void SaveImage() { if (lastImage == null) { ShowError("Zuerst ein Bild aufnehmen."); return; } var dialog = new SaveFileDialog { Filter = "PNG-Bild|*.png", FileName = "wardogs-aufnahme.png" }; if (dialog.ShowDialog() != true) return; try { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(lastImage)); using var file = File.Create(dialog.FileName); encoder.Save(file); } catch (Exception ex) { ShowError(ex.Message); } }
-    private void ExportLog() { var dialog = new SaveFileDialog { Filter = "Textdatei|*.txt", FileName = "wardogs-diagnose.txt" }; if (dialog.ShowDialog() != true) return; try { File.WriteAllText(dialog.FileName, "WardogsTeamselector\n" + geometryText.Text + "\n" + detectionText.Text + "\n" + string.Join("\n", logLines) + "\n\nMessflächen:\n" + string.Join("\n", (probes.ItemsSource as IReadOnlyList<ProbeResult> ?? Array.Empty<ProbeResult>()).Select(p => $"{p.Name}: {p.Score:F3} | Soll {p.Expected} | Ist {p.Actual}"))); } catch (Exception ex) { ShowError(ex.Message); } }
+    private void SaveImage() { if (lastImage == null) { ShowError("Zuerst ein Bild aufnehmen."); return; } var dialog = new SaveFileDialog { Filter = Localization.Text("PNG-Bild|*.png"), FileName = "wardogs-aufnahme.png" }; if (dialog.ShowDialog() != true) return; try { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(lastImage)); using var file = File.Create(dialog.FileName); encoder.Save(file); } catch (Exception ex) { ShowError(ex.Message); } }
+    private void ExportLog()
+    {
+        var dialog = new SaveFileDialog { Filter = Localization.Text("Textdatei|*.txt"), FileName = "wardogs-diagnose.txt" };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            File.WriteAllText(dialog.FileName, "WardogsTeamselector\n" + geometryText.Text + "\n" + detectionText.Text + "\n" +
+                string.Join("\n", logLines.Select(Localization.Text)) + Localization.Text("\n\nMessflächen:\n") +
+                string.Join("\n", (probes.ItemsSource as IReadOnlyList<ProbeResult> ?? Array.Empty<ProbeResult>())
+                    .Select(p => Localization.Text($"{p.Name}: {p.Score:F3} | Soll {p.Expected} | Ist {p.Actual}"))));
+        }
+        catch (Exception ex) { ShowError(ex.Message); }
+    }
     private void ShowError(string message) { errorText.Text = message; errorText.Visibility = Visibility.Visible; AddLog("Fehler: " + message); }
     private void ClearError() { errorText.Text = ""; errorText.Visibility = Visibility.Collapsed; }
     private void AddLog(string message) { logLines.Add(DateTime.Now.ToString("HH:mm:ss.fff") + "  " + message); if (logLines.Count > 500) logLines.RemoveAt(0); log.Text = string.Join(Environment.NewLine, logLines); log.ScrollToEnd(); }

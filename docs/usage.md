@@ -4,6 +4,8 @@
 
 ## Die vier Bereiche
 
+Die App startet beim ersten Mal auf Englisch. Über die Sprachauswahl neben **Stopp · ESC** lässt sich jederzeit eine von 20 Sprachen wählen. Die Wahl wird automatisch für den nächsten Start gespeichert. Sprachwechsel erhalten ungespeicherte Eingaben und laufende Versuche. Die folgenden Beschriftungen beziehen sich auf Deutsch; [Details zur Mehrsprachigkeit](releases/multilingual-interface.md).
+
 **Über die App** in der Kopfzeile zeigt Herkunft, GitHub-Projekt, GPL-v3.0-Lizenz und Build-Informationen. **Fehler auf GitHub melden** öffnet ein vorbereitetes Issue im Browser; der Button steht auch unter **Diagnose**. Ergänze Reproduktionsschritte, erwartetes und tatsächliches Ergebnis sowie möglichst Statusgrund und Diagnoseexport. Zum Abschicken auf GitHub ist eine Anmeldung erforderlich.
 
 Die Oberfläche hat vier Bereiche. Neue Profile starten in **Einrichtung**, vorhandene gültige Profile direkt in **Betrieb**. Ein ungültiges gespeichertes Profil öffnet die Einrichtung mit einem Fehlerhinweis.
