@@ -10,6 +10,8 @@ Der vollständige `build.ps1 -Tests -OutputDirectory dist/game-focus` war erfolg
 
 ## Automatische Updates (8. Oktober 2026)
 
+CI-Korrektur nach dem ersten Push: `pwsh → dotnet → powershell.exe` vererbte PowerShell-7-Modulpfade an Windows PowerShell. Der echte Installationshelfertest ließ sich unter lokalem PowerShell 7 mit `Safe replacement: success` und dem Zusatz `Get-FileHash` nicht gefunden reproduzieren. Anwendung und Tests verwenden jetzt denselben Helferstart, der `PSModulePath` ausschließlich aus der Kindprozessumgebung entfernt. Unter PowerShell 7 bestehen anschließend alle 33 Updateprüfungen; vier davon prüfen den bereinigten Modulpfad. Bei einem erneuten Fehlschlag enthalten die Assertions außerdem das tatsächliche Installationsergebnis. Der Anwendungsbuild ist ohne Warnungen und Fehler erfolgreich. Der erneute GitHub-Actions-Lauf steht bis zum nächsten Push aus.
+
 - Vollständiger `build.ps1 -Tests -OutputDirectory dist/automatic-update` erfolgreich, einschließlich aller vorhandenen Bild-, Steuerungs-, Profil- und 18 Plattformprüfungen. Beide Runtime-Varianten gebaut.
 - `UpdateChecks`: 29 Prüfungen für neue/gleiche/ältere Builds, Drafts und Prereleases, passende Runtime-Variante, SHA-256, Downloadgröße, EXE-Kennung und sicheren Austausch. Der reale PowerShell-Helfer wurde mit temporären Dateien ausgeführt: erfolgreicher Austausch mit unveränderter Sicherung, beschädigter Download, zwischenzeitlich geänderte und gesperrte Ziel-EXE. Pfade enthalten Leerzeichen, Apostroph und Unicode. Die Benutzer-EXE wurde nicht ersetzt.
 - Öffentlichen GitHub-Release ohne Anmeldung abgefragt und dessen `without-runtime`-EXE tatsächlich heruntergeladen und anhand der Release-Prüfsumme validiert (`UpdateChecks --live`, zwei zusätzliche Prüfungen).

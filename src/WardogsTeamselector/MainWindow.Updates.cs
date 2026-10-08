@@ -127,11 +127,7 @@ public sealed partial class MainWindow
                 TargetSha256 = targetHash,
                 Result = Path.Combine(UpdatePreferences.DirectoryPath, "update-result.txt"), Script = script
             }));
-            var start = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe")) {
-                UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden
-            };
-            foreach (string argument in new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-Job", job }) start.ArgumentList.Add(argument);
-            Process.Start(start)?.Dispose();
+            Process.Start(UpdateInstaller.CreateStartInfo(script, job))?.Dispose();
         }
         catch
         {

@@ -66,15 +66,16 @@ try
             Sha256 = scenario == "corrupt" ? new string('0', 64) : hash,
             TargetSha256 = scenario == "changed" ? new string('0', 64) : Convert.ToHexString(SHA256.HashData(original)), Result = result
         }));
-        var start = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true };
-        foreach (var argument in new[] { "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", script, "-Job", job }) start.ArgumentList.Add(argument);
+        var start = UpdateInstaller.CreateStartInfo(script, job);
+        Check(!start.Environment.ContainsKey("PSModulePath"), "Installer reconstructs Windows PowerShell module paths");
         using var lockedFile = scenario == "locked" ? new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.None) : null;
         using var process = Process.Start(start)!;
         await process.WaitForExitAsync();
         lockedFile?.Dispose();
-        Check(process.ExitCode == 0, "Installer completed: " + scenario);
-        Check(File.ReadAllBytes(target).SequenceEqual(scenario == "success" ? bytes : original), "Safe replacement: " + scenario);
-        Check(File.ReadAllText(result).Contains(scenario == "success" ? "erfolgreich" : "fehlgeschlagen"), "Result: " + scenario);
+        string installerResult = File.Exists(result) ? File.ReadAllText(result).Trim() : "Installer produced no result file.";
+        Check(process.ExitCode == 0, $"Installer completed: {scenario}. {installerResult}");
+        Check(File.ReadAllBytes(target).SequenceEqual(scenario == "success" ? bytes : original), $"Safe replacement: {scenario}. {installerResult}");
+        Check(installerResult.Contains(scenario == "success" ? "erfolgreich" : "fehlgeschlagen"), $"Result: {scenario}. {installerResult}");
         if (scenario == "success") Check(File.ReadAllBytes(target + ".previous").SequenceEqual(original), "Original backed up");
         Check(!File.Exists(job) && !File.Exists(script), "Helper cleaned up");
     }
