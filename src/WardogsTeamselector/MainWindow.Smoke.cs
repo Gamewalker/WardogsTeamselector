@@ -53,6 +53,16 @@ public sealed partial class MainWindow
         LoadFields(); ApplyHotkeys(settings);
         Check(!dirty && !regionDirty, "Loading fields does not create unsaved edits");
         Check(focusGame.IsChecked == true && ReadFields().FocusGameOnTeamActivation, "Game focus defaults to enabled");
+        foreach (var code in new[] { "en", "de" })
+        {
+            languageSelector.SelectedItem = Localization.Languages.Single(l => l.Code == code);
+            LocalizeInterface();
+            Check(operationFocusHint.Text == Localization.Text("Auto-Fokus ist an: Ein Team aktivieren, und die App holt das Spiel in den Vordergrund."), "Operation explains automatic focus: " + code);
+            focusGame.IsChecked = false; LocalizeInterface();
+            Check(operationFocusHint.Text == Localization.Text("Auto-Fokus ist aus: Ein Team aktivieren, dann selbst zum Spiel wechseln."), "Operation explains manual focus immediately: " + code);
+            dirty = false; LoadFields(); LocalizeInterface();
+            Check(focusGame.IsChecked == true && operationFocusHint.Text == Localization.Text("Auto-Fokus ist an: Ein Team aktivieren, und die App holt das Spiel in den Vordergrund."), "Loading saved fields restores automatic focus hint: " + code);
+        }
         Check(!stopButton.IsEnabled, "Stop is disabled before activation");
         Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(dryRun) && LogicalElements((DependencyObject)((TabItem)pages.Items[3]).Content).Contains(dryRun), "Test-mode control belongs exclusively to diagnosis");
         Check(operationState.TextAlignment == TextAlignment.Center && runReason.TextAlignment == TextAlignment.Center && counters.TextAlignment == TextAlignment.Center, "Current run is centered");
