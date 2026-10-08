@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/WardogsTeamselector/**/*.cs" Exclude="../../../src/WardogsTeamselector/bin/**/*.cs;../../../src/WardogsTeamselector/obj/**/*.cs" />
+    <Resource Include="../../../src/WardogsTeamselector/Assets/app.png" Link="Assets/app.png" />
+    <Page Include="../../../src/WardogsTeamselector/Theme.xaml" Link="Theme.xaml" />
+    <EmbeddedResource Include="../../../src/WardogsTeamselector/Assets/reference.png" LogicalName="WardogsTeamselector.Reference" />
+    <EmbeddedResource Include="../../../src/WardogsTeamselector/Assets/joined.png" LogicalName="WardogsTeamselector.Joined" />
+    <EmbeddedResource Include="../../../src/WardogsTeamselector/Localization/*.json" LogicalName="WardogsTeamselector.Localization.%(Filename).json" />
+    <EmbeddedResource Include="../../../src/WardogsTeamselector/Updates/InstallUpdate.ps1" LogicalName="WardogsTeamselector.InstallUpdate" />
+  </ItemGroup>
+</Project>

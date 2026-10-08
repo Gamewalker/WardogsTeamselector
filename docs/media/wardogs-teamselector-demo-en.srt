@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:06,000
+WardogsTeamselector
+Choose Blue, Red or Green with F6, F7 or F8. Start in test mode.
+CURRENT ENGLISH INTERFACE / NO MOUSE INPUT
+
+2
+00:00:06,000 --> 00:00:12,000
+01 / Connect and calibrate
+Find the game, check the colored team outlines, then save your setup.
+EMBEDDED REFERENCE IMAGE / NOT A LIVE GAME
+
+3
+00:00:12,000 --> 00:00:18,000
+02 / Activate, switch or stop
+The active team becomes Stop. Other teams stay selectable. ESC cancels.
+WAITING-STATE UI FIXTURE / CONTROLLER STOPPED
+
+4
+00:00:18,000 --> 00:00:24,000
+03 / Make it yours
+Adjust click intervals and hotkeys. Auto focus brings the game forward.
+DEFAULT INTERVAL: 50-70 MS / HOTKEYS: F1-F24
+
+5
+00:00:24,000 --> 00:00:30,000
+04 / Test before real clicks
+Use test mode, check reference images and export diagnostics for support.
+TEST MODE SENDS NO MOUSE INPUT
+
+6
+00:00:30,000 --> 00:00:36,000
+05 / Confirm the join
+A run stops after five white HUD bars stay detected for at least 0.5 seconds.
+EMBEDDED HUD REFERENCE / NO LIVE JOIN SHOWN
+
+7
+00:00:36,000 --> 00:00:42,000
+06 / Stay up to date
+Release builds check at startup and every six hours. Your runtime variant and settings are preserved.
+UPDATES ARE DISABLED IN THIS DOCUMENTATION CAPTURE
+
+8
+00:00:42,000 --> 00:00:48,000
+07 / Your language, your project
+20 offline UI languages. English by default. Project, GPL license and bug reports in About the app.
+OPEN SOURCE / GAMEWALKER ON GITHUB
