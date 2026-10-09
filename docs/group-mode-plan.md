@@ -16,7 +16,10 @@ Der neue Gruppenbereich ergänzt diesen Ablauf. Die Bildschirmkalibrierung, Klic
 
 ## Vorgeschlagene Produktentscheidungen
 
+- Hauptnavigation: Einrichtung/Betrieb links, Konfiguration/Diagnose/Gruppenverwaltung rechts.
 - Zwei Tabs im Bereich „Betrieb“: „Manuell“ und „Gruppenmodus“.
+- Verwaltung, Anlage und Einladungen im eigenen Tab. Mehrere gespeicherte Gruppen, aber eine gemeinsame aktive Gruppenauswahl in allen Modi.
+- Gezielter Admin-Übertragungscode je Gruppe: zusätzlicher Zugang oder exklusive Übernahme mit Tokenwechsel. Administrative Tokens bleiben in der Oberfläche verborgen.
 - Ein Ersteller verwaltet die Mitglieder und veröffentlicht die Teamauswahl. Mitglieder dürfen beitreten, die Gruppe verlassen und ihrer Auswahl folgen.
 - Eine Person kann mehreren Gruppen angehören, aber nur einer Gruppe gleichzeitig aktiv folgen.
 - Zunächst ohne Benutzerkonto: Zugangsdaten werden auf diesem PC gespeichert. Ein exportierbarer Wiederherstellungscode übernimmt sie bei einem PC-Wechsel.
