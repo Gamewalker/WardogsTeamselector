@@ -15,7 +15,7 @@ namespace WardogsTeamselector;
 
 public sealed partial class MainWindow
 {
-    private readonly TabControl operationTabs = new();
+    private readonly TabControl operationTabs = new() { Padding = new Thickness(20) };
     private readonly ComboBox groupPicker = new() { DisplayMemberPath = "Label", MinWidth = 260 };
     private readonly ComboBox shareGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 240 };
     private readonly ComboBox managementGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 260 };
@@ -24,7 +24,7 @@ public sealed partial class MainWindow
     private readonly ListBox groupMembers = new() { DisplayMemberPath = "Label", MinHeight = 100, MaxHeight = 220 };
     private readonly ListBox groupRequests = new() { DisplayMemberPath = "Label", MinHeight = 70, MaxHeight = 160 };
     private readonly TextBlock groupStatus = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 8) };
-    private readonly CheckBox groupAuto = new() { Content = "Auto folgen · beim nächsten Teamauswahlbildschirm" };
+    private readonly CheckBox groupAuto = new() { Content = "Auto folgen · beim nächsten Teamauswahlbildschirm", Margin = new Thickness(0, 8, 0, 8) };
     private readonly TextBox groupService = new() { MinWidth = 260 };
     private readonly GroupApiClient groupApi = new();
     private readonly GroupFollowCoordinator groupFollow = new();
@@ -47,8 +47,7 @@ public sealed partial class MainWindow
     private UIElement BuildGroupMode()
     {
         var body = new StackPanel();
-        body.Children.Add(Heading("Gemeinsam einem Team beitreten"));
-        body.Children.Add(Hint("Der Ersteller teilt ein Team. Bestätigte Mitglieder können einmal beitreten oder der Auswahl automatisch folgen."));
+        body.Children.Add(PageTitle("Gemeinsam einem Team beitreten", "Der Ersteller teilt ein Team. Bestätigte Mitglieder können einmal beitreten oder der Auswahl automatisch folgen."));
         body.Children.Add(groupPicker);
         AutomationProperties.SetName(groupPicker, "Gespeicherte Gruppen");
         groupPicker.SelectionChanged += async (_, _) =>
