@@ -21,7 +21,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks')) {
+          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks', 'GroupChecks', 'GroupStorageChecks')) {
             dotnet run --project "tests/$name/$name.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "Checks failed: $name" }
           }
@@ -44,9 +44,100 @@ jobs:
           path: dist/WardogsTeamselector-win-x64-*.exe
           if-no-files-found: error
           retention-days: 30
+      - name: Check desktop UI and group fixtures without game inputs
+        shell: pwsh
+        run: |
+          $output = Join-Path $PWD 'artifacts/group-ui-smoke'
+          $exe = Join-Path $PWD 'dist/WardogsTeamselector-win-x64-with-runtime.exe'
+          $process = Start-Process -FilePath $exe -ArgumentList @('--ui-smoke', ('"' + $output + '"')) -PassThru
+          if (!$process.WaitForExit(180000)) { $process.Kill(); throw 'UI smoke timed out' }
+          $result = Join-Path $output 'result.txt'
+          if (!(Test-Path $result)) {
+            "UI smoke produced no result. Process exit code: $($process.ExitCode)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+            Write-Output "::error::UI smoke produced no result. Process exit code: $($process.ExitCode)"
+            throw 'UI smoke produced no result'
+          }
+          $message = Get-Content -Raw $result
+          if ($process.ExitCode -ne 0 -or $message.Trim() -ne 'GUI smoke passed') {
+            @('### Group UI smoke failure', '```text', $message, '```') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+            Write-Output ('::error::' + $message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A'))
+            throw $message
+          }
+      - name: Upload desktop UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WardogsTeamselector-group-ui
+          path: artifacts/group-ui-smoke/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  groups-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: npm run test:client
+      - run: npm run check
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+
+  deploy-worker:
+    name: Deploy groups Worker (Workers Free)
+    needs: [build, groups-backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: groups-worker-deploy-main
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Check this commit is still main
+        id: current-main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$latest" = "$GITHUB_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skip deployment: a newer commit is already on main."
+          fi
+      - name: Deploy with Free-account guard
+        if: steps.current-main.outputs.deploy == 'true'
+        run: npm run deploy:free
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_SEND_METRICS: 'false'
 
   release:
-    needs: build
+    needs: [build, groups-backend]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 5

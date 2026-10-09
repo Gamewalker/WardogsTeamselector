@@ -9,7 +9,7 @@ using WardogsTeamselector.Core;
 
 namespace WardogsTeamselector;
 
-// THESIS: Four task areas guide setup, operation, configuration and diagnosis.
+// Five task areas: setup/operation on the left; configuration/diagnosis/groups on the right.
 // OWN-WORLD: Dark native Windows utility, Segoe UI, explicit labels and team colors.
 // STORY: Connect the game, check click areas, run a team, investigate only as needed.
 // FIRST VIEWPORT: Operation leads with a
@@ -105,18 +105,21 @@ public sealed partial class MainWindow
 
         BuildPreviewPane();
         pages.Background = Background;
+        pages.Style = (Style)FindResource("SplitNavigationTabs");
         pages.Padding = new Thickness(20);
         pages.BorderBrush = BorderBrushColor;
-        pages.Items.Add(Page("1. Einrichtung", BuildSetup()));
-        pages.Items.Add(Page("2. Betrieb", BuildOperation()));
-        pages.Items.Add(Page("3. Konfiguration", BuildConfiguration()));
-        pages.Items.Add(Page("4. Diagnose", BuildDiagnostics()));
+        pages.Items.Add(Page("Einrichtung", BuildSetup()));
+        pages.Items.Add(Page("Betrieb", BuildOperation()));
+        pages.Items.Add(Page("Konfiguration", BuildConfiguration()));
+        pages.Items.Add(Page("Diagnose", BuildDiagnostics()));
+        pages.Items.Add(Page("Gruppenverwaltung", BuildGroupManagement()));
         pages.SelectionChanged += (_, e) =>
         {
             if (e.Source != pages) return;
             CancelRegionDrag();
             UpdatePreviewLocation();
             UpdateProfileFooter();
+            if (pages.SelectedIndex == 4 && !smokeMode) _ = RefreshSelectedGroupAsync();
         };
         root.Children.Add(pages);
     }
@@ -216,11 +219,19 @@ public sealed partial class MainWindow
         runMode.TextAlignment = TextAlignment.Center;
         runMode.Margin = new Thickness(0, 8, 0, 0);
         currentRun.Children.Add(runMode);
+        groupStopButton = Button("Stopp · ESC", () => StopAll("Manuell gestoppt"));
+        groupStopButton.Visibility = Visibility.Collapsed;
+        groupStopButton.HorizontalAlignment = HorizontalAlignment.Center;
+        currentRun.Children.Add(groupStopButton);
         runPanel = new Border { Child = currentRun, Background = SurfaceBrush, BorderBrush = BorderBrushColor, BorderThickness = new Thickness(2), CornerRadius = new CornerRadius(8), Padding = new Thickness(24), Margin = new Thickness(0, 0, 0, 24) };
         body.Children.Add(runPanel);
 
+        var operationBody = body;
+        body = new StackPanel();
+
         operationFocusHint = Hint("");
         body.Children.Add(operationFocusHint);
+        BuildManualGroupActions(body);
 
         var teams = new Grid();
         foreach (var team in Enum.GetValues<Team>())
@@ -267,7 +278,11 @@ public sealed partial class MainWindow
         links.Children.Add(Button("Diagnose / Testmodus", () => ShowPage(3)));
         body.Children.Add(links);
         body.Children.Add(Hint("Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. ESC, Fokusverlust und Aufnahmefehler stoppen den Lauf.", 18));
-        return Scroll(body);
+        operationTabs.Items.Add(new TabItem { Header = "Manuell", Content = Scroll(body) });
+        operationTabs.Items.Add(new TabItem { Header = "Gruppenmodus", Content = BuildGroupMode() });
+        operationTabs.SelectionChanged += (_, e) => { if (e.Source == operationTabs && operationTabs.SelectedIndex == 1 && !smokeMode) _ = RefreshSelectedGroupAsync(); };
+        operationBody.Children.Add(operationTabs);
+        return Scroll(operationBody);
     }
 
     private UIElement BuildConfiguration()
@@ -466,17 +481,17 @@ public sealed partial class MainWindow
         previewEmpty.Visibility = Visibility.Visible;
     }
 
-    private void UpdateProfileFooter() => profileFooter.Visibility = pages.SelectedIndex == 1 ? Visibility.Collapsed : Visibility.Visible;
+    private void UpdateProfileFooter() => profileFooter.Visibility = pages.SelectedIndex is 1 or 4 ? Visibility.Collapsed : Visibility.Visible;
 
     private void ToggleTeam(Team team)
     {
         var current = automation.Snapshot;
         if (current.State != RunState.Stopped && current.Team == team)
         {
-            automation.Stop("Manuell gestoppt");
+            StopAll("Manuell gestoppt");
             UpdateRunDisplay(automation.Snapshot);
         }
-        else StartTeam(team);
+        else ActivateTeam(team);
     }
 
     private void UpdateProfileState()
@@ -512,6 +527,8 @@ public sealed partial class MainWindow
         runPanel.BorderBrush = running && current.Team is Team activeTeam ? TeamBrush(activeTeam) : BorderBrushColor;
         runReason.Text = current.Team == null && current.State == RunState.Stopped ? "Ein Team auswählen oder dessen F-Taste drücken." : current.Reason;
         counters.Text = $"{(testing ? "Simulierte Klicks" : "Klicks")}: {current.ClickCount}  ·  Letztes Intervall: {(current.IntervalMs == 0 ? "–" : current.IntervalMs + " ms")}";
+        groupStopButton.IsEnabled = groupFollow.Enabled;
+        groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
         drawRegion.IsEnabled = !running;
         foreach (var team in Enum.GetValues<Team>())
         {
@@ -528,7 +545,7 @@ public sealed partial class MainWindow
 
     private static TabItem Page(string title, UIElement content) => new()
     {
-        Header = IconLabel(title, title[0] switch { '1' => ActionIcon.Setup, '2' => ActionIcon.Play, '3' => ActionIcon.Settings, _ => ActionIcon.Diagnose }),
+        Header = IconLabel(title, title switch { "Einrichtung" => ActionIcon.Setup, "Betrieb" => ActionIcon.Play, "Konfiguration" => ActionIcon.Settings, "Gruppenverwaltung" => ActionIcon.Shield, _ => ActionIcon.Diagnose }),
         Content = content, Padding = new Thickness(16, 11, 16, 11)
     };
 

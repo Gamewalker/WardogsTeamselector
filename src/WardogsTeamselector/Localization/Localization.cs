@@ -26,6 +26,8 @@ internal static class Localization
     private static readonly Regex placeholder = new(@"\{(\d+)\}");
     private static readonly Dictionary<string, int[]> translatedArguments = new()
     {
+        ["Gruppe: {0} · {1}"] = new[] { 1 },
+        ["Auswahl: {0}"] = new[] { 0 },
         ["{0} verwenden F{1}. Für {2} eine andere F-Taste wählen."] = new[] { 0, 2 },
         ["Dialog: {0} · Score {1}"] = new[] { 0 },
         ["Folgescreen: {0} · Score {1}"] = new[] { 0 },

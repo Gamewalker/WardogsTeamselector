@@ -164,6 +164,37 @@ await stopTask;
 var delivered = blockingSink.Count;
 await Task.Delay(120);
 Check(blockingSink.Count == delivered, "Input delivered after synchronized Stop");
+
+// Group Auto uses this worker to observe the next selection after HUD success.
+control.Stop("Observe only", AutomationStopCause.GroupUpdate); detector.Match = true; hud.Match = false;
+var beforeObservation = detector.Calls; count = sink.Count;
+control.Observe(Settings());
+await Until(() => detector.Calls > beforeObservation && control.Snapshot.Detection?.IsMatch == true, "Idle observation never detected the next dialog");
+await Task.Delay(300);
+Check(sink.Count == count && control.Snapshot.State == RunState.Stopped, "Observation sent input or activated a run");
+control.Start(Team.Green, Settings());
+await Until(() => control.Snapshot.State == RunState.Clicking, "Group-style restart did not validate the dialog");
+hud.Match = true;
+await Until(() => control.Snapshot.State == RunState.Stopped && control.Snapshot.StopCause == AutomationStopCause.Joined, "HUD success lacks typed stop cause");
+count = sink.Count;
+await Task.Delay(300); Check(sink.Count == count, "Idle HUD observation restarted clicking");
+control.Observe(null); control.Stop("ESC");
+Check(control.Snapshot.StopCause == AutomationStopCause.Manual, "Explicit stop must remain distinguishable from HUD success");
+screen.Fail = true; control.Observe(Settings());
+await Until(() => control.Snapshot.StopCause == AutomationStopCause.Safety, "Observer failure did not produce a safety stop");
+screen.Fail = false; control.Observe(null);
+
+// The input worker must enforce lease expiry without relying on UI timers.
+hud.Match = false; detector.Match = true;
+control.Start(Team.Blue, Settings(), Stopwatch.GetTimestamp() + Stopwatch.Frequency / 3);
+await Until(() => control.Snapshot.State == RunState.Clicking, "Leased group run did not start");
+await Until(() => control.Snapshot.State == RunState.Stopped && control.Snapshot.StopCause == AutomationStopCause.GroupUpdate, "Expired lease did not stop on the input worker");
+count = sink.Count; await Task.Delay(150); Check(sink.Count == count, "Expired lease continued input");
+control.Start(Team.Blue, Settings(), Stopwatch.GetTimestamp() + Stopwatch.Frequency / 3);
+await Until(() => control.Snapshot.State == RunState.Clicking, "Lease renewal run did not start");
+control.RenewOnlineLease(Stopwatch.GetTimestamp() + Stopwatch.Frequency);
+await Task.Delay(400); Check(control.Snapshot.State == RunState.Clicking, "Fresh authorized renewal did not extend the lease");
+control.Stop();
 Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, continuous clicking beyond former absence timeout, mandatory HUD confirmation/flicker/focus/overlap, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
 
 sealed class FakeScreen : IScreenService

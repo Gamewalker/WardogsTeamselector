@@ -4,7 +4,7 @@ $projectRoot = $PSScriptRoot
 $localSdk = Join-Path $projectRoot '.tools\dotnet\dotnet.exe'
 $sdkCommand = if (Test-Path -LiteralPath $localSdk) { $localSdk } else { 'dotnet' }
 if ($Tests) {
-    foreach ($testProject in @('tests\DetectionChecks\DetectionChecks.csproj', 'tests\JoinedScreenChecks\JoinedScreenChecks.csproj', 'tests\AutomationChecks\AutomationChecks.csproj', 'tests\ConfigurationChecks\ConfigurationChecks.csproj', 'tests\LocalizationChecks\LocalizationChecks.csproj', 'tests\UpdateChecks\UpdateChecks.csproj', 'tests\PlatformChecks\PlatformChecks.csproj')) {
+    foreach ($testProject in @('tests\DetectionChecks\DetectionChecks.csproj', 'tests\JoinedScreenChecks\JoinedScreenChecks.csproj', 'tests\AutomationChecks\AutomationChecks.csproj', 'tests\ConfigurationChecks\ConfigurationChecks.csproj', 'tests\LocalizationChecks\LocalizationChecks.csproj', 'tests\UpdateChecks\UpdateChecks.csproj', 'tests\GroupChecks\GroupChecks.csproj', 'tests\GroupStorageChecks\GroupStorageChecks.csproj', 'tests\PlatformChecks\PlatformChecks.csproj')) {
         & $sdkCommand run --project (Join-Path $projectRoot $testProject) -c Release
         if ($LASTEXITCODE -ne 0) { throw "Prüfung fehlgeschlagen: $testProject" }
     }

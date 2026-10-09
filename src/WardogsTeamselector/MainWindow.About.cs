@@ -55,10 +55,6 @@ public sealed partial class MainWindow
         panel.Children.Add(Hint("Beschreibe die Schritte zum Fehler, das erwartete Ergebnis und was tatsächlich passiert. Ergänze möglichst den Statusgrund und einen Diagnoseexport aus dem Bereich Diagnose."));
         panel.Children.Add(Hint("Der Button öffnet ein vorbereitetes GitHub-Issue im Browser. Prüfe den Text und sende ihn dort ab; eine GitHub-Anmeldung ist erforderlich. Diagnose und Bilder kannst du selbst anhängen."));
         panel.Children.Add(Button("Fehler auf GitHub melden", () => OpenProjectLink(BugReportUrl())));
-        var close = Button("Schließen", () => dialog.Close());
-        close.IsCancel = true;
-        close.HorizontalAlignment = HorizontalAlignment.Right;
-        panel.Children.Add(close);
         dialog.Content = Scroll(panel);
         LocalizeInterface(dialog);
         return dialog;

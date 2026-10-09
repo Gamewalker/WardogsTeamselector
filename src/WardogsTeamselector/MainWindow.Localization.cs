@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Markup;
 using System.Windows.Threading;
@@ -35,6 +36,7 @@ public sealed partial class MainWindow
         {
             if (languageSelector.SelectedItem is not Localization.Language language) return;
             Localization.SetLanguage(language.Code);
+            if (groupJoinButton != null) ReloadGroupPickers();
             LocalizeInterface();
             if (!smokeMode)
             {
@@ -61,17 +63,20 @@ public sealed partial class MainWindow
             void Visit(DependencyObject element)
             {
                 if (!visited.Add(element)) return;
+                // Group and player names are user data; their labels localize only status/role.
+                if (element is FrameworkElement { DataContext: Groups.GroupMembership or Groups.GroupMember }) return;
                 LocalizeProperty(element, FrameworkElement.ToolTipProperty);
                 LocalizeProperty(element, AutomationProperties.NameProperty);
                 // Language names are always shown in their own language.
                 if (element == languageSelector) return;
                 if (element is TextBlock text)
                 {
-                    LocalizeProperty(text, TextBlock.TextProperty);
+                    if (!text.Inlines.OfType<Hyperlink>().Any()) LocalizeProperty(text, TextBlock.TextProperty);
                     var direction = Localization.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
                     if (text.FlowDirection != direction) text.FlowDirection = direction;
                 }
                 if (element is TextBox box && box.IsReadOnly) LocalizeProperty(box, TextBox.TextProperty);
+                if (element is Run { Parent: Hyperlink }) LocalizeProperty(element, Run.TextProperty);
                 if (element is ContentControl) LocalizeProperty(element, ContentControl.ContentProperty);
                 if (element is HeaderedContentControl) LocalizeProperty(element, HeaderedContentControl.HeaderProperty);
                 if (element is Window window)
@@ -82,7 +87,7 @@ public sealed partial class MainWindow
                 }
                 if (element is DataGrid table)
                     foreach (var column in table.Columns) LocalizeProperty(column, DataGridColumn.HeaderProperty);
-                foreach (var child in LogicalTreeHelper.GetChildren(element).OfType<DependencyObject>()) Visit(child);
+                foreach (var child in LogicalTreeHelper.GetChildren(element).OfType<DependencyObject>().ToArray()) Visit(child);
                 if (element is Visual)
                     for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++) Visit(VisualTreeHelper.GetChild(element, i));
             }

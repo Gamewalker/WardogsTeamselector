@@ -2,6 +2,24 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Gruppenverwaltung und geteilte Navigation (9. Oktober 2026, Featurebranch)
+
+Der [abschließende CI-Lauf](https://github.com/Gamewalker/WardogsTeamselector/actions/runs/37911155557) besteht mit beiden Windows-EXEs und GUI-Screenshots. Der GUI-Smoke-Lauf prüft fünf Bereiche, links/rechts getrennte und bei geringer Breite umbrechende Tabs, Mindestfenstergröße, Englisch/Arabisch/Chinesisch, Administration ausschließlich im Verwaltungstab, dieselbe aktive Gruppe in allen drei Auswahllisten sowie Stopp und Entwertung alter Antworten beim Gruppenwechsel. Der neue Verwaltungstab zeigt keine Profil-Speichern-Leiste, weil Gruppenänderungen separat gespeichert werden.
+
+46 Gruppenprüfungen und 19.339 Sprachprüfungen bestanden. Ein einzelner Admin-Übertragungscode enthält nur die ausgewählte Gruppenidentität; Mitglieder, widerrufene Zugänge und unterbrochene Tokenwechsel dürfen nicht als aktueller Adminzugang exportiert werden. Die aktive Gruppenauswahl bleibt im gespeicherten Profil erhalten. Der echte .NET-Client gegen Miniflare bestätigt zusätzlich: kopierter Adminzugang funktioniert in einer zweiten Instanz, exklusive Übernahme entzieht dem ursprünglichen Token den Zugriff, und der Empfänger behält Adminrechte. Backend-/Free-Tarif-Prüfungen und Windows-Speicher-/Automationsprüfungen bestehen ebenfalls.
+
+Die GUI-Aufnahmen sind im CI-Artefakt `WardogsTeamselector-group-ui` verfügbar. Keine manuelle Sichtprüfung dieser Aufnahmen und kein Versuch im echten Spiel. Keine Mauseingaben, kein Merge, keine App-Veröffentlichung und keine Cloudflare-Bereitstellung.
+
+## Gruppenmodus (8. Oktober 2026, Featurebranch)
+
+- Backend: elf Tests mit echten Worker-/Durable-Object-Instanzen in Miniflare bestanden. Geprüft sind Freigaberechte, Schreibschutz für Mitglieder, idempotente Anlage und Veröffentlichung, WebSocket-Updates und Zustandsantworten, Entfernung mit Verbindungsschließung, Einladungstausch, Löschung, Austritt, Zugangscodewechsel, Eingabe-/Anfragegrenzen und Wiederherstellung nach Objekt-Eviction. Zwei dieser Tests prüfen zusätzlich, dass der Deployment-Guard Paid-Tarife und unklare Tarifantworten ablehnt.
+- Client: 39 plattformunabhängige Prüfungen bestanden, einschließlich Generationen nach ESC/Gruppenwechsel, alter Revisionen, abgelaufener Online-Freigabe, Wiederherstellung und HTTP-Antwortgrenzen.
+- Tatsächlicher .NET-HTTP-/WebSocket-Client gegen den lokalen Worker: Beitrittsanfrage, Freigabe, sofortiges Rot-Update, automatischer Zustandsabgleich nach etwa 55 Sekunden und Entfernung mit endgültigem Zugriffsentzug bestanden. Keine Cloudflare-Zugangsdaten und keine Spieleingaben verwendet.
+- Sprachprüfungen: 18.379 Prüfungen über die bestehenden 20 Kataloge bestanden. Gruppennamen bleiben wörtlich; geteilte Teamfarben und Statusmeldungen werden übersetzt. Neue Gruppenmeldungen sind Deutsch/Englisch, weitere Kataloge verwenden hierfür Englisch.
+- Windows-WPF-Anwendung sowie erweiterte AutomationChecks und GroupStorageChecks von Linux aus für Windows ohne Warnungen oder Fehler kompiliert. Worker-Deployment-Dry-Run mit SQLite-Migration und Free-kompatiblen Bindings bestanden.
+
+Der abschließende [GitHub-Actions-Lauf](https://github.com/Gamewalker/WardogsTeamselector/actions/runs/37861736790) bestand einschließlich Windows-Bild-, Automations-, DPAPI- und Backend-Prüfungen, der Online-Freigabeprüfung direkt vor der Eingabe sowie beider EXE-Artefakte. Der GUI-Smoke-Lauf der EXE mit Runtime bestand ebenfalls: beide Betriebsmodi, getrennte Beitrittsanfragen/Mitglieder, Gruppen-Stopp und ungültige verspätete Antworten nach ESC werden geprüft. Screenshots bei Standard- und Mindestgröße sind als `WardogsTeamselector-group-ui` im CI-Lauf verfügbar. Die automatisierten Windows-Prüfungen liefen auf dem Windows-Runner; eine manuelle Sichtprüfung der neuen Screenshots und ein Versuch im echten Spiel wurden nicht ausgeführt. Keine Benutzerprofile gespeichert und keine Spieleingaben gesendet. Die Cloudflare-Live-Bereitstellung ist auf Wunsch des Nutzers bis zum nächsten verfügbaren Zugang verschoben. Es wurde kein Tarif geändert und keine neue App-Version veröffentlicht.
+
 ## Stopp neben dem Laufstatus (8. Oktober 2026)
 
 `build.ps1 -Tests -OutputDirectory dist/stop-placement` besteht und veröffentlicht beide Runtime-Varianten ohne Warnungen oder Fehler. Die Plattformprüfung besteht mit 23 Checks; Windows verweigert den Test-Fokuswechsel, weshalb diese einzelne Assertion übersprungen wird.
