@@ -84,7 +84,7 @@ public sealed partial class MainWindow
                 {
                     ShowPage(page); await Settle();
                     Check(!dirty && !regionDirty, "Translation and navigation preserve saved field state");
-                    Check(profileFooter.Visibility == (page == 1 ? Visibility.Collapsed : Visibility.Visible), "Save actions only appear in settings areas");
+                    Check(profileFooter.Visibility == (page is 1 or 4 ? Visibility.Collapsed : Visibility.Visible), "Profile save actions stay hidden in operation and group administration");
                     var languagePosition = languageSelector.TranslatePoint(new Point(), (UIElement)Content);
                     var aboutButton = ((StackPanel)languageSelector.Parent).Children.OfType<Button>().Single(button => button != headerUpdateButton);
                     var aboutPosition = aboutButton.TranslatePoint(new Point(), (UIElement)Content);
