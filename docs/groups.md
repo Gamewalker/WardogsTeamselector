@@ -2,21 +2,23 @@
 
 [← Dokumentation](README.md)
 
-Unter **Betrieb** gibt es die Tabs **Manuell** und **Gruppenmodus**. Bildschirmkalibrierung, Klickintervalle, Testmodus und Spielfokus bleiben auf jedem PC separat eingestellt.
+Die Hauptnavigation zeigt **Einrichtung** und **Betrieb** links, **Konfiguration**, **Diagnose** und **Gruppenverwaltung** rechts. Bei zu wenig Platz erscheinen die beiden Bereiche in getrennten Zeilen. Unter **Betrieb** gibt es die Tabs **Manuell** und **Gruppenmodus**. Bildschirmkalibrierung, Klickintervalle, Testmodus und Spielfokus bleiben auf jedem PC separat eingestellt.
 
 Die neuen Gruppenmeldungen stehen auf Deutsch und Englisch zur Verfügung. In den weiteren vorhandenen Oberflächensprachen verwenden die neuen Gruppenmeldungen zunächst Englisch; die bisherigen Übersetzungen bleiben erhalten. Selbst eingegebene Gruppen- und Spielernamen werden nicht übersetzt.
 
 ## Gruppe erstellen und einladen
 
-1. Unter **Gruppenmodus → Gruppendienst einrichten** die HTTPS-Adresse des bereitgestellten Dienstes speichern. Solange der Cloudflare-Dienst noch nicht bereitgestellt ist, funktioniert weiterhin der manuelle Modus.
-2. **Gruppe erstellen** wählen und Gruppenname sowie deinen Namen eingeben.
+1. Unter **Gruppenverwaltung → Gruppendienst einrichten** die HTTPS-Adresse des bereitgestellten Dienstes speichern. Solange der Cloudflare-Dienst noch nicht bereitgestellt ist, funktioniert weiterhin der manuelle Modus.
+2. Unter **Gruppenverwaltung** **Gruppe erstellen** wählen und Gruppenname sowie deinen Namen eingeben.
 3. **Einladungslink kopieren** und an deine Mitspieler senden.
-4. Mitspieler wählen **Gruppe beitreten**, fügen den vollständigen Link ein und geben ihren Namen ein. Der Link allein bestätigt niemanden.
+4. Mitspieler wählen unter **Gruppenverwaltung** **Gruppe beitreten**, fügen den vollständigen Link ein und geben ihren Namen ein. Der Link allein bestätigt niemanden.
 5. Als Ersteller die Gruppe aktualisieren. Unter **Gruppe verwalten → Offene Beitrittsanfragen** eine Anfrage auswählen und **Bestätigen** oder **Ablehnen** wählen.
 
 Die Bestätigung wird beim nächsten Aktualisieren auf dem eingeladenen PC sichtbar. Gleichnamige Personen werden durch eine kurze Mitgliedskennung unterschieden. Namen bestätigen keine Identität.
 
 ## Ein Team teilen
+
+Es können mehrere Gruppen gespeichert werden. Die Gruppenauswahl unter **Manuell**, **Gruppenmodus** und **Gruppenverwaltung** ist dieselbe aktive Gruppe. Ein Wechsel beendet den bisherigen Gruppenlauf und entwertet seine verspäteten Antworten. Die Auswahl bleibt nach einem Neustart erhalten; Auto bleibt ausgeschaltet.
 
 Unter **Manuell** eine eigene Gruppe und ein Team wählen, dann **Auswahl mit Gruppe teilen & beitreten** anklicken. Nach erfolgreicher Veröffentlichung beginnt der normale lokale Beitritt. Scheitert die Veröffentlichung, wird ein lokaler Beitritt separat angeboten. Der Server kann eine Veröffentlichung bereits erhalten haben, obwohl die Bestätigung auf deinem PC nicht ankommt; der Hinweis lautet deshalb „nicht bestätigt“.
 
@@ -31,6 +33,15 @@ Im **Gruppenmodus** eine bestätigte Gruppe auswählen. **Einmal beitreten** ver
 **ESC**, **Stopp**, das Ausschalten von Auto, Gruppenwechsel und manuelle Teamtasten beenden das aktive Folgen. Spätere Online-Updates starten es nicht neu. Nach App-Neustart ist Auto aus. Bei Fokusverlust, Aufnahmefehler oder veränderter Geometrie muss Auto erneut aktiviert werden.
 
 Bei Verbindungsabbruch pausiert der Gruppenlauf. Bei wiederhergestellter Verbindung wird ein neuer Zustand geladen; Auto kann dann wieder auf den nächsten Dialog warten. Ausbleibende Zustandsantworten beenden die Freigabe, statt unbegrenzt eine alte Auswahl zu verwenden. Diese zeitliche Freigabe wird direkt vor Eingaben im Klickworker geprüft, auch wenn die Oberfläche beschäftigt ist.
+
+## Administrative Übertragung einer einzelnen Gruppe
+
+Unter **Gruppenverwaltung → Gruppe übertragen** kann der Ersteller den **Adminzugang kopieren**. Das administrative Token wird nicht in der Oberfläche angezeigt; nur der private Übertragungscode wird gezielt in die Zwischenablage kopiert. Er enthält die Rechte und den Einladungslink genau der ausgewählten Gruppe. Der Importdialog verdeckt den Code.
+
+- **Adminzugang importieren** übernimmt die Gruppe in eine weitere Instanz. Beide Instanzen teilen dieselbe administrative Identität und können die Gruppe verwalten.
+- **Adminzugang exklusiv übernehmen** überträgt die Administration an die empfangende Instanz oder Person. Nach Online-Prüfung und Bestätigung wird das Token gewechselt: Bisherige Admininstanzen und alte Übertragungscodes verlieren ihren Zugang. Bestehende Mitglieder und die Gruppe bleiben erhalten. Die ursprüngliche Erstellerkennung und der Anzeigename bleiben bestehen.
+
+Der Empfänger muss den Gruppendienst erreichen können. Nach einem Import ist Auto aus. Bei unterbrochenem Tokenwechsel sind die neuen Zugangsdaten vorab lokal gesichert; **Aktualisieren** setzt den Wechsel fort. Den Code nur privat weitergeben und die Zwischenablage anschließend leeren. Eine Einladung für normale Mitglieder verleiht keine Adminrechte.
 
 ## Mitglieder und Wiederherstellung
 

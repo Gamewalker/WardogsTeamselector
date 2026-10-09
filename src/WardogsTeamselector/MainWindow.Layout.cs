@@ -9,7 +9,7 @@ using WardogsTeamselector.Core;
 
 namespace WardogsTeamselector;
 
-// THESIS: Four task areas guide setup, operation, configuration and diagnosis.
+// Five task areas: setup/operation on the left; configuration/diagnosis/groups on the right.
 // OWN-WORLD: Dark native Windows utility, Segoe UI, explicit labels and team colors.
 // STORY: Connect the game, check click areas, run a team, investigate only as needed.
 // FIRST VIEWPORT: Operation leads with a
@@ -105,18 +105,21 @@ public sealed partial class MainWindow
 
         BuildPreviewPane();
         pages.Background = Background;
+        pages.Style = (Style)FindResource("SplitNavigationTabs");
         pages.Padding = new Thickness(20);
         pages.BorderBrush = BorderBrushColor;
-        pages.Items.Add(Page("1. Einrichtung", BuildSetup()));
-        pages.Items.Add(Page("2. Betrieb", BuildOperation()));
-        pages.Items.Add(Page("3. Konfiguration", BuildConfiguration()));
-        pages.Items.Add(Page("4. Diagnose", BuildDiagnostics()));
+        pages.Items.Add(Page("Einrichtung", BuildSetup()));
+        pages.Items.Add(Page("Betrieb", BuildOperation()));
+        pages.Items.Add(Page("Konfiguration", BuildConfiguration()));
+        pages.Items.Add(Page("Diagnose", BuildDiagnostics()));
+        pages.Items.Add(Page("Gruppenverwaltung", BuildGroupManagement()));
         pages.SelectionChanged += (_, e) =>
         {
             if (e.Source != pages) return;
             CancelRegionDrag();
             UpdatePreviewLocation();
             UpdateProfileFooter();
+            if (pages.SelectedIndex == 4 && !smokeMode) _ = RefreshSelectedGroupAsync();
         };
         root.Children.Add(pages);
     }
@@ -478,7 +481,7 @@ public sealed partial class MainWindow
         previewEmpty.Visibility = Visibility.Visible;
     }
 
-    private void UpdateProfileFooter() => profileFooter.Visibility = pages.SelectedIndex == 1 ? Visibility.Collapsed : Visibility.Visible;
+    private void UpdateProfileFooter() => profileFooter.Visibility = pages.SelectedIndex is 1 or 4 ? Visibility.Collapsed : Visibility.Visible;
 
     private void ToggleTeam(Team team)
     {
@@ -542,7 +545,7 @@ public sealed partial class MainWindow
 
     private static TabItem Page(string title, UIElement content) => new()
     {
-        Header = IconLabel(title, title[0] switch { '1' => ActionIcon.Setup, '2' => ActionIcon.Play, '3' => ActionIcon.Settings, _ => ActionIcon.Diagnose }),
+        Header = IconLabel(title, title switch { "Einrichtung" => ActionIcon.Setup, "Betrieb" => ActionIcon.Play, "Konfiguration" => ActionIcon.Settings, "Gruppenverwaltung" => ActionIcon.Shield, _ => ActionIcon.Diagnose }),
         Content = content, Padding = new Thickness(16, 11, 16, 11)
     };
 

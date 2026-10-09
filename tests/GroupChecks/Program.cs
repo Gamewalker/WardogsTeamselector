@@ -53,6 +53,18 @@ Reject(() => GroupRecoveryCodec.Export(new GroupProfile { Groups = new() { group
 var oldName = group.DisplayName; group.DisplayName = "Name\nwith newline";
 Reject(() => GroupRecoveryCodec.Export(profile), "Control characters in names rejected before saving credentials");
 group.DisplayName = oldName;
+var admin = Membership(); admin.Role = "Owner"; admin.Status = "Approved"; admin.InviteToken = GroupMembership.NewToken();
+var adminCopy = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(admin));
+Check(adminCopy.Key == admin.Key && adminCopy.Token == admin.Token && adminCopy.InviteToken == admin.InviteToken, "Single-group admin transfer retains management and invitation rights");
+Check(adminCopy != admin, "Imported admin identity is independent of source instance");
+Reject(() => GroupRecoveryCodec.ExportAdmin(group), "Member identity cannot be exported as administrator");
+Reject(() => GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.Export(profile)), "Whole-profile backup cannot be mistaken for single-group admin transfer");
+admin.PendingToken = GroupMembership.NewToken();
+Reject(() => GroupRecoveryCodec.ExportAdmin(admin), "Interrupted admin rotation must be resolved before transfer");
+admin.PendingToken = null; admin.Status = "Removed";
+Reject(() => GroupRecoveryCodec.ExportAdmin(admin), "Revoked admin identity cannot be transferred");
+profile.ActiveGroupKey = group.Key;
+Check(GroupRecoveryCodec.Import(GroupRecoveryCodec.Export(profile)).ActiveGroupKey == group.Key, "Active group survives profile recovery");
 
 var handler = new FakeHandler(request =>
 {
@@ -110,6 +122,15 @@ if (args.Length == 2 && args[0] == "--live")
         await realApi.ActionAsync(owner, "remove", new { operationId = GroupMembership.NewId(), memberId = member.MemberId });
         await revoked.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Check(true, "Real removal revokes .NET WebSocket membership");
+        var transferred = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(owner));
+        Check((await realApi.GetAsync(transferred)).YourRole == "Owner", "Copied administrative token authorizes another instance");
+        var replacement = GroupMembership.NewToken();
+        await realApi.ActionAsync(transferred, "credential", new { operationId = GroupMembership.NewId(), newToken = replacement });
+        var oldAdmin = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(owner));
+        owner.Token = replacement; transferred.Token = replacement;
+        try { await realApi.GetAsync(oldAdmin); Check(false, "Previous admin access must be revoked after exclusive takeover"); }
+        catch (GroupApiException ex) { Check(ex.AccessRevoked, "Exclusive admin takeover revokes the source instance"); }
+        Check((await realApi.GetAsync(transferred)).YourRole == "Owner", "Recipient retains administration after exclusive takeover");
         Console.WriteLine("Live client: minute sync and removal passed.");
     }
     finally { await realApi.ActionAsync(owner, "delete", new { operationId = GroupMembership.NewId() }); }

@@ -48,7 +48,7 @@ public sealed partial class MainWindow
         UpdateHeaderUpdateButton();
         Check(headerUpdateButton.IsEnabled, "Verified update can be installed from the header");
         stagedUpdate = null; stagedAsset = null;
-        Check(pages.Items.Count == 4, "Four task areas");
+        Check(pages.Items.Count == 5, "Five task areas including group management");
         Check(updateStatus.Text.Contains("GUI-Prüflauf") && !updateTimer.IsEnabled && stagedUpdate == null, "Smoke mode never checks or stages updates");
         Check(pages.SelectedIndex == (hasSavedProfile && startupSettingsError == null ? 1 : 0), "Startup follows saved profile");
 
@@ -97,6 +97,12 @@ public sealed partial class MainWindow
                     var updatePosition = headerUpdateButton.TranslatePoint(new Point(), (UIElement)Content);
                     Check(identityEnd.X <= updatePosition.X + 1, "Identity text does not overlap the update action at minimum width");
                     SaveRender(Path.Combine(directory, $"{code}-{size.Item1}-{page + 1}.png"));
+                    var leftTab = (TabItem)pages.Items[1]; var rightTab = (TabItem)pages.Items[2]; var lastTab = (TabItem)pages.Items[4];
+                    var leftEdge = leftTab.TranslatePoint(new Point(leftTab.ActualWidth, 0), pages);
+                    var rightEdge = rightTab.TranslatePoint(new Point(), pages);
+                    var lastEdge = lastTab.TranslatePoint(new Point(lastTab.ActualWidth, 0), pages);
+                    Check(rightEdge.Y > leftEdge.Y || rightEdge.X >= leftEdge.X + 10, "Left and right navigation areas do not overlap");
+                    Check(lastEdge.X <= pages.ActualWidth + 1, "Right navigation fits minimum width");
                 }
             }
         }
@@ -149,16 +155,28 @@ public sealed partial class MainWindow
         groupStatus.Text = DescribeGroup(selectedGroupSnapshot); UpdateGroupControls();
         ShowPage(1); operationTabs.SelectedIndex = 1;
         Check(groupRequests.Items.Count == 1 && groupMembers.Items.Count == 1, "Requests are separate from confirmed members");
+        Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(groupMembers) && LogicalElements((DependencyObject)((TabItem)pages.Items[4]).Content).Contains(groupMembers), "Administration belongs exclusively to group management");
+        Check(ReferenceEquals(groupPicker.SelectedItem, shareGroupPicker.SelectedItem) && ReferenceEquals(groupPicker.SelectedItem, managementGroupPicker.SelectedItem), "All modes share one active group");
         foreach (var size in new[] { ("desktop", 1180d, 820d), ("small", MinWidth, MinHeight) })
         {
             Width = size.Item2; Height = size.Item3; await Settle();
             SaveRender(Path.Combine(directory, size.Item1 + "-groups.png"));
+            ShowPage(4); await Settle(); SaveRender(Path.Combine(directory, size.Item1 + "-group-management.png")); ShowPage(1);
         }
         var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
         groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
         UpdateGroupControls(); Check(groupStopButton.IsEnabled, "Global Stop is available while Auto waits");
         StopAll("ESC fixture");
         Check(!groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp()), "Delayed online update cannot rearm after ESC");
+        var secondOwner = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(fixtureOwner));
+        secondOwner.GroupId = GroupMembership.NewId(); secondOwner.Name = "Weitere Gruppe";
+        groupProfile.Groups.Add(secondOwner); ReloadGroupPickers();
+        var switchGeneration = groupFollow.Begin(fixtureOwner, true);
+        shareGroupPicker.SelectedItem = secondOwner;
+        Check(SelectedGroup == secondOwner && managementGroupPicker.SelectedItem == secondOwner && !groupFollow.Enabled && groupSync == null, "Manual group switch stops previous group and updates administration");
+        Check(!groupFollow.Apply(switchGeneration, selectedGroupSnapshot ?? new GroupSnapshot(1, fixtureOwner.GroupId, fixtureOwner.Name, 3, 1, "Red", "Approved", "Owner", fixtureOwner.MemberId, new()), System.Diagnostics.Stopwatch.GetTimestamp()), "Old group cannot rearm after switching active group");
+        managementGroupPicker.SelectedItem = fixtureOwner;
+        Check(SelectedGroup == fixtureOwner && shareGroupPicker.SelectedItem == fixtureOwner && groupProfile.ActiveGroupKey == fixtureOwner.Key, "Management selection updates the active group in both modes");
         groupProfile = new(); selectedGroupSnapshot = null; ReloadGroupPickers(); operationTabs.SelectedIndex = 0;
         ShowPage(0); drawRegion.IsChecked = true;
         await Settle();
@@ -267,7 +285,7 @@ public sealed partial class MainWindow
         ((ScrollViewer)about.Content).ScrollToEnd(); await Settle();
         SaveRender(Path.Combine(directory, "about-small-bottom.png"), about);
         about.Close();
-        File.WriteAllText(Path.Combine(directory, "checks.txt"), "PASS: startup routing, four areas, both sizes, navigation, drawing, region drafts, validation, hotkeys, dirty state, preview lifecycle, diagnosis-only test mode, centered run and hotkeys, exclusive active-team markers, waiting/switching/stopping and UI-only clicking snapshot, conditional stop, reference checks and empty state. No mouse input sent; no profile saved. clicking-fixture.png uses a UI snapshot fixture while the controller is stopped.");
+        File.WriteAllText(Path.Combine(directory, "checks.txt"), "PASS: startup routing, five areas, split navigation, single active group, group administration, both sizes, navigation, drawing, region drafts, validation, hotkeys, dirty state, preview lifecycle, diagnosis-only test mode, centered run and hotkeys, exclusive active-team markers, waiting/switching/stopping and UI-only clicking snapshot, conditional stop, reference checks and empty state. No mouse input sent; no profile saved. clicking-fixture.png uses a UI snapshot fixture while the controller is stopped.");
     }
 
     private async Task Settle()

@@ -38,6 +38,7 @@ public sealed class GroupMembership
     public string? PendingCredentialOperation { get; set; }
     [JsonIgnore] public string Label => $"{Name} · {GroupMember.TranslateDisplay(GroupMember.StatusLabel(Status))}{(Role == "Owner" ? " · " + GroupMember.TranslateDisplay("Ersteller") : "")}";
     [JsonIgnore] public string InvitationLink => $"{ServiceUrl}/invite/{GroupId}#{InviteToken}";
+    [JsonIgnore] public string Key => $"{ServiceUrl}/groups/{GroupId}";
     public void Apply(GroupSnapshot snapshot) { snapshot.Validate(this); Name = snapshot.Name; Role = snapshot.YourRole; Status = snapshot.YourStatus; }
     public static string NewId() => Guid.NewGuid().ToString("N");
     public static string NewToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
@@ -54,6 +55,7 @@ public sealed class GroupProfile
     public int Version { get; set; } = 1;
     public string ServiceUrl { get; set; } = "";
     public List<GroupMembership> Groups { get; set; } = new();
+    public string? ActiveGroupKey { get; set; }
 }
 public static class GroupJson
 {

@@ -17,6 +17,8 @@ public sealed partial class MainWindow
     private readonly TabControl operationTabs = new();
     private readonly ComboBox groupPicker = new() { DisplayMemberPath = "Label", MinWidth = 260 };
     private readonly ComboBox shareGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 240 };
+    private readonly ComboBox managementGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 260 };
+    private readonly TextBlock managementGroupStatus = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 8) };
     private readonly ComboBox sharedTeamPicker = new() { MinWidth = 100 };
     private readonly ListBox groupMembers = new() { DisplayMemberPath = "Label", MinHeight = 100, MaxHeight = 220 };
     private readonly ListBox groupRequests = new() { DisplayMemberPath = "Label", MinHeight = 70, MaxHeight = 160 };
@@ -52,6 +54,10 @@ public sealed partial class MainWindow
         {
             if (groupUiLoading) return;
             StopGroupFollow(); selectedGroupSnapshot = null; UpdateGroupControls();
+            SynchronizeGroupPickers();
+            groupProfile.ActiveGroupKey = SelectedGroup?.Key;
+            try { SaveGroups(); }
+            catch { groupStorageFailed = true; groupStatus.Text = "Gruppenspeicher nicht verfügbar · Auto wurde gestoppt."; UpdateGroupControls(); return; }
             if (!smokeMode) await RefreshSelectedGroupAsync();
         };
         body.Children.Add(groupStatus);
@@ -61,6 +67,18 @@ public sealed partial class MainWindow
         body.Children.Add(actions); body.Children.Add(groupAuto);
         groupAuto.Checked += async (_, _) => { if (!groupUiLoading) await RunGroupUiAction(() => BeginGroupFollowAsync(true)); };
         groupAuto.Unchecked += (_, _) => { if (!groupUiLoading) StopGroupFollow(); };
+        body.Children.Add(Button("Gruppen verwalten", () => ShowPage(4)));
+        return Scroll(body);
+    }
+    private UIElement BuildGroupManagement()
+    {
+        var body = new StackPanel();
+        body.Children.Add(PageTitle("Gruppenverwaltung", "Gruppen erstellen, Einladungen teilen und Mitglieder freigeben. Im Betrieb ist immer genau eine Gruppe aktiv."));
+        body.Children.Add(managementGroupPicker);
+        AutomationProperties.SetName(managementGroupPicker, "Aktive Gruppe verwalten");
+        managementGroupPicker.SelectionChanged += (_, _) => SelectActiveGroup(managementGroupPicker);
+        body.Children.Add(managementGroupStatus);
+        body.Children.Add(GroupButton("Aktualisieren", RefreshSelectedGroupAsync));
         var manage = new WrapPanel { Margin = new Thickness(0, 12, 0, 8) };
         manage.Children.Add(GroupButton("Gruppe erstellen", CreateGroupAsync));
         manage.Children.Add(GroupButton("Gruppe beitreten", JoinGroupAsync));
@@ -89,6 +107,14 @@ public sealed partial class MainWindow
         }
         owner.Children.Add(inviteActions);
         body.Children.Add(new Expander { Header = "Gruppe verwalten", Content = owner, IsExpanded = true });
+        var admin = new StackPanel();
+        admin.Children.Add(Hint("Das administrative Token bleibt verborgen. Ein privater Übertragungscode enthält ausschließlich die Rechte der ausgewählten Gruppe. Importieren teilt den Zugang; exklusiv übernehmen widerruft bisherige Adminzugänge."));
+        var adminActions = new WrapPanel();
+        var exportAdmin = Button("Adminzugang kopieren", ExportSelectedAdmin); adminActions.Children.Add(exportAdmin); groupOwnerButtons.Add(exportAdmin);
+        adminActions.Children.Add(GroupButton("Adminzugang importieren", () => ImportSelectedAdminAsync(false)));
+        adminActions.Children.Add(GroupButton("Adminzugang exklusiv übernehmen", () => ImportSelectedAdminAsync(true)));
+        admin.Children.Add(adminActions);
+        body.Children.Add(new Expander { Header = "Gruppe übertragen", Content = admin });
         var recovery = new WrapPanel();
         recovery.Children.Add(Button("Wiederherstellungscode exportieren", ExportGroups));
         recovery.Children.Add(Button("Wiederherstellungscode importieren", ImportGroups));
@@ -106,6 +132,7 @@ public sealed partial class MainWindow
         var section = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
         section.Children.Add(Hint("Als Ersteller: Team mit einer eigenen Gruppe teilen und anschließend lokal beitreten."));
         section.Children.Add(shareGroupPicker);
+        shareGroupPicker.SelectionChanged += (_, _) => SelectActiveGroup(shareGroupPicker);
         foreach (var team in Enum.GetValues<Team>()) sharedTeamPicker.Items.Add(new ComboBoxItem { Content = TeamName(team), Tag = team });
         sharedTeamPicker.SelectedIndex = 0;
         AutomationProperties.SetName(shareGroupPicker, "Gruppe für geteilte Auswahl");
@@ -136,7 +163,7 @@ public sealed partial class MainWindow
         }
         groupService.Text = groupProfile.ServiceUrl;
         ReloadGroupPickers();
-        groupTimer.Tick += (_, _) => TickGroupFollow(); groupTimer.Start();
+        groupTimer.Tick += (_, _) => { managementGroupStatus.Text = groupStatus.Text; TickGroupFollow(); }; groupTimer.Start();
     }
     private void SaveGroups()
     {
@@ -146,18 +173,30 @@ public sealed partial class MainWindow
     }
     private void ReloadGroupPickers()
     {
-        var selected = SelectedGroup; var shared = shareGroupPicker.SelectedItem as GroupMembership;
+        var selected = SelectedGroup;
         groupUiLoading = true;
         try
         {
             groupPicker.ItemsSource = null; groupPicker.ItemsSource = groupProfile.Groups;
-            groupPicker.SelectedItem = selected != null && groupProfile.Groups.Contains(selected) ? selected : groupProfile.Groups.FirstOrDefault();
-            var owned = groupProfile.Groups.Where(x => x.Role == "Owner" && x.Status == "Approved" && !x.RegistrationPending).ToList();
-            shareGroupPicker.ItemsSource = null; shareGroupPicker.ItemsSource = owned;
-            shareGroupPicker.SelectedItem = shared != null && owned.Contains(shared) ? shared : owned.FirstOrDefault();
+            groupPicker.SelectedItem = selected != null && groupProfile.Groups.Contains(selected) ? selected : groupProfile.Groups.FirstOrDefault(g => g.Key == groupProfile.ActiveGroupKey) ?? groupProfile.Groups.FirstOrDefault();
+            shareGroupPicker.ItemsSource = null; shareGroupPicker.ItemsSource = groupProfile.Groups;
+            managementGroupPicker.ItemsSource = null; managementGroupPicker.ItemsSource = groupProfile.Groups;
+            shareGroupPicker.SelectedItem = groupPicker.SelectedItem;
+            managementGroupPicker.SelectedItem = groupPicker.SelectedItem;
         }
         finally { groupUiLoading = false; }
         UpdateGroupControls();
+    }
+    private void SelectActiveGroup(ComboBox source)
+    {
+        if (groupUiLoading) return;
+        groupPicker.SelectedItem = source.SelectedItem;
+    }
+    private void SynchronizeGroupPickers()
+    {
+        groupUiLoading = true;
+        try { shareGroupPicker.SelectedItem = SelectedGroup; managementGroupPicker.SelectedItem = SelectedGroup; }
+        finally { groupUiLoading = false; }
     }
     private void UpdateGroupControls()
     {
@@ -165,7 +204,7 @@ public sealed partial class MainWindow
         var group = SelectedGroup; bool available = !groupBusy && !groupStorageFailed;
         groupJoinButton.IsEnabled = available && group?.Status == "Approved" && selectedGroupSnapshot?.Team != null;
         groupAuto.IsEnabled = available && group?.Status == "Approved";
-        shareButton.IsEnabled = available && shareGroupPicker.Items.Count > 0;
+        shareButton.IsEnabled = available && group?.Role == "Owner" && group.Status == "Approved" && !group.RegistrationPending;
         foreach (var button in groupOwnerButtons) button.IsEnabled = available && group?.Role == "Owner" && group.Status == "Approved";
         if (!ReferenceEquals(displayedGroupSnapshot, selectedGroupSnapshot))
         {
@@ -176,6 +215,7 @@ public sealed partial class MainWindow
         groupStopButton.IsEnabled = groupFollow.Enabled;
         groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
         if (group == null && !groupStorageFailed) groupStatus.Text = "Noch keine Gruppe gespeichert. Gruppe erstellen oder Einladung einfügen.";
+        managementGroupStatus.Text = groupStatus.Text;
     }
     private void SaveGroupService()
     {
@@ -312,7 +352,8 @@ public sealed partial class MainWindow
     }
     private async Task ShareAndJoinAsync()
     {
-        var group = shareGroupPicker.SelectedItem as GroupMembership ?? throw new ArgumentException("Eine eigene Gruppe wählen.");
+        var group = SelectedGroup ?? throw new ArgumentException("Eine eigene Gruppe wählen.");
+        if (group.Role != "Owner" || group.Status != "Approved") throw new ArgumentException("Eine eigene Gruppe wählen.");
         var team = (Team)((ComboBoxItem)sharedTeamPicker.SelectedItem).Tag;
         var config = ReadFields(); config.Validate();
         StopAll("Gruppenauswahl veröffentlichen");
@@ -379,6 +420,56 @@ public sealed partial class MainWindow
         if (group?.Role != "Owner" || group.InviteToken == null) return;
         try { Clipboard.SetText(group.InvitationLink); groupStatus.Text = "Einladungslink kopiert."; }
         catch (Exception) { groupStatus.Text = "Zwischenablage momentan nicht verfügbar."; }
+    }
+    private void ExportSelectedAdmin()
+    {
+        var group = SelectedGroup; if (group == null || groupBusy) return;
+        try
+        {
+            Clipboard.SetText(GroupRecoveryCodec.ExportAdmin(group));
+            groupStatus.Text = "Privater Admin-Übertragungscode kopiert. Nur an die gewünschte Person oder Instanz weitergeben.";
+        }
+        catch { groupStatus.Text = "Adminzugang konnte nicht kopiert werden. Mitgliedschaft und Zwischenablage prüfen."; }
+        UpdateGroupControls();
+    }
+    private async Task ImportSelectedAdminAsync(bool exclusive)
+    {
+        var code = AdminSecretPrompt(); if (code == null) return;
+        var imported = GroupRecoveryCodec.ImportAdmin(code.Trim());
+        var snapshot = await groupApi.GetAsync(imported, groupLifetime.Token);
+        if (snapshot.YourRole != "Owner" || snapshot.YourStatus != "Approved") throw new ArgumentException("Nur einen bestätigten und aktuellen Adminzugang übertragen.");
+        imported.Apply(snapshot);
+        if (exclusive && LocalizedMessageBox.Show(this, "Adminzugang exklusiv übernehmen? Alle bisherigen Instanzen und Übertragungscodes verlieren ihre Adminrechte für diese Gruppe.", "Gruppe übertragen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        var previous = groupProfile.Groups.FirstOrDefault(g => g.Key == imported.Key);
+        if (!exclusive && previous != null && LocalizedMessageBox.Show(this, "Den vorhandenen lokalen Zugang dieser Gruppe durch den Adminzugang ersetzen?", "Gruppe übertragen", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+        StopAll("Adminzugang importieren");
+        if (previous != null) groupProfile.Groups.Remove(previous);
+        groupProfile.Groups.Add(imported);
+        try { SaveGroups(); }
+        catch { groupProfile.Groups.Remove(imported); if (previous != null) groupProfile.Groups.Add(previous); throw; }
+        ReloadGroupPickers(); groupPicker.SelectedItem = imported;
+        if (exclusive)
+        {
+            imported.PendingToken = GroupMembership.NewToken(); imported.PendingCredentialOperation = GroupMembership.NewId();
+            SaveGroups(); await ResolvePendingCredentialAsync(imported);
+        }
+        else AcceptManagedSnapshot(imported, snapshot);
+        groupStatus.Text = exclusive ? "Adminzugang übernommen. Bisherige Adminzugänge sind widerrufen. Auto ist aus." : "Adminzugang importiert. Weitere Instanzen behalten ihren Zugang. Auto ist aus.";
+    }
+    private string? AdminSecretPrompt()
+    {
+        var dialog = new Window { Owner = this, Title = "Gruppe übertragen", Width = 580, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = Background, Foreground = Foreground, FontFamily = FontFamily, FontSize = FontSize };
+        dialog.Resources.MergedDictionaries.Add(CreateTheme());
+        var body = new StackPanel { Margin = new Thickness(24) };
+        body.Children.Add(Hint("Privaten Admin-Übertragungscode einfügen. Der Code wird nicht angezeigt."));
+        var secret = new PasswordBox { MaxLength = 16000, MinHeight = 40, Background = Background, Foreground = Foreground, Padding = new Thickness(8) };
+        AutomationProperties.SetName(secret, "Privater Admin-Übertragungscode"); body.Children.Add(secret);
+        var row = new WrapPanel { Margin = new Thickness(0, 12, 0, 0) };
+        var accept = Button("Bestätigen", () => dialog.DialogResult = true); accept.IsDefault = true; row.Children.Add(accept);
+        var cancel = Button("Abbrechen", () => dialog.DialogResult = false); cancel.IsCancel = true; row.Children.Add(cancel);
+        body.Children.Add(row); dialog.Content = body; dialog.Loaded += (_, _) => { LocalizeInterface(dialog); secret.Focus(); };
+        if (dialog.ShowDialog() != true) return null;
+        var result = secret.Password; secret.Clear(); return result;
     }
     private void ExportGroups()
     {
