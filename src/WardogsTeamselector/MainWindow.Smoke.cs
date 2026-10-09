@@ -178,6 +178,15 @@ public sealed partial class MainWindow
             operationTabs.SelectedIndex = 1; await Settle();
             SaveRender(Path.Combine(directory, size.Item1 + "-groups.png"));
             ShowPage(4); await Settle(); SaveRender(Path.Combine(directory, size.Item1 + "-group-management.png"));
+            groupRequests.SelectedIndex = 0; groupRequests.Focus(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-request-selected.png"));
+            managementGroupPicker.Focus(); groupRequests.BringIntoView(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-request-selected-inactive.png"));
+            groupMembers.SelectedIndex = 0; groupMembers.Focus(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-member-selected.png"));
+            managementGroupPicker.Focus(); groupMembers.BringIntoView(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-member-selected-inactive.png"));
+            groupMembers.SelectedIndex = -1;
             var managementScroll = (ScrollViewer)((TabItem)pages.Items[4]).Content;
             managementScroll.ScrollToBottom(); await Settle();
             SaveRender(Path.Combine(directory, size.Item1 + "-group-member-actions.png"));
