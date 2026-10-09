@@ -18,6 +18,7 @@ public sealed partial class MainWindow
         LocalizeInterface();
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
         Check(profileText.Text.Contains("Default profile") || hasSavedProfile, "English profile");
+        Check(groupService.Text == GroupProfile.DefaultServiceUrl, "New group settings show the default service address");
         SaveRender(Path.Combine(directory, "english-startup.png"));
         foreach (var language in Localization.Languages)
         {
@@ -153,6 +154,15 @@ public sealed partial class MainWindow
         groupPicker.SelectedItem = fixtureOwner;
         selectedGroupSnapshot = new GroupSnapshot(1, fixtureOwner.GroupId, fixtureOwner.Name, 3, 1, "Red", "Approved", "Owner", fixtureOwner.MemberId, new() { new(fixtureOwner.MemberId, fixtureOwner.DisplayName, "Approved", "Owner", 0), new(GroupMembership.NewId(), "Mitspieler", "Pending", "Member", 0) });
         groupStatus.Text = DescribeGroup(selectedGroupSnapshot); UpdateGroupControls();
+        Check(shareTeamWithGroup.IsChecked != true && !shareGroupPicker.IsEnabled, "Group sharing starts off with a disabled picker");
+        shareTeamWithGroup.IsChecked = true;
+        Check(shareGroupPicker.IsEnabled, "Sharing checkbox enables the group picker");
+        groupBusy = true; UpdateGroupControls();
+        Check(!shareGroupPicker.IsEnabled && teamButtons.Values.All(button => !button.IsEnabled), "Publishing locks group and team selection");
+        var pendingShareGeneration = groupFollow.Generation;
+        shareTeamWithGroup.IsChecked = false;
+        Check(groupFollow.Generation != pendingShareGeneration && !shareGroupPicker.IsEnabled && teamButtons.Values.All(button => button.IsEnabled), "Disabling sharing invalidates a pending join and restores local buttons");
+        groupBusy = false; UpdateGroupControls();
         ShowPage(1); operationTabs.SelectedIndex = 1;
         Check(groupRequests.Items.Count == 1 && groupMembers.Items.Count == 1, "Requests are separate from confirmed members");
         Check(!LogicalElements((DependencyObject)((TabItem)pages.Items[1]).Content).Contains(groupMembers) && LogicalElements((DependencyObject)((TabItem)pages.Items[4]).Content).Contains(groupMembers), "Administration belongs exclusively to group management");
@@ -160,8 +170,23 @@ public sealed partial class MainWindow
         foreach (var size in new[] { ("desktop", 1180d, 820d), ("small", MinWidth, MinHeight) })
         {
             Width = size.Item2; Height = size.Item3; await Settle();
+            operationTabs.SelectedIndex = 0; shareTeamWithGroup.IsChecked = true; await Settle();
+            Check(shareGroupPicker.TranslatePoint(new Point(0, shareGroupPicker.ActualHeight), this).Y < teamButtons[Team.Blue].TranslatePoint(new Point(), this).Y, "Group sharing sits above the normal team buttons");
+            SaveRender(Path.Combine(directory, size.Item1 + "-share-team.png"));
+            shareTeamWithGroup.IsChecked = false; await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-local-team.png"));
+            operationTabs.SelectedIndex = 1; await Settle();
             SaveRender(Path.Combine(directory, size.Item1 + "-groups.png"));
-            ShowPage(4); await Settle(); SaveRender(Path.Combine(directory, size.Item1 + "-group-management.png")); ShowPage(1);
+            ShowPage(4); await Settle(); SaveRender(Path.Combine(directory, size.Item1 + "-group-management.png"));
+            var managementScroll = (ScrollViewer)((TabItem)pages.Items[4]).Content;
+            managementScroll.ScrollToBottom(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-member-actions.png"));
+            var managementExpanders = LogicalElements(managementScroll).OfType<Expander>().ToArray();
+            foreach (var expander in managementExpanders) expander.IsExpanded = true;
+            await Settle(); managementScroll.ScrollToBottom(); await Settle();
+            SaveRender(Path.Combine(directory, size.Item1 + "-group-management-service.png"));
+            foreach (var expander in managementExpanders.Skip(1)) expander.IsExpanded = false;
+            managementScroll.ScrollToTop(); ShowPage(1);
         }
         var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
         groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());

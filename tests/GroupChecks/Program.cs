@@ -9,6 +9,9 @@ void Reject(Action action, string label) { bool rejected = false; try { action()
 GroupMembership Membership() => new() { ServiceUrl = "https://groups.example", GroupId = GroupMembership.NewId(), MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), Name = "Freunde", DisplayName = "Spieler", Status = "Approved" };
 GroupSnapshot Snapshot(GroupMembership group, long revision = 1, long selection = 1, string? team = "Blue", string status = "Approved") => new(1, group.GroupId, group.Name, revision, selection, team, status, "Member", group.MemberId, new());
 
+Check(new GroupProfile().ServiceUrl == "https://wardogs-groups.niels-82f.workers.dev", "New profiles use the default group service");
+Check(JsonSerializer.Deserialize<GroupProfile>("{\"serviceUrl\":\"https://custom.example\"}", GroupJson.Options)!.ServiceUrl == "https://custom.example", "Stored custom service survives the new default");
+
 var group = Membership(); var follower = new GroupFollowCoordinator(); var now = Stopwatch.GetTimestamp();
 var generation = follower.Begin(group, true);
 Check(!follower.CanRun(generation, now), "Cannot start before authorized state");

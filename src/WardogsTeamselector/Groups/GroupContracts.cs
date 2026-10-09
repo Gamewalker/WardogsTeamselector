@@ -52,8 +52,9 @@ public sealed class GroupMembership
 }
 public sealed class GroupProfile
 {
+    public const string DefaultServiceUrl = "https://wardogs-groups.niels-82f.workers.dev";
     public int Version { get; set; } = 1;
-    public string ServiceUrl { get; set; } = "";
+    public string ServiceUrl { get; set; } = DefaultServiceUrl;
     public List<GroupMembership> Groups { get; set; } = new();
     public string? ActiveGroupKey { get; set; }
 }

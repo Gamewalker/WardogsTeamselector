@@ -1,4 +1,5 @@
 {
+  "Deployment-Anleitung im Repository-Wiki": "Deployment guide in the repository wiki",
   "\n\nMessflächen:\n": "\n\nMeasuring surfaces:\n",
   " (Hauptmonitor)": " (main monitor)",
   " Unter Einrichtung und Konfiguration prüfen, dann speichern.": " Check under setup and configuration, then save.",
@@ -478,5 +479,6 @@
   "Privaten Admin-Übertragungscode einfügen. Der Code wird nicht angezeigt.": "Paste the private admin transfer code. The code stays hidden.",
   "Privater Admin-Übertragungscode": "Private admin transfer code",
   "Ungültiger Admin-Übertragungscode.": "Invalid admin transfer code.",
-  "Leerer Admin-Übertragungscode.": "Empty admin transfer code."
+  "Leerer Admin-Übertragungscode.": "Empty admin transfer code.",
+  "Mit Gruppe teilen": "Share with group"
 }

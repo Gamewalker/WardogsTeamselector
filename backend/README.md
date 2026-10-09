@@ -18,15 +18,15 @@ Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lok
 
 ## Ausschließlich kostenlos bereitstellen
 
-Die Live-Bereitstellung wurde in dieser Sitzung auf Wunsch des Nutzers bis zum nächsten verfügbaren Cloudflare-Zugang verschoben. Es wurde kein Cloudflare-Tarif gebucht oder geändert.
+Die vollständige [Deployment-Anleitung im Repository-Wiki](../docs/wiki/Eigenen-Gruppendienst-deployen.md) beschreibt Einrichtung, Prüfungen und Bereitstellung. Der Desktop-Client verwendet standardmäßig `https://wardogs-groups.niels-82f.workers.dev/`; eigene Dienstadressen sind weiterhin möglich.
 
 1. Ein Cloudflare-Konto im Workers-Free-Tarif verwenden.
 2. Im Plugin oder in der Umgebung `CLOUDFLARE_ACCOUNT_ID` und einen auf dieses Konto begrenzten API-Token hinterlegen. Zugangsdaten gehören nicht in Git oder Diagnoseexporte. Für den CLI-Guard werden neben der Worker-Bereitstellung Leserechte für den Tarif und die Kontoabonnements benötigt. Fehlende Leserechte verhindern die Bereitstellung.
 3. `npm run deploy:free` ausführen. Der Guard prüft den Workers-Tarif und vorhandene Abonnements. Bei Paid, unklarer Antwort oder fehlender Berechtigung bricht er ab. Er ändert keinen Tarif. Der anschließende Wrangler-Aufruf verwendet die SQLite-Migration in `wrangler.jsonc`.
-4. Die ausgegebene HTTPS-Adresse unter **Betrieb → Gruppenmodus → Gruppendienst einrichten** im Tool speichern. Der konfigurierte Service ist auch ohne eine neue EXE verwendbar.
+4. Die ausgegebene HTTPS-Adresse unter **Gruppenverwaltung → Gruppendienst einrichten** im Tool speichern. Der konfigurierte Service ist auch ohne eine neue EXE verwendbar.
 5. Mit zwei Clients im Testmodus Gruppe erstellen, Anfrage bestätigen, Team teilen, WebSocket-Update und Entfernung praktisch überprüfen. Die erste öffentliche Bereitstellung benötigt diesen Live-Test.
 
-Die kostenlose `workers.dev`-Adresse reicht für API und Einladungsseite. Es gibt keine automatische Cloudflare-Bereitstellung in GitHub Actions. Die CI prüft nur Tests und Deployment-Dry-Run. Änderungen auf Featurebranches veröffentlichen keine App-Version.
+Die kostenlose `workers.dev`-Adresse reicht für API und Einladungsseite. Bei einem Push auf `main` deployt GitHub Actions den Worker automatisch nach erfolgreichen Desktop- und Backend-Prüfungen einschließlich Client-Integration und Deployment-Dry-Run. Dafür müssen die Repository-Secrets `CLOUDFLARE_ACCOUNT_ID` und `CLOUDFLARE_API_TOKEN` gesetzt sein. Der Deployment-Job verwendet ebenfalls `npm run deploy:free`, läuft ohne paralleles Worker-Deployment und überspringt inzwischen veraltete Commits. Pull Requests, Featurebranches und manuelle Workflow-Läufe deployen den Worker nicht.
 
 ## API
 

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Markup;
 using System.Windows.Threading;
@@ -70,11 +71,12 @@ public sealed partial class MainWindow
                 if (element == languageSelector) return;
                 if (element is TextBlock text)
                 {
-                    LocalizeProperty(text, TextBlock.TextProperty);
+                    if (!text.Inlines.OfType<Hyperlink>().Any()) LocalizeProperty(text, TextBlock.TextProperty);
                     var direction = Localization.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
                     if (text.FlowDirection != direction) text.FlowDirection = direction;
                 }
                 if (element is TextBox box && box.IsReadOnly) LocalizeProperty(box, TextBox.TextProperty);
+                if (element is Run { Parent: Hyperlink }) LocalizeProperty(element, Run.TextProperty);
                 if (element is ContentControl) LocalizeProperty(element, ContentControl.ContentProperty);
                 if (element is HeaderedContentControl) LocalizeProperty(element, HeaderedContentControl.HeaderProperty);
                 if (element is Window window)
@@ -85,7 +87,7 @@ public sealed partial class MainWindow
                 }
                 if (element is DataGrid table)
                     foreach (var column in table.Columns) LocalizeProperty(column, DataGridColumn.HeaderProperty);
-                foreach (var child in LogicalTreeHelper.GetChildren(element).OfType<DependencyObject>()) Visit(child);
+                foreach (var child in LogicalTreeHelper.GetChildren(element).OfType<DependencyObject>().ToArray()) Visit(child);
                 if (element is Visual)
                     for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++) Visit(VisualTreeHelper.GetChild(element, i));
             }

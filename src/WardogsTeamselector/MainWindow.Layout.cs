@@ -231,6 +231,7 @@ public sealed partial class MainWindow
 
         operationFocusHint = Hint("");
         body.Children.Add(operationFocusHint);
+        BuildManualGroupActions(body);
 
         var teams = new Grid();
         foreach (var team in Enum.GetValues<Team>())
@@ -266,7 +267,6 @@ public sealed partial class MainWindow
             teams.Children.Add(frame);
         }
         body.Children.Add(teams);
-        BuildManualGroupActions(body);
 
         body.Children.Add(new Separator { Background = BorderBrushColor, Margin = new Thickness(0, 22, 0, 12) });
         operationSummary.Foreground = Muted;
@@ -491,7 +491,7 @@ public sealed partial class MainWindow
             StopAll("Manuell gestoppt");
             UpdateRunDisplay(automation.Snapshot);
         }
-        else StartTeam(team);
+        else ActivateTeam(team);
     }
 
     private void UpdateProfileState()

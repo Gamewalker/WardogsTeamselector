@@ -8,7 +8,7 @@ Die neuen Gruppenmeldungen stehen auf Deutsch und Englisch zur Verfügung. In de
 
 ## Gruppe erstellen und einladen
 
-1. Unter **Gruppenverwaltung → Gruppendienst einrichten** die HTTPS-Adresse des bereitgestellten Dienstes speichern. Solange der Cloudflare-Dienst noch nicht bereitgestellt ist, funktioniert weiterhin der manuelle Modus.
+1. Unter **Gruppenverwaltung → Gruppendienst einrichten** ist für neue oder bisher leere Einstellungen `https://wardogs-groups.niels-82f.workers.dev/` voreingestellt. Für einen eigenen Dienst die HTTPS-Adresse ändern und speichern; vorhandene eigene Adressen bleiben erhalten. Die [Deployment-Anleitung im Repository-Wiki](wiki/Eigenen-Gruppendienst-deployen.md) erklärt die Bereitstellung.
 2. Unter **Gruppenverwaltung** **Gruppe erstellen** wählen und Gruppenname sowie deinen Namen eingeben.
 3. **Einladungslink kopieren** und an deine Mitspieler senden.
 4. Mitspieler wählen unter **Gruppenverwaltung** **Gruppe beitreten**, fügen den vollständigen Link ein und geben ihren Namen ein. Der Link allein bestätigt niemanden.
@@ -20,7 +20,7 @@ Die Bestätigung wird beim nächsten Aktualisieren auf dem eingeladenen PC sicht
 
 Es können mehrere Gruppen gespeichert werden. Die Gruppenauswahl unter **Manuell**, **Gruppenmodus** und **Gruppenverwaltung** ist dieselbe aktive Gruppe. Ein Wechsel beendet den bisherigen Gruppenlauf und entwertet seine verspäteten Antworten. Die Auswahl bleibt nach einem Neustart erhalten; Auto bleibt ausgeschaltet.
 
-Unter **Manuell** eine eigene Gruppe und ein Team wählen, dann **Auswahl mit Gruppe teilen & beitreten** anklicken. Nach erfolgreicher Veröffentlichung beginnt der normale lokale Beitritt. Scheitert die Veröffentlichung, wird ein lokaler Beitritt separat angeboten. Der Server kann eine Veröffentlichung bereits erhalten haben, obwohl die Bestätigung auf deinem PC nicht ankommt; der Hinweis lautet deshalb „nicht bestätigt“.
+Unter **Manuell** über den drei Teambuttons **Mit Gruppe teilen** einschalten und eine eigene Gruppe wählen. Anschließend den normalen blauen, roten oder grünen Teambutton oder die zugehörige F-Taste verwenden. Nach erfolgreicher Veröffentlichung beginnt der normale lokale Beitritt. Ohne Häkchen bleiben die Gruppenauswahl deaktiviert und die Teamaktionen rein lokal. Das Häkchen ist nach einem Neustart aus. Scheitert die Veröffentlichung, wird ein lokaler Beitritt separat angeboten. Der Server kann eine Veröffentlichung bereits erhalten haben, obwohl die Bestätigung auf deinem PC nicht ankommt; der Hinweis lautet deshalb „nicht bestätigt“.
 
 Erneutes Teilen derselben Farbe ist eine neue Veröffentlichung. **Auswahl zurücknehmen** entfernt das Gruppenziel. Ein lokaler Stopp nimmt eine bereits geteilte Auswahl nicht zurück.
 

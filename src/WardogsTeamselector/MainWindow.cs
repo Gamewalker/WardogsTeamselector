@@ -93,7 +93,7 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
         UpdatePreviewLocation();
-        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += StartTeam; hotkeys.EscapePressed += () => StopAll("ESC – abgebrochen"); RegisterKeys(); };
+        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += ActivateTeam; hotkeys.EscapePressed += () => StopAll("ESC – abgebrochen"); RegisterKeys(); };
         Loaded += async (_, _) => { if (startupSettingsError != null) ShowError(startupSettingsError); await RefreshPreview(); UpdatePreviewTimer(); };
         timer.Tick += async (_, _) => await RefreshPreview();
         Closing += (_, e) =>

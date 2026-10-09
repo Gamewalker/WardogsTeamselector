@@ -9,6 +9,7 @@
 - [Diagnose und Hilfe](troubleshooting.md) – Fehlerbehebung, Exporte und gespeicherte Einstellungen
 - [Automatische Updates](updates.md) – Updateprüfung, Installation und Wiederherstellung
 - [Gruppenmodus](groups.md) – Einladungen, Freigaben und gemeinsame Teamauswahl
+- [Wiki: Eigenen Gruppendienst deployen](wiki/Eigenen-Gruppendienst-deployen.md) – Cloudflare-Zugang, Prüfungen und Bereitstellung
 - [Lizenz](license.md) – GNU GPL v3.0 und vollständiger Lizenztext
 
 ## 🛠️ Entwicklung

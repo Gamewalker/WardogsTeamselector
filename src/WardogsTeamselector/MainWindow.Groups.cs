@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Threading;
 using WardogsTeamselector.Core;
 using WardogsTeamselector.Groups;
@@ -19,7 +20,7 @@ public sealed partial class MainWindow
     private readonly ComboBox shareGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 240 };
     private readonly ComboBox managementGroupPicker = new() { DisplayMemberPath = "Label", MinWidth = 260 };
     private readonly TextBlock managementGroupStatus = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 8) };
-    private readonly ComboBox sharedTeamPicker = new() { MinWidth = 100 };
+    private readonly CheckBox shareTeamWithGroup = new() { Content = "Mit Gruppe teilen", VerticalAlignment = VerticalAlignment.Center };
     private readonly ListBox groupMembers = new() { DisplayMemberPath = "Label", MinHeight = 100, MaxHeight = 220 };
     private readonly ListBox groupRequests = new() { DisplayMemberPath = "Label", MinHeight = 70, MaxHeight = 160 };
     private readonly TextBlock groupStatus = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 8) };
@@ -39,7 +40,7 @@ public sealed partial class MainWindow
     private int stableGroupDialog;
     private long lastGroupObservation;
     private Button groupStopButton = null!;
-    private Button groupJoinButton = null!, shareButton = null!;
+    private Button groupJoinButton = null!;
     private readonly System.Collections.Generic.List<Button> groupOwnerButtons = new();
     private GroupMembership? SelectedGroup => groupPicker.SelectedItem as GroupMembership;
 
@@ -67,7 +68,9 @@ public sealed partial class MainWindow
         body.Children.Add(actions); body.Children.Add(groupAuto);
         groupAuto.Checked += async (_, _) => { if (!groupUiLoading) await RunGroupUiAction(() => BeginGroupFollowAsync(true)); };
         groupAuto.Unchecked += (_, _) => { if (!groupUiLoading) StopGroupFollow(); };
-        body.Children.Add(Button("Gruppen verwalten", () => ShowPage(4)));
+        var manageButton = Button("Gruppen verwalten", () => ShowPage(4));
+        manageButton.Margin = new Thickness(0, 8, 8, 8);
+        body.Children.Add(manageButton);
         return Scroll(body);
     }
     private UIElement BuildGroupManagement()
@@ -87,18 +90,24 @@ public sealed partial class MainWindow
         body.Children.Add(manage);
         var owner = new StackPanel();
         owner.Children.Add(Hint("Gruppenverwaltung · für Ersteller. Namen sind Anzeigenamen; die kurze Kennung unterscheidet gleichnamige Personen."));
-        owner.Children.Add(new TextBlock { Text = "Offene Beitrittsanfragen", Margin = new Thickness(0, 8, 0, 4) });
+        owner.Children.Add(Heading("Offene Beitrittsanfragen"));
         owner.Children.Add(groupRequests);
-        owner.Children.Add(new TextBlock { Text = "Bestätigte Mitglieder", Margin = new Thickness(0, 8, 0, 4) });
-        owner.Children.Add(groupMembers);
         groupRequests.SelectionChanged += (_, _) => { if (groupRequests.SelectedItem != null) groupMembers.SelectedItem = null; };
         groupMembers.SelectionChanged += (_, _) => { if (groupMembers.SelectedItem != null) groupRequests.SelectedItem = null; };
-        var memberActions = new WrapPanel();
-        foreach (var (label, action) in new[] { ("Bestätigen", "approve"), ("Ablehnen", "reject"), ("Mitglied entfernen", "remove") })
+        var requestActions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        foreach (var (label, action) in new[] { ("Bestätigen", "approve"), ("Ablehnen", "reject") })
         {
-            var button = GroupButton(label, () => MemberActionAsync(action)); memberActions.Children.Add(button); groupOwnerButtons.Add(button);
+            var button = GroupButton(label, () => MemberActionAsync(action)); requestActions.Children.Add(button); groupOwnerButtons.Add(button);
         }
+        owner.Children.Add(requestActions);
+        owner.Children.Add(Heading("Bestätigte Mitglieder"));
+        owner.Children.Add(groupMembers);
+        var memberActions = new WrapPanel { Margin = new Thickness(0, 8, 0, 0) };
+        var removeMember = GroupButton("Mitglied entfernen", () => MemberActionAsync("remove"));
+        memberActions.Children.Add(removeMember); groupOwnerButtons.Add(removeMember);
         owner.Children.Add(memberActions);
+        owner.Children.Add(new Separator { Background = BorderBrushColor, Margin = new Thickness(0, 16, 0, 0) });
+        owner.Children.Add(Heading("Gruppenverwaltung"));
         var inviteActions = new WrapPanel();
         var copy = Button("Einladungslink kopieren", CopyGroupInvitation); inviteActions.Children.Add(copy); groupOwnerButtons.Add(copy);
         foreach (var (label, action) in new[] { ("Neuen Einladungslink erzeugen", "invite"), ("Auswahl zurücknehmen", "clear"), ("Gruppe löschen", "delete") })
@@ -122,24 +131,56 @@ public sealed partial class MainWindow
         body.Children.Add(new Expander { Header = "PC-Wechsel und Wiederherstellung", Content = recovery });
         var service = new StackPanel();
         service.Children.Add(Hint("Adresse des Gruppendienstes. Einladungslinks enthalten die passende Adresse bereits. Eine eigene Bereitstellung benötigt ausschließlich Cloudflare Workers Free."));
+        var deploymentGuide = new Hyperlink(new Run("Deployment-Anleitung im Repository-Wiki"))
+        {
+            NavigateUri = new Uri(ProjectUrl + "/blob/main/docs/wiki/Eigenen-Gruppendienst-deployen.md"),
+            Foreground = BrushFrom(145, 200, 246)
+        };
+        deploymentGuide.RequestNavigate += (_, e) => { OpenProjectLink(e.Uri.AbsoluteUri); e.Handled = true; };
+        var deploymentHelp = Hint("", 4);
+        deploymentHelp.Margin = new Thickness(0, 4, 0, 12);
+        deploymentHelp.Inlines.Add(deploymentGuide);
+        service.Children.Add(deploymentHelp);
         service.Children.Add(groupService); AutomationProperties.SetName(groupService, "Gruppendienst-Adresse");
-        service.Children.Add(Button("Dienstadresse speichern", SaveGroupService));
+        var saveService = Button("Dienstadresse speichern", SaveGroupService);
+        saveService.Margin = new Thickness(0, 8, 8, 8);
+        service.Children.Add(saveService);
         body.Children.Add(new Expander { Header = "Gruppendienst einrichten", Content = service });
         return Scroll(body);
     }
     private void BuildManualGroupActions(StackPanel body)
     {
-        var section = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
-        section.Children.Add(Hint("Als Ersteller: Team mit einer eigenen Gruppe teilen und anschließend lokal beitreten."));
-        section.Children.Add(shareGroupPicker);
+        var row = new Grid { Margin = new Thickness(0, 0, 0, 16) };
+        row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new());
+        row.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        shareTeamWithGroup.Margin = new Thickness(0, 0, 16, 0);
+        shareTeamWithGroup.Checked += (_, _) => UpdateGroupControls();
+        shareTeamWithGroup.Unchecked += (_, _) =>
+        {
+            if (groupBusy) StopGroupFollow();
+            UpdateGroupControls();
+        };
+        row.Children.Add(shareTeamWithGroup);
+        shareGroupPicker.IsEnabled = false;
+        Grid.SetColumn(shareGroupPicker, 1); row.Children.Add(shareGroupPicker);
         shareGroupPicker.SelectionChanged += (_, _) => SelectActiveGroup(shareGroupPicker);
-        foreach (var team in Enum.GetValues<Team>()) sharedTeamPicker.Items.Add(new ComboBoxItem { Content = TeamName(team), Tag = team });
-        sharedTeamPicker.SelectedIndex = 0;
         AutomationProperties.SetName(shareGroupPicker, "Gruppe für geteilte Auswahl");
-        AutomationProperties.SetName(sharedTeamPicker, "Team zum Teilen");
-        var row = new WrapPanel(); row.Children.Add(sharedTeamPicker);
-        shareButton = GroupButton("Auswahl mit Gruppe teilen & beitreten", ShareAndJoinAsync); row.Children.Add(shareButton);
-        section.Children.Add(row); body.Children.Add(section);
+        var configureGroup = Button("Gruppen verwalten", () => ShowPage(4));
+        configureGroup.Margin = new Thickness(8, 0, 0, 0);
+        configureGroup.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(configureGroup, 2); row.Children.Add(configureGroup);
+        body.Children.Add(row);
+    }
+    private async void ActivateTeam(Team team)
+    {
+        if (shareTeamWithGroup.IsChecked != true) { StartTeam(team); return; }
+        if (groupBusy) return;
+        await RunGroupUiAction(async () =>
+        {
+            try { await ShareAndJoinAsync(team); }
+            catch (Exception ex) { if (!closing) ShowError(ex.Message); throw; }
+        });
     }
     private Button GroupButton(string label, Func<Task> action) => Button(label, async () => await RunGroupUiAction(action));
     private async Task RunGroupUiAction(Func<Task> action)
@@ -161,6 +202,7 @@ public sealed partial class MainWindow
             try { groupProfile = GroupMembershipStore.Load(); }
             catch (Exception) { groupStorageFailed = true; groupStatus.Text = "Gruppenspeicher konnte nicht geladen werden. Datei sichern und Wiederherstellungscode importieren."; }
         }
+        if (string.IsNullOrWhiteSpace(groupProfile.ServiceUrl)) groupProfile.ServiceUrl = GroupProfile.DefaultServiceUrl;
         groupService.Text = groupProfile.ServiceUrl;
         ReloadGroupPickers();
         groupTimer.Tick += (_, _) => { managementGroupStatus.Text = groupStatus.Text; TickGroupFollow(); }; groupTimer.Start();
@@ -204,7 +246,8 @@ public sealed partial class MainWindow
         var group = SelectedGroup; bool available = !groupBusy && !groupStorageFailed;
         groupJoinButton.IsEnabled = available && group?.Status == "Approved" && selectedGroupSnapshot?.Team != null;
         groupAuto.IsEnabled = available && group?.Status == "Approved";
-        shareButton.IsEnabled = available && group?.Role == "Owner" && group.Status == "Approved" && !group.RegistrationPending;
+        shareGroupPicker.IsEnabled = available && shareTeamWithGroup.IsChecked == true;
+        foreach (var button in teamButtons.Values) button.IsEnabled = shareTeamWithGroup.IsChecked != true || !groupBusy;
         foreach (var button in groupOwnerButtons) button.IsEnabled = available && group?.Role == "Owner" && group.Status == "Approved";
         if (!ReferenceEquals(displayedGroupSnapshot, selectedGroupSnapshot))
         {
@@ -350,11 +393,11 @@ public sealed partial class MainWindow
         stableGroupDialog = 0;
         if (groupFollow.CanRun(groupFollow.Generation, timestamp) && Enum.TryParse<Team>(groupFollow.Team, out var team)) automation.Start(team, followedSettings, groupFollow.OnlineLeaseDeadline);
     }
-    private async Task ShareAndJoinAsync()
+    private async Task ShareAndJoinAsync(Team team)
     {
         var group = SelectedGroup ?? throw new ArgumentException("Eine eigene Gruppe wählen.");
-        if (group.Role != "Owner" || group.Status != "Approved") throw new ArgumentException("Eine eigene Gruppe wählen.");
-        var team = (Team)((ComboBoxItem)sharedTeamPicker.SelectedItem).Tag;
+        if (groupStorageFailed) throw new ArgumentException("Gruppenspeicher nicht verfügbar · Auto wurde gestoppt.");
+        if (group.Role != "Owner" || group.Status != "Approved" || group.RegistrationPending) throw new ArgumentException("Eine eigene Gruppe wählen.");
         var config = ReadFields(); config.Validate();
         StopAll("Gruppenauswahl veröffentlichen");
         var generation = groupFollow.Generation;
