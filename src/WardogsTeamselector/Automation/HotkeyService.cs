@@ -18,7 +18,7 @@ public sealed class HotkeyService : IDisposable
     private readonly Dictionary<int, Team> registered = new();
     private IntPtr hook;
     private bool stopDown;
-    private int stopKey = 0x1B;
+    private int stopKey = new AppSettings().StopHotkey;
     private bool disposed;
     public event Action<Team>? TeamPressed;
     public event Action? StopPressed;

@@ -219,7 +219,7 @@ public sealed partial class MainWindow
         runMode.TextAlignment = TextAlignment.Center;
         runMode.Margin = new Thickness(0, 8, 0, 0);
         currentRun.Children.Add(runMode);
-        groupStopButton = Button("Stopp · ESC", () => StopAll("Manuell gestoppt"));
+        groupStopButton = Button($"Stopp · {HotkeyChoice.Display(settings.StopHotkey)}", () => StopAll("Manuell gestoppt"));
         groupStopButton.Visibility = Visibility.Collapsed;
         groupStopButton.HorizontalAlignment = HorizontalAlignment.Center;
         currentRun.Children.Add(groupStopButton);

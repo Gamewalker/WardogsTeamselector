@@ -46,14 +46,14 @@ public sealed class AppSettings
     public string? MonitorId { get; set; }
     public string WindowTitleContains { get; set; } = "wardogs";
     public string ProcessNameContains { get; set; } = "wardogs";
-    public bool DryRun { get; set; } = true;
+    public bool DryRun { get; set; } = false;
     public bool GeometryCalibrated { get; set; }
     public Rectangle? ManualBounds { get; set; }
     public double DetectionOffsetX { get; set; }
     public double DetectionOffsetY { get; set; }
     public double DetectionScale { get; set; } = 1;
     public Dictionary<Team, int> Hotkeys { get; set; } = new() { [Team.Blue] = 0x75, [Team.Red] = 0x76, [Team.Green] = 0x77 };
-    public int StopHotkey { get; set; } = 0x1B;
+    public int StopHotkey { get; set; } = 0x23;
     public List<TeamRegion> Regions { get; set; } = DefaultRegions();
     public static List<TeamRegion> DefaultRegions() => new() {
         new(Team.Blue, 1483d/3838, 944d/2158, 273d/3838, 358d/2158),

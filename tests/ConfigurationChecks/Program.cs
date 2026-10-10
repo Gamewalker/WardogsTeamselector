@@ -24,7 +24,11 @@ if (migrated.Contains("DialogAbsenceTimeoutMs") || migrated.Contains("DetectJoin
 
 Console.WriteLine("PASS: Profil-Roundtrip, ungültige Profile und Migration veralteter Beitrittseinstellungen. Keine Benutzereinstellungen verändert.");
 
-if (SettingsStore.Deserialize("{}").StopHotkey != 0x1B) throw new Exception("Alte Profile müssen ESC als Stopptaste behalten.");
+if (defaults.StopHotkey != 0x23 || missingIntervals.StopHotkey != 0x23) throw new Exception("Standard-Stopptaste muss ENDE sein.");
+if (defaults.DryRun || missingIntervals.DryRun) throw new Exception("Testmodus muss standardmäßig ausgeschaltet sein.");
+var explicitPreferences = SettingsStore.Deserialize("{\"StopHotkey\":27,\"DryRun\":true}");
+var savedPreferences = SettingsStore.Deserialize(SettingsStore.Serialize(explicitPreferences));
+if (savedPreferences.StopHotkey != 0x1B || !savedPreferences.DryRun) throw new Exception("Gespeicherte Stopptaste und Testmodus müssen erhalten bleiben.");
 foreach (var key in HotkeyChoice.All)
 {
     var hotkeyProfile = new AppSettings { StopHotkey = key.Code };

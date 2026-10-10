@@ -28,7 +28,7 @@ Explore team selection, shared teams, automatic following, invitations, personal
 1. **Open Wardogs** and go to the team selection screen.
 2. In **Setup**, choose **Find game / load image**. Check that the colored outlines and click points match the three team cards. Adjust them if needed.
 3. Choose **Save & open Operation**.
-4. **Try test mode first:** choose a team with its button or F-key and watch the status. New profiles start in test mode, so no real clicks are sent.
+4. **Try test mode first:** open **Diagnostics** and turn on **Use test mode · no mouse input**, then choose a team with its button or F-key and watch the status. New profiles start with test mode off.
 5. When everything looks right, open **Diagnostics**, turn off **Use test mode · no mouse input**, save, and activate your team again.
 
 The app normally brings Wardogs to the foreground for you. You can turn this off in **Configuration → Game focus** and switch to the game yourself.
@@ -40,11 +40,11 @@ The app normally brings Wardogs to the foreground for you. You can turn this off
 | **F6** | 🔵 Choose Blue |
 | **F7** | 🔴 Choose Red |
 | **F8** | 🟢 Choose Green |
-| **ESC** | ⏹️ Stop the attempt or group following |
+| **END** | ⏹️ Stop the attempt or group following |
 
 Choose a team even before the selection screen appears: the app waits until the game is ready, then keeps trying your choice. Once it recognizes that you have joined, clicking stops automatically.
 
-During an attempt, your team button becomes **Stop**. The other team buttons stay available if you want to switch. In **Configuration**, choose your own keys for all three teams and **Stop**, including function keys, arrow keys and other special keys. ESC is the default stop key. Save your choices to keep them after restarting, and adjust the click speed to suit you.
+During an attempt, your team button becomes **Stop**. The other team buttons stay available if you want to switch. In **Configuration**, choose your own keys for all three teams and **Stop**, including function keys, arrow keys and other special keys. END is the default stop key. Save your choices to keep them after restarting, and adjust the click speed to suit you.
 
 ## ✨ Features
 

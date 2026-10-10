@@ -35,11 +35,11 @@ dem Aufrufer- oder Workerthread ausgelöst. WPF-Abonnenten müssen mit
 `Dispatcher.Invoke` und kein `Dispose` aus dem Eventhandler verwenden.
 
 `HotkeyService(System.Windows.Window)` bietet `Apply(AppSettings)`,
-`event Action<Team>? TeamPressed`, `event Action? EscapePressed` und `Dispose()`.
+`event Action<Team>? TeamPressed`, `event Action? StopPressed` und `Dispose()`.
 Alle Aufrufe erfolgen auf dem UI-Thread des Fensters. F1–F24 werden mit
 `RegisterHotKey` und `MOD_NOREPEAT` gebunden. Konflikte deaktivieren alle
-Teamhotkeys und werfen eine verständliche `Win32Exception`; ESC bleibt aktiv.
-Ein Low-Level-Keyboardhook beobachtet ESC einmal pro Tastendruck und reicht
+Teamhotkeys und werfen eine verständliche `Win32Exception`; die gewählte Stopptaste bleibt aktiv.
+Ein Low-Level-Keyboardhook beobachtet die gewählte Stopptaste (standardmäßig ENDE) einmal pro Tastendruck und reicht
 jedes Ereignis unverändert an Windows bzw. das Spiel weiter. Beim Schließen
 müssen beide Dienste entsorgt werden.
 

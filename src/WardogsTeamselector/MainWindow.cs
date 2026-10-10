@@ -51,7 +51,7 @@ public sealed partial class MainWindow : Window
     private readonly ComboBox stopKeyBox = new();
     private readonly Dictionary<Team, Button> teamButtons = new();
     private readonly ComboBox monitor = new(), selectedTeam = new();
-    private readonly CheckBox dryRun = new() { Content = "Testmodus – keine Mauseingaben", IsChecked = true }, calibrated = new() { Content = "Geometrie für dieses Profil geprüft" };
+    private readonly CheckBox dryRun = new() { Content = "Testmodus – keine Mauseingaben", IsChecked = false }, calibrated = new() { Content = "Geometrie für dieses Profil geprüft" };
     private readonly CheckBox liveUpdates = new() { Content = "Live-Bild und Detaildiagnose aktualisieren", IsChecked = true };
     private readonly CheckBox focusGame = new() { Content = "Spiel nach Teamaktivierung in den Vordergrund holen", IsChecked = true };
     private readonly TextBlock status = new(), geometryText = new(), detectionText = new(), errorText = new(), counters = new();
