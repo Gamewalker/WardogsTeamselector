@@ -23,6 +23,22 @@ public sealed class ScreenService : IScreenService
         var candidates = FindGameWindows(settings.WindowTitleContains, settings.ProcessNameContains);
         var foreground = GetForegroundWindow();
         var monitors = GetMonitors();
+        foreach (var candidate in candidates.OrderByDescending(c => c.Handle == foreground).ThenByDescending(c => (long)c.Bounds.Width * c.Bounds.Height))
+        {
+            var geometry = ResolveGeometry(candidate, settings, foreground, monitors);
+            if (geometry != null) return geometry;
+        }
+        return null;
+    }
+
+    public TargetGeometry? RevalidateTarget(TargetGeometry target, AppSettings settings)
+    {
+        var candidate = ReadGameWindow(target.WindowHandle, settings.WindowTitleContains, settings.ProcessNameContains);
+        return candidate == null ? null : ResolveGeometry(candidate, settings, GetForegroundWindow(), GetMonitors());
+    }
+
+    private static TargetGeometry? ResolveGeometry(GameWindow candidate, AppSettings settings, IntPtr foreground, IReadOnlyList<MonitorInfo> monitors)
+    {
         MonitorInfo? selected = null;
         if (!string.IsNullOrEmpty(settings.MonitorId))
         {
@@ -30,27 +46,23 @@ public sealed class ScreenService : IScreenService
             if (selected is null) return null; // Never silently substitute another monitor.
         }
 
-        foreach (var candidate in candidates.OrderByDescending(c => c.Handle == foreground).ThenByDescending(c => (long)c.Bounds.Width * c.Bounds.Height))
+        var bounds = candidate.Bounds;
+        if (settings.ManualBounds is Rectangle manual)
         {
-            var bounds = candidate.Bounds;
-            if (settings.ManualBounds is Rectangle manual)
-            {
-                if (!bounds.Contains(manual) || (selected is not null && !selected.Bounds.Contains(manual))) continue;
-                bounds = manual;
-            }
-            else if (selected is not null)
-            {
-                // Binding chooses the display; scaling still uses the game's actual
-                // client area, including in ordinary windowed mode.
-                if (!selected.Bounds.Contains(bounds)) continue;
-            }
-            if (bounds.Width < 100 || bounds.Height < 100 || !IsOnVisibleDesktop(bounds, monitors)) continue;
-            var ratio = (double)bounds.Width / bounds.Height;
-            var calibrated = settings.GeometryCalibrated || Math.Abs(ratio - 16d / 9) < 0.025;
-            return new TargetGeometry(bounds, candidate.Handle, candidate.Handle == foreground,
-                $"{candidate.Title} · {bounds.Width}×{bounds.Height} · ({bounds.X}, {bounds.Y})", calibrated);
+            if (!bounds.Contains(manual) || (selected is not null && !selected.Bounds.Contains(manual))) return null;
+            bounds = manual;
         }
-        return null;
+        else if (selected is not null)
+        {
+            // Binding chooses the display; scaling still uses the game's actual
+            // client area, including in ordinary windowed mode.
+            if (!selected.Bounds.Contains(bounds)) return null;
+        }
+        if (bounds.Width < 100 || bounds.Height < 100 || !IsOnVisibleDesktop(bounds, monitors)) return null;
+        var ratio = (double)bounds.Width / bounds.Height;
+        var calibrated = settings.GeometryCalibrated || Math.Abs(ratio - 16d / 9) < 0.025;
+        return new TargetGeometry(bounds, candidate.Handle, candidate.Handle == foreground,
+            $"{candidate.Title} · {bounds.Width}×{bounds.Height} · ({bounds.X}, {bounds.Y})", calibrated);
     }
 
     public CaptureFrame Capture(TargetGeometry target)
@@ -102,39 +114,41 @@ public sealed class ScreenService : IScreenService
     private static List<GameWindow> FindGameWindows(string titleFilter, string processFilter, bool includeMinimized = false)
     {
         var result = new List<GameWindow>();
-        var ownProcess = (uint)Environment.ProcessId;
         EnumWindows((window, _) =>
         {
-            if (!IsWindowVisible(window) || (!includeMinimized && IsIconic(window))) return true;
-            GetWindowThreadProcessId(window, out var processId);
-            if (processId == ownProcess) return true;
-            var titleLength = GetWindowTextLength(window);
-            if (titleLength <= 0) return true;
-            var text = new StringBuilder(titleLength + 1);
-            GetWindowText(window, text, text.Capacity);
-            var title = text.ToString();
-            if (!title.Contains(titleFilter, StringComparison.OrdinalIgnoreCase)) return true;
-            try
-            {
-                using var process = Process.GetProcessById((int)processId);
-                if (!process.ProcessName.Contains(processFilter, StringComparison.OrdinalIgnoreCase)) return true;
-            }
-            catch (ArgumentException) { return true; }
-            catch (InvalidOperationException) { return true; }
-            catch (System.ComponentModel.Win32Exception) { return true; }
-            if (includeMinimized && IsIconic(window))
-            {
-                result.Add(new GameWindow(window, title, Rectangle.Empty));
-                return true;
-            }
-            if (!GetClientRect(window, out var client)) return true;
-            var origin = new NativePoint();
-            if (!ClientToScreen(window, ref origin)) return true;
-            var bounds = new Rectangle(origin.X, origin.Y, client.Right - client.Left, client.Bottom - client.Top);
-            if (bounds.Width >= 100 && bounds.Height >= 100) result.Add(new GameWindow(window, title, bounds));
+            var candidate = ReadGameWindow(window, titleFilter, processFilter, includeMinimized);
+            if (candidate != null) result.Add(candidate);
             return true;
         }, IntPtr.Zero);
         return result;
+    }
+
+    private static GameWindow? ReadGameWindow(IntPtr window, string titleFilter, string processFilter, bool includeMinimized = false)
+    {
+        if (string.IsNullOrWhiteSpace(titleFilter) || string.IsNullOrWhiteSpace(processFilter)
+            || !IsWindow(window) || !IsWindowVisible(window) || (!includeMinimized && IsIconic(window))) return null;
+        GetWindowThreadProcessId(window, out var processId);
+        if (processId == (uint)Environment.ProcessId) return null;
+        var titleLength = GetWindowTextLength(window);
+        if (titleLength <= 0) return null;
+        var text = new StringBuilder(titleLength + 1);
+        GetWindowText(window, text, text.Capacity);
+        var title = text.ToString();
+        if (!title.Contains(titleFilter, StringComparison.OrdinalIgnoreCase)) return null;
+        try
+        {
+            using var process = Process.GetProcessById((int)processId);
+            if (!process.ProcessName.Contains(processFilter, StringComparison.OrdinalIgnoreCase)) return null;
+        }
+        catch (ArgumentException) { return null; }
+        catch (InvalidOperationException) { return null; }
+        catch (System.ComponentModel.Win32Exception) { return null; }
+        if (includeMinimized && IsIconic(window)) return new(window, title, Rectangle.Empty);
+        if (!GetClientRect(window, out var client)) return null;
+        var origin = new NativePoint();
+        if (!ClientToScreen(window, ref origin)) return null;
+        var bounds = new Rectangle(origin.X, origin.Y, client.Right - client.Left, client.Bottom - client.Top);
+        return bounds.Width >= 100 && bounds.Height >= 100 ? new(window, title, bounds) : null;
     }
 
     private sealed record GameWindow(IntPtr Handle, string Title, Rectangle Bounds);

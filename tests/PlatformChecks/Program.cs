@@ -51,8 +51,14 @@ internal static class Program
             var geometry = service.ResolveTarget(settings);
             Check(geometry is not null && geometry.Bounds == expected, "separate-process physical client bounds");
             Check(geometry!.IsCalibrated, "16:9 client initially calibrated");
+            Check(service.RevalidateTarget(geometry, settings)?.Bounds == expected, "direct input validation retains physical client bounds");
+            var matchingTitle = settings.WindowTitleContains;
+            settings.WindowTitleContains = "wrong-title";
+            Check(service.RevalidateTarget(geometry, settings) is null, "direct input validation rejects changed title filter");
+            settings.WindowTitleContains = matchingTitle;
             settings.ProcessNameContains = "wrong-process";
             Check(service.ResolveTarget(settings) is null, "title match cannot bypass process filter");
+            Check(service.RevalidateTarget(geometry, settings) is null, "direct input validation cannot bypass process filter");
             Check(!service.TryBringGameToForeground(settings), "focus respects the process filter");
             settings.ProcessNameContains = child.ProcessName;
             var monitor = monitors.Single(m => m.Bounds.Contains(expected));
@@ -60,14 +66,18 @@ internal static class Program
             Check(service.ResolveTarget(settings)?.Bounds == expected, "fixed monitor preserves windowed client bounds");
             settings.MonitorId = "missing-monitor";
             Check(service.ResolveTarget(settings) is null, "missing monitor does not silently fall back");
+            Check(service.RevalidateTarget(geometry, settings) is null, "direct input validation rejects missing monitor");
             settings.MonitorId = monitor.Id;
             settings.ManualBounds = new Rectangle(expected.X + 10, expected.Y + 10, 200, 150);
             var manual = service.ResolveTarget(settings);
             Check(manual?.Bounds == settings.ManualBounds && !manual.IsCalibrated, "manual bounds and uncalibrated aspect ratio");
+            Check(service.RevalidateTarget(geometry, settings)?.Bounds == settings.ManualBounds
+                && service.RevalidateTarget(geometry, settings)?.IsCalibrated == false, "direct input validation recomputes manual bounds and calibration");
             settings.GeometryCalibrated = true;
             Check(service.ResolveTarget(settings)?.IsCalibrated == true, "explicit geometry calibration");
             settings.ManualBounds = new Rectangle(expected.X - 10, expected.Y, 200, 150);
             Check(service.ResolveTarget(settings) is null, "manual bounds cannot escape game client");
+            Check(service.RevalidateTarget(geometry, settings) is null, "direct input validation rejects escaped manual bounds");
             settings.ManualBounds = null;
             using (var competitor = new Form { Text = "WardogsFocusCheck", ClientSize = new Size(240, 120) })
             {
@@ -79,6 +89,7 @@ internal static class Program
             }
             ShowWindow(geometry.WindowHandle, 6); // SW_MINIMIZE
             Check(IsIconic(geometry.WindowHandle) && service.ResolveTarget(settings) is null, "minimized game excluded from capture");
+            Check(service.RevalidateTarget(geometry, settings) is null, "direct input validation rejects minimized target");
             bool activated = service.TryBringGameToForeground(settings);
             Check(!IsIconic(geometry.WindowHandle) && service.ResolveTarget(settings) is not null, "activation restores minimized game");
             Check(activated == (service.ResolveTarget(settings)?.IsForeground == true), "foreground result reports actual focus");

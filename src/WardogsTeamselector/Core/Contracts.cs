@@ -75,6 +75,9 @@ public interface IScreenService
 {
     IReadOnlyList<MonitorInfo> GetMonitors();
     TargetGeometry? ResolveTarget(AppSettings settings);
+    // Recheck the captured window immediately before input without rediscovering
+    // all desktop windows. Other screen implementations retain the full check.
+    TargetGeometry? RevalidateTarget(TargetGeometry target, AppSettings settings) => ResolveTarget(settings);
     CaptureFrame Capture(TargetGeometry target);
 }
 public interface IDialogDetector { DetectionResult Detect(CaptureFrame frame, AppSettings settings); }

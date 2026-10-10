@@ -11,12 +11,45 @@ static async Task Until(Func<bool> condition, string message)
     Check(condition(), message);
 }
 static AppSettings Settings() => new() { DryRun = false, GeometryCalibrated = true, MinIntervalMs = 50, MaxIntervalMs = 50 };
+static async Task CheckClickRevalidation()
+{
+    var screen = new FakeScreen { ResolveDelayMs = 150 };
+    var detector = new FakeDetector { Match = true };
+    var sink = new FakeSink();
+    using var control = new AutomationController(screen, detector, sink, new FakeJoinedDetector());
+    control.Start(Team.Blue, Settings());
+    await Until(() => sink.Count > 0, "Focused active run never clicked when window discovery takes over 100ms");
+    control.Stop();
+
+    screen.ResolveDelayMs = 0; screen.ValidationLosesFocus = true;
+    var count = sink.Count;
+    control.Start(Team.Blue, Settings());
+    await Until(() => control.Snapshot.Reason == "Fokus oder Spielbereich vor Klick geändert", "Focus loss at input validation is not visible");
+    Check(sink.Count == count, "Click escaped final foreground validation");
+    screen.ValidationLosesFocus = false;
+    await Until(() => sink.Count > count, "Fresh foreground validation did not release waiting clicks");
+    control.Stop();
+
+    detector.DelayMs = 150; count = sink.Count;
+    control.Start(Team.Blue, Settings());
+    await Until(() => control.Snapshot.Reason == "Bildschirmaufnahme zu alt", "Stale capture silently leaves an active run waiting");
+    Check(sink.Count == count, "Stale capture was allowed to click");
+    detector.DelayMs = 0;
+    await Until(() => sink.Count > count, "Fresh captures did not recover waiting clicks");
+    control.Stop();
+    Console.WriteLine("PASS: slow discovery, final foreground gate, stale-capture reason and recovery.");
+}
 
 var screen = new FakeScreen();
 var detector = new FakeDetector();
 var sink = new FakeSink();
 var hud = new FakeJoinedDetector();
 using var control = new AutomationController(screen, detector, sink, hud);
+if (args.Contains("--slow-target"))
+{
+    await CheckClickRevalidation();
+    return;
+}
 foreach (var pair in new[] { (49, 100), (50, 49), (-1, -1), (50, 60001) })
 {
     var bad = Settings(); bad.MinIntervalMs = pair.Item1; bad.MaxIntervalMs = pair.Item2;
@@ -199,23 +232,34 @@ await Until(() => control.Snapshot.State == RunState.Clicking, "Lease renewal ru
 control.RenewOnlineLease(Stopwatch.GetTimestamp() + Stopwatch.Frequency);
 await Task.Delay(400); Check(control.Snapshot.State == RunState.Clicking, "Fresh authorized renewal did not extend the lease");
 control.Stop();
+await CheckClickRevalidation();
 Console.WriteLine("PASS: timing validation, armed waiting, stable detection, focus/calibration, continuous clicking beyond former absence timeout, mandatory HUD confirmation/flicker/focus/overlap, geometry, deep settings snapshot, cancellation, concurrent starts, dry-run, capture failure, in-flight Stop synchronization.");
 
 sealed class FakeScreen : IScreenService
 {
     public volatile bool Foreground = true, Calibrated = true, Fail;
     public volatile int Width = 1000;
+    public volatile int ResolveDelayMs;
+    public volatile bool ValidationLosesFocus;
     public IReadOnlyList<MonitorInfo> GetMonitors() => [];
-    public TargetGeometry? ResolveTarget(AppSettings settings) => new(new(0, 0, Width, 600), new IntPtr(42), Foreground, "Fake", Calibrated);
+    public TargetGeometry? ResolveTarget(AppSettings settings)
+    {
+        if (ResolveDelayMs > 0) Thread.Sleep(ResolveDelayMs);
+        return new(new(0, 0, Width, 600), new IntPtr(42), Foreground, "Fake", Calibrated);
+    }
+    public TargetGeometry? RevalidateTarget(TargetGeometry target, AppSettings settings) =>
+        new(new(0, 0, Width, 600), new IntPtr(42), Foreground && !ValidationLosesFocus, "Fake", Calibrated);
     public CaptureFrame Capture(TargetGeometry target) => Fail ? throw new InvalidOperationException("Fake capture failure") : new(new Bitmap(1, 1), target);
 }
 sealed class FakeDetector : IDialogDetector
 {
     public volatile bool Match;
+    public volatile int DelayMs;
     public int Calls;
     public readonly ConcurrentQueue<bool> Samples = new();
     public DetectionResult Detect(CaptureFrame frame, AppSettings settings)
     {
+        if (DelayMs > 0) Thread.Sleep(DelayMs);
         Interlocked.Increment(ref Calls);
         var match = Samples.TryDequeue(out var sample) ? sample : Match;
         return new(match, match ? 1 : 0, [], "Fake");

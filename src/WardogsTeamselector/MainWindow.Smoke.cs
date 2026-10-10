@@ -269,6 +269,19 @@ public sealed partial class MainWindow
         }
         var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
         groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
+        ApplyGroupConnectionState(fixtureGeneration, true, "Verbunden · Zustandsprüfung alle 15 Sekunden");
+        Check(groupStatus.Text.Contains(TeamName(Team.Red)) && groupStatus.Text.Contains(fixtureOwner.Name)
+            && groupStatus.Text.Contains("Verbunden"), "Connected Auto retains the group and selected team");
+        ApplyGroupConnectionState(fixtureGeneration, false, "Verbindung unterbrochen");
+        Check(groupStatus.Text.Contains(TeamName(Team.Red)) && groupStatus.Text.Contains("Verbindung unterbrochen"),
+            "Connection loss retains the last team alongside the offline status");
+        groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
+        ApplyGroupConnectionState(fixtureGeneration, true, "Verbunden · Zustandsprüfung alle 15 Sekunden");
+        Check(groupStatus.Text.Contains(TeamName(Team.Red)) && groupStatus.Text.Contains("Verbunden"),
+            "Reconnect retains the selected team");
+        var connectedStatus = groupStatus.Text;
+        ApplyGroupConnectionState(fixtureGeneration - 1, false, "Old connection");
+        Check(groupStatus.Text == connectedStatus, "Previous session cannot overwrite the connected team display");
         UpdateGroupControls(); Check(groupStopButton.IsEnabled, "Global Stop is available while Auto waits");
         followedSettings = new AppSettings(); followedMembership = fixtureOwner;
         groupUiLoading = true; groupAuto.IsChecked = true; groupUiLoading = false;

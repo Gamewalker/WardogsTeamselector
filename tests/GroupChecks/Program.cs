@@ -85,6 +85,27 @@ var noSelection = await repeated.RefreshForJoinAsync(repeatGeneration, _ => Task
 repeated.Apply(repeatGeneration, noSelection!, Stopwatch.GetTimestamp());
 Check(repeated.HasCurrentState(repeatGeneration, Stopwatch.GetTimestamp()) && !repeated.CanRun(repeatGeneration, Stopwatch.GetTimestamp()),
     "Auto can observe a dialog while the leader has not published a team");
+repeated.Apply(repeatGeneration, Snapshot(group, 2, 1, "Red"), Stopwatch.GetTimestamp());
+var publicationRead = false;
+Check((await repeated.RefreshForJoinAsync(repeatGeneration, _ => { publicationRead = true; return Task.FromResult(Snapshot(group, 2, 1, "Red")); }, CancellationToken.None))?.Team == "Red" && publicationRead,
+    "Publishing a team releases the no-selection wait without a 15-second delay");
+
+repeatGeneration = repeated.Begin(group, true);
+repeated.Apply(repeatGeneration, Snapshot(group), Stopwatch.GetTimestamp());
+pendingRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
+confirmation = repeated.RefreshForJoinAsync(repeatGeneration, _ => pendingRead.Task, CancellationToken.None);
+repeated.Apply(repeatGeneration, Snapshot(group, 2, 2, "Green"), Stopwatch.GetTimestamp());
+pendingRead.SetResult(Snapshot(group));
+Check((await confirmation)?.Team == "Green", "Publication during HTTP confirmation uses the newer pushed team immediately");
+
+repeatGeneration = repeated.Begin(group, true);
+repeated.Apply(repeatGeneration, Snapshot(group), Stopwatch.GetTimestamp());
+pendingRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
+confirmation = repeated.RefreshForJoinAsync(repeatGeneration, _ => pendingRead.Task, CancellationToken.None);
+repeated.Apply(repeatGeneration, Snapshot(group, 2, 2, "Green"), Stopwatch.GetTimestamp());
+repeated.Disconnected(repeatGeneration);
+pendingRead.SetResult(Snapshot(group));
+Check(await confirmation == null, "Disconnected pushed state cannot replace an older HTTP confirmation");
 
 var invite = GroupMembership.NewToken();
 var parsed = GroupServiceAddress.ParseInvitation($"https://groups.example/invite/{group.GroupId}#{invite}");

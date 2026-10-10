@@ -27,6 +27,14 @@ bleibt die stabile Dialogerkennung erforderlich; ein bereits sichtbarer
 Folgescreen kann den wartenden Lauf über die HUD-Prüfung beenden.
 `JoinedDetection` liefert die HUD-Diagnose.
 
+Unmittelbar vor Klick und HUD-Bestätigung wird das bereits aufgenommene Fenster
+direkt erneut geprüft. Diese Prüfung sucht nicht nochmals alle Desktopfenster,
+sondern kontrolliert denselben Fensterhandle einschließlich Prozess-/Titelfilter,
+Sichtbarkeit, Spielfokus, Monitorbindung und aktuellem Clientbereich. Die
+100-ms-Grenze für das Aufnahmealter bleibt bestehen. Auch vor dem ersten Klick
+zeigt der Status eine zu alte Aufnahme oder einen bei der letzten Prüfung
+geänderten Fokus/Spielbereich ausdrücklich an.
+
 `Stop` synchronisiert sich mit der Eingabesenke. Nach seiner Rückkehr kann der
 beendete Lauf keinen weiteren Klick senden. Ein neu gestarteter Lauf ist eine
 separate explizite Aktivierung. `Updated` wird unter der Steuerungssperre auf

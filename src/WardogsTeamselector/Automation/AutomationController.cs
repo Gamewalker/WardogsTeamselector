@@ -140,7 +140,7 @@ public sealed class AutomationController : IDisposable
                     session.JoinedStable++;
                     if (session.JoinedStable >= 3 && Stopwatch.GetElapsedTime(session.JoinedSince.Value, now).TotalMilliseconds >= 500)
                     {
-                        var hudFresh = screen.ResolveTarget(session.Settings);
+                        var hudFresh = screen.RevalidateTarget(target, session.Settings);
                         if (hudFresh is null || !hudFresh.IsForeground || !SameGeometry(target, hudFresh) || (DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100)
                         {
                             session.JoinedSince = null; session.JoinedStable = 0;
@@ -171,14 +171,20 @@ public sealed class AutomationController : IDisposable
                     return;
                 }
                 // Revalidate foreground immediately before SendInput; no click based on a stale capture.
-                var fresh = screen.ResolveTarget(session.Settings);
+                var fresh = screen.RevalidateTarget(target, session.Settings);
                 if (fresh is null || !fresh.IsForeground || !SameGeometry(target, fresh) || (!fresh.IsCalibrated && !session.Settings.DryRun))
                 {
                     if (session.Started) StopLocked("Fokus oder Spielbereich vor Klick geändert");
-                    else session.Stable = 0;
+                    else { session.Stable = 0; Publish(snapshot with { Geometry = fresh, Reason = "Fokus oder Spielbereich vor Klick geändert" }); }
                     return;
                 }
-                if ((DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100) { session.Stable = 0; if (session.Started) StopLocked("Bildschirmaufnahme zu alt"); return; }
+                if ((DateTimeOffset.Now - frame.CapturedAt).TotalMilliseconds > 100)
+                {
+                    session.Stable = 0;
+                    if (session.Started) StopLocked("Bildschirmaufnahme zu alt");
+                    else Publish(snapshot with { Reason = "Bildschirmaufnahme zu alt" });
+                    return;
+                }
                 var point = session.Settings.Regions.Single(r => r.Team == session.Team).Center(target.Bounds);
                 // Enforce the group lease on the input worker, even if WPF is busy.
                 if (LeaseExpired(session)) { StopLocked("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); return; }

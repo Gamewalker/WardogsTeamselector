@@ -396,14 +396,19 @@ public sealed partial class MainWindow
             groupSync.Updated += update => Dispatcher.BeginInvoke(() => { if (!closing) ApplyFollowedGroup(generation, group, update); });
             groupSync.ConnectionChanged += (online, reason) => Dispatcher.BeginInvoke(() =>
             {
-                if (closing || generation != groupFollow.Generation || !groupFollow.Enabled) return;
-                if (!online) { groupFollow.Disconnected(generation); automation.Observe(groupFollow.Auto ? followedSettings : null); automation.Stop("Gruppenverbindung pausiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; }
-                groupStatus.Text = reason; UpdateGroupControls();
+                ApplyGroupConnectionState(generation, online, reason);
             });
             groupSync.Start();
             if (!smokeMode && config.FocusGameOnTeamActivation) screen.TryBringGameToForeground(config);
         }
         catch { if (generation == groupFollow.Generation) StopAll("Gruppenbeitritt fehlgeschlagen"); throw; }
+    }
+    private void ApplyGroupConnectionState(long generation, bool online, string reason)
+    {
+        if (closing || generation != groupFollow.Generation || !groupFollow.Enabled) return;
+        if (!online) { groupFollow.Disconnected(generation); automation.Observe(groupFollow.Auto ? followedSettings : null); automation.Stop("Gruppenverbindung pausiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; }
+        groupStatus.Text = selectedGroupSnapshot == null ? reason : DescribeGroup(selectedGroupSnapshot) + "\n" + reason;
+        UpdateGroupControls();
     }
     private void ApplyFollowedGroup(long generation, GroupMembership group, GroupSnapshot snapshot)
     {

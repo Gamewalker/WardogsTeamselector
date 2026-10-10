@@ -18,6 +18,8 @@ public sealed class GroupFollowCoordinator
     public long Revision { get; private set; }
     public long SelectionVersion { get; private set; }
     private long lastReceipt;
+    private GroupSnapshot? currentSnapshot;
+    private bool waitingForSelection;
     private long joinRefreshAttempt, nextJoinRefresh;
     public bool JoinRefreshPending { get; private set; }
     public long OnlineLeaseDeadline => lastReceipt + System.Diagnostics.Stopwatch.Frequency * 75;
@@ -26,7 +28,7 @@ public sealed class GroupFollowCoordinator
         Stop(); GroupId = group.GroupId; ServiceUrl = group.ServiceUrl; Auto = auto; Enabled = true;
         return Generation;
     }
-    public void Stop() { Generation++; joinRefreshAttempt++; JoinRefreshPending = false; nextJoinRefresh = 0; Enabled = false; Auto = false; Online = false; Team = null; Revision = 0; SelectionVersion = 0; }
+    public void Stop() { Generation++; joinRefreshAttempt++; JoinRefreshPending = false; nextJoinRefresh = 0; waitingForSelection = false; currentSnapshot = null; lastReceipt = 0; Enabled = false; Auto = false; Online = false; Team = null; Revision = 0; SelectionVersion = 0; }
     public void Disconnected(long generation) { if (Generation == generation) Online = false; }
     public bool Apply(long generation, GroupSnapshot snapshot, long timestamp)
     {
@@ -34,7 +36,11 @@ public sealed class GroupFollowCoordinator
         if (snapshot.YourStatus != "Approved") { Online = false; Team = null; return true; }
         var changed = snapshot.SelectionVersion != SelectionVersion || snapshot.Team != Team;
         Revision = snapshot.Revision; SelectionVersion = snapshot.SelectionVersion; Team = snapshot.Team;
-        Online = true; lastReceipt = timestamp; return changed;
+        Online = true; lastReceipt = timestamp; currentSnapshot = snapshot;
+        // A publication ends the wait for a missing selection immediately. Keep
+        // transport-error backoff intact so it cannot exhaust the call budget.
+        if (waitingForSelection && Team != null) { waitingForSelection = false; nextJoinRefresh = 0; }
+        return changed;
     }
     public bool HasCurrentState(long generation, long timestamp) => Enabled && Generation == generation && Online && Stopwatch.GetElapsedTime(lastReceipt, timestamp).TotalSeconds <= 75;
     public bool CanRun(long generation, long timestamp) => Team != null && HasCurrentState(generation, timestamp);
@@ -44,20 +50,28 @@ public sealed class GroupFollowCoordinator
     {
         if (!Enabled || generation != Generation || JoinRefreshPending || Stopwatch.GetTimestamp() < nextJoinRefresh) return null;
         var attempt = ++joinRefreshAttempt;
+        var requestedAt = Stopwatch.GetTimestamp();
         JoinRefreshPending = true;
         try
         {
             var snapshot = await refresh(cancellation);
             cancellation.ThrowIfCancellationRequested();
             if (!Enabled || generation != Generation || snapshot.GroupId != GroupId) return null;
-            if (snapshot.Revision < Revision) { nextJoinRefresh = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15; return null; }
-            nextJoinRefresh = snapshot.Team == null ? Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15 : 0;
+            // A pushed update received during this request is a newer server
+            // confirmation. An older HTTP response must not delay that team.
+            if (snapshot.Revision < Revision)
+            {
+                if (Online && lastReceipt >= requestedAt && currentSnapshot != null) snapshot = currentSnapshot;
+                else { nextJoinRefresh = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15; return null; }
+            }
+            waitingForSelection = snapshot.Team == null;
+            nextJoinRefresh = waitingForSelection ? Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15 : 0;
             return snapshot;
         }
         catch
         {
             // Leave room for the 15-second background sync within the ten-call budget.
-            if (attempt == joinRefreshAttempt) nextJoinRefresh = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15;
+            if (attempt == joinRefreshAttempt) { waitingForSelection = false; nextJoinRefresh = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 15; }
             throw;
         }
         finally { if (attempt == joinRefreshAttempt) JoinRefreshPending = false; }
