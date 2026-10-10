@@ -1,6 +1,6 @@
 # Wardogs-Gruppendienst
 
-Cloudflare Worker mit einem **SQLite-basierten Durable Object pro Gruppe**. Benötigt ausschließlich Workers Free. Es werden keine zusätzlichen D1-, KV-, R2-, Queue- oder kostenpflichtigen Ressourcen angelegt. WebSockets verwenden die Hibernation-API; minütliche Zustandsabfragen kommen vom Client, nicht von Server-Timern.
+Cloudflare Worker mit einem **SQLite-basierten Durable Object pro Gruppe**. Benötigt ausschließlich Workers Free. Es werden keine zusätzlichen D1-, KV-, R2-, Queue- oder kostenpflichtigen Ressourcen angelegt. WebSockets verwenden die Hibernation-API; Zustandsabfragen alle 15 Sekunden kommen vom Client, nicht von Server-Timern.
 
 ## Lokal prüfen
 
@@ -14,7 +14,7 @@ npm run check
 npm run dev
 ```
 
-Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lokale HTTP-Adresse ist im Windows-Client erlaubt; öffentliche Dienste benötigen HTTPS. Die Tests verwenden echte Worker- und Durable-Object-Instanzen in Miniflare und benötigen keine Cloudflare-Zugangsdaten. `test:client` benötigt zusätzlich das .NET-10-SDK und prüft den tatsächlichen Desktop-HTTP-/WebSocket-Client einschließlich des geplanten Minutenabgleichs; der Lauf dauert etwa eine Minute.
+Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lokale HTTP-Adresse ist im Windows-Client erlaubt; öffentliche Dienste benötigen HTTPS. Die Tests verwenden echte Worker- und Durable-Object-Instanzen in Miniflare und benötigen keine Cloudflare-Zugangsdaten. `test:client` benötigt zusätzlich das .NET-10-SDK und prüft den tatsächlichen Desktop-HTTP-/WebSocket-Client einschließlich des geplanten 15-Sekunden-Abgleichs; der Lauf dauert etwa 20 Sekunden.
 
 ## Ausschließlich kostenlos bereitstellen
 
@@ -46,7 +46,7 @@ Alle Daten sind JSON, Protokollversion 1. Einladungslinks verwenden `/invite/<gr
 
 IDs bestehen aus 32 zufälligen Hex-Zeichen; Tokens aus 32 zufälligen Bytes in Base64url (43 Zeichen). Der Server speichert SHA-256-Hashes der Zugangsdaten. Zustände enthalten keine Tokens oder Token-Hashes. Namen sind reine Anzeigenamen.
 
-Grenzen: 48 Zeichen pro Name, 50 bestätigte Mitglieder, 50 offene Anfragen, sieben Tage Anfragegültigkeit, begrenzte Tombstones und zuletzt 200 Schreiboperationen zur Deduplizierung. API-Anfragen sind auf 8 KiB begrenzt. Die Gruppenverwaltung sieht offene Anfragen; normale Mitglieder erhalten diese Liste nicht.
+Grenzen: 48 Zeichen pro Name, 50 bestätigte Mitglieder, 50 offene Anfragen, sieben Tage Anfragegültigkeit, begrenzte Tombstones und zuletzt 200 Schreiboperationen zur Deduplizierung. API-Anfragen sind auf 8 KiB begrenzt. Pro Mitglied sind höchstens zehn Aufrufe pro Minute erlaubt; HTTP-Zustandsabfragen, Schreibaktionen, WebSocket-Verbindungsaufbau und Sync-Nachrichten teilen sich dieses Budget. Die Gruppenverwaltung sieht offene Anfragen; normale Mitglieder erhalten diese Liste nicht.
 
 ## Kosten und Ausfälle
 

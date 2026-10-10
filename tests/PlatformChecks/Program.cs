@@ -100,6 +100,27 @@ internal static class Program
         Check(Marshal.SizeOf(input) == (IntPtr.Size == 8 ? 40 : 28), "native INPUT ABI size");
         Check(Marshal.OffsetOf(input, "Data").ToInt32() == (IntPtr.Size == 8 ? 8 : 4), "native INPUT union alignment");
         Check(Marshal.SizeOf(mouse) == (IntPtr.Size == 8 ? 32 : 24), "native MOUSEINPUT ABI size");
+
+        var buildInputs = typeof(WindowsClickSink).GetMethod("BuildInputs", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var desktop = new Rectangle(-1920, -200, 3840, 1280);
+        var monitorBounds = new Rectangle(-1920, -200, 1920, 1080);
+        foreach (var point in new[] { new Point(-900, 300), new Point(-1, 300), new Point(-1920, -200) })
+        {
+            // Inspect the native packets without calling SendInput or moving the pointer.
+            var packets = (Array)buildInputs.Invoke(null, new object[] { point, desktop, monitorBounds })!;
+            object Packet(int index) => input.GetField("Data")!.GetValue(packets.GetValue(index))!.GetType()
+                .GetField("Mouse")!.GetValue(input.GetField("Data")!.GetValue(packets.GetValue(index)))!;
+            int Coordinate(int index, string name) => (int)mouse.GetField(name)!.GetValue(Packet(index))!;
+            uint Flags(int index) => (uint)mouse.GetField("Flags")!.GetValue(Packet(index))!;
+            int Normalize(int value, int origin, int length) => (int)Math.Round(((long)value - origin) * 65535d / (length - 1));
+            var adjacentX = point.X < monitorBounds.Right - 1 ? point.X + 1 : point.X - 1;
+            Check(packets.Length == 4 && Coordinate(0, "X") == Normalize(adjacentX, desktop.Left, desktop.Width)
+                && Coordinate(1, "X") == Normalize(point.X, desktop.Left, desktop.Width), "real movement then exact click target, including monitor edges");
+            Check(Coordinate(0, "Y") == Normalize(point.Y, desktop.Top, desktop.Height)
+                && Coordinate(1, "Y") == Coordinate(0, "Y"), "movement retains Y on negative-origin desktop");
+            Check(Flags(0) == 0xe001 && Flags(1) == 0xe001 && Flags(2) == 2 && Flags(3) == 4,
+                "uncoalesced absolute moves precede one button press and release");
+        }
     }
 
     private static int Helper(string title)

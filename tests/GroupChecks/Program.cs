@@ -34,6 +34,51 @@ Check(!follower.Apply(newer, Snapshot(group, 5, 4), now), "Other group ID reject
 follower.Apply(newer, Snapshot(other, 1, 0, null), now); Check(follower.Enabled && !follower.CanRun(newer, now), "Auto may wait for no selection");
 follower.Apply(newer, Snapshot(other, 2, 1, "Blue", "Removed"), now); Check(!follower.CanRun(newer, now), "Removal revokes click gate");
 
+// A fresh server read is required for each newly detected selection dialog.
+var repeated = new GroupFollowCoordinator();
+var repeatGeneration = repeated.Begin(group, true);
+repeated.Apply(repeatGeneration, Snapshot(group), Stopwatch.GetTimestamp());
+var pendingRead = new TaskCompletionSource<GroupSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+var confirmation = repeated.RefreshForJoinAsync(repeatGeneration, _ => pendingRead.Task, CancellationToken.None);
+Check(repeated.JoinRefreshPending && !confirmation.IsCompleted, "New dialog waits for server confirmation");
+var duplicateRead = false;
+Check(await repeated.RefreshForJoinAsync(repeatGeneration, _ => { duplicateRead = true; return Task.FromResult(Snapshot(group)); }, CancellationToken.None) == null && !duplicateRead, "Pending confirmation cannot send duplicate calls");
+pendingRead.SetResult(Snapshot(group, 2, 2, "Red"));
+var confirmed = await confirmation;
+Check(confirmed?.Team == "Red", "Fresh dialog confirmation uses the leader's new team");
+repeated.Apply(repeatGeneration, confirmed!, Stopwatch.GetTimestamp());
+Check(repeated.Enabled && repeated.Auto && repeated.Team == "Red", "Auto remains enabled for subsequent dialogs");
+var secondConfirmation = await repeated.RefreshForJoinAsync(repeatGeneration, _ => Task.FromResult(Snapshot(group, 3, 3, "Green")), CancellationToken.None);
+Check(secondConfirmation?.Team == "Green", "Subsequent dialog performs another server read");
+
+pendingRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
+confirmation = repeated.RefreshForJoinAsync(repeatGeneration, _ => pendingRead.Task, CancellationToken.None);
+repeated.Stop();
+var nextGeneration = repeated.Begin(other, true);
+var nextRead = new TaskCompletionSource<GroupSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
+var nextConfirmation = repeated.RefreshForJoinAsync(nextGeneration, _ => nextRead.Task, CancellationToken.None);
+pendingRead.SetResult(Snapshot(group, 4, 4));
+Check(await confirmation == null && repeated.JoinRefreshPending, "Stopped generation cannot start input or clear another group's pending read");
+nextRead.SetResult(Snapshot(other)); await nextConfirmation;
+Check(!repeated.JoinRefreshPending, "Current confirmation releases its own pending guard");
+
+repeatGeneration = repeated.Begin(group, true);
+repeated.Apply(repeatGeneration, Snapshot(group, 5, 5), Stopwatch.GetTimestamp());
+Check(await repeated.RefreshForJoinAsync(repeatGeneration, _ => Task.FromResult(Snapshot(group, 4, 4, "Red")), CancellationToken.None) == null,
+    "Delayed HTTP state cannot override a newer pushed selection");
+repeatGeneration = repeated.Begin(group, true);
+repeated.Apply(repeatGeneration, Snapshot(group), Stopwatch.GetTimestamp());
+try { await repeated.RefreshForJoinAsync(repeatGeneration, _ => Task.FromException<GroupSnapshot>(new HttpRequestException()), CancellationToken.None); Check(false, "Offline confirmation must fail"); }
+catch (HttpRequestException) { Check(repeated.Enabled && repeated.Auto && !repeated.JoinRefreshPending, "Failed confirmation leaves Auto waiting without starting input"); }
+var retriedRead = false;
+Check(await repeated.RefreshForJoinAsync(repeatGeneration, _ => { retriedRead = true; return Task.FromResult(Snapshot(group)); }, CancellationToken.None) == null && !retriedRead,
+    "Failed confirmation backs off instead of exhausting the call budget");
+repeatGeneration = repeated.Begin(group, true);
+var noSelection = await repeated.RefreshForJoinAsync(repeatGeneration, _ => Task.FromResult(Snapshot(group, 1, 0, null)), CancellationToken.None);
+repeated.Apply(repeatGeneration, noSelection!, Stopwatch.GetTimestamp());
+Check(repeated.HasCurrentState(repeatGeneration, Stopwatch.GetTimestamp()) && !repeated.CanRun(repeatGeneration, Stopwatch.GetTimestamp()),
+    "Auto can observe a dialog while the leader has not published a team");
+
 var invite = GroupMembership.NewToken();
 var parsed = GroupServiceAddress.ParseInvitation($"https://groups.example/invite/{group.GroupId}#{invite}");
 Check(parsed.ServiceUrl == group.ServiceUrl && parsed.GroupId == group.GroupId && parsed.InviteToken == invite, "Invitation retains secret fragment");
@@ -117,11 +162,11 @@ if (args.Length == 2 && args[0] == "--live")
         var waiting = Stopwatch.StartNew();
         while (!updates.Any(x => x.State.Team == "Red") && waiting.Elapsed.TotalSeconds < 10) await Task.Delay(20);
         Check(updates.Any(x => x.State.Team == "Red"), "Real .NET WebSocket receives immediate publication");
-        Console.WriteLine("Live client: connected and Red received; checking the scheduled minute sync.");
+        Console.WriteLine("Live client: connected and Red received; checking the scheduled 15-second sync.");
         var heartbeatStart = Stopwatch.GetTimestamp();
         waiting.Restart();
-        while (!updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 45) && waiting.Elapsed.TotalSeconds < 65) await Task.Delay(100);
-        Check(updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 45), "Real minute sync refreshes unchanged authorized state");
+        while (!updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 12) && waiting.Elapsed.TotalSeconds < 25) await Task.Delay(100);
+        Check(updates.Any(x => x.State.Team == "Red" && Stopwatch.GetElapsedTime(heartbeatStart, x.Time).TotalSeconds >= 12), "Real 15-second sync refreshes unchanged authorized state");
         await realApi.ActionAsync(owner, "remove", new { operationId = GroupMembership.NewId(), memberId = member.MemberId });
         await revoked.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Check(true, "Real removal revokes .NET WebSocket membership");
@@ -134,7 +179,7 @@ if (args.Length == 2 && args[0] == "--live")
         try { await realApi.GetAsync(oldAdmin); Check(false, "Previous admin access must be revoked after exclusive takeover"); }
         catch (GroupApiException ex) { Check(ex.AccessRevoked, "Exclusive admin takeover revokes the source instance"); }
         Check((await realApi.GetAsync(transferred)).YourRole == "Owner", "Recipient retains administration after exclusive takeover");
-        Console.WriteLine("Live client: minute sync and removal passed.");
+        Console.WriteLine("Live client: 15-second sync and removal passed.");
     }
     finally { await realApi.ActionAsync(owner, "delete", new { operationId = GroupMembership.NewId() }); }
 }

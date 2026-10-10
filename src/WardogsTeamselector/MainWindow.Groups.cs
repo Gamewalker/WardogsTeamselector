@@ -39,6 +39,8 @@ public sealed partial class MainWindow
     private bool groupUiLoading, groupBusy, groupStorageFailed;
     private int stableGroupDialog;
     private long lastGroupObservation;
+    private bool groupDialogFocusRequested;
+    private CancellationTokenSource? groupJoinRefresh;
     private Button groupStopButton = null!;
     private Button groupJoinButton = null!;
     private readonly System.Collections.Generic.List<Button> groupOwnerButtons = new();
@@ -364,11 +366,11 @@ public sealed partial class MainWindow
         group.Apply(snapshot);
         try { SaveGroups(); } catch { StopAll("Gruppenspeicher nicht verfügbar"); groupStatus.Text = "Gruppenspeicher nicht verfügbar · Auto wurde gestoppt."; return; }
         selectedGroupSnapshot = snapshot;
-        groupStatus.Text = DescribeGroup(snapshot) + "\nOnline · Zustandsprüfung mindestens jede Minute";
+        groupStatus.Text = DescribeGroup(snapshot) + "\nOnline · Zustandsprüfung alle 15 Sekunden";
         if (snapshot.YourStatus != "Approved") { StopAll("Mitgliedschaft beendet"); ReloadGroupPickers(); return; }
         if (changed) { automation.Stop("Gruppenauswahl aktualisiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; lastGroupObservation = 0; }
         automation.RenewOnlineLease(groupFollow.OnlineLeaseDeadline);
-        if (followedSettings != null) automation.Observe(snapshot.Team == null ? null : followedSettings);
+        if (followedSettings != null) automation.Observe(groupFollow.Auto || snapshot.Team != null ? followedSettings : null);
         UpdateGroupControls();
     }
     private void TickGroupFollow()
@@ -376,21 +378,77 @@ public sealed partial class MainWindow
         if (!groupFollow.Enabled || followedSettings == null || closing) return;
         var current = automation.Snapshot;
         if (current.State == RunState.Stopped && current.StopCause is AutomationStopCause.Manual or AutomationStopCause.Safety) { StopGroupFollow(); return; }
-        if (!groupFollow.CanRun(groupFollow.Generation, Stopwatch.GetTimestamp()))
+        if (!groupFollow.HasCurrentState(groupFollow.Generation, Stopwatch.GetTimestamp()))
         {
             if (!groupFollow.Online || groupFollow.Team != null) { automation.Observe(null); if (current.State != RunState.Stopped) automation.Stop("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); }
             stableGroupDialog = 0; return;
         }
         if (current.State != RunState.Stopped) return;
         if (current.StopCause == AutomationStopCause.Joined && !groupFollow.Auto) { StopGroupFollow(); return; }
-        if (current.Detection?.IsMatch != true || current.JoinedDetection?.IsMatch == true || current.Geometry?.IsForeground != true || (!followedSettings.DryRun && !current.Geometry.IsCalibrated)) { stableGroupDialog = 0; return; }
+        UpdateRunDisplay(current);
+        if (groupFollow.JoinRefreshPending) return;
+        if (!GroupDialogReady(current, followedSettings, focusGame.IsChecked == true,
+            () => { if (!smokeMode) screen.TryBringGameToForeground(followedSettings); })) { stableGroupDialog = 0; return; }
         // Distinct sparse observations, followed by the controller's own three-frame validation.
         var timestamp = Stopwatch.GetTimestamp();
         if (lastGroupObservation != 0 && Stopwatch.GetElapsedTime(lastGroupObservation, timestamp).TotalMilliseconds < 240) return;
         lastGroupObservation = timestamp;
         if (++stableGroupDialog < 3) return;
         stableGroupDialog = 0;
-        if (groupFollow.CanRun(groupFollow.Generation, timestamp) && Enum.TryParse<Team>(groupFollow.Team, out var team)) automation.Start(team, followedSettings, groupFollow.OnlineLeaseDeadline);
+        _ = RefreshAndStartGroupAttemptAsync();
+    }
+    private bool GroupDialogReady(AutomationSnapshot current, AppSettings config, bool focusOnActivation, Action requestFocus)
+    {
+        if (current.Detection?.IsMatch != true || current.JoinedDetection?.IsMatch == true || current.Geometry == null
+            || (!config.DryRun && !current.Geometry.IsCalibrated))
+        {
+            groupDialogFocusRequested = false;
+            return false;
+        }
+        // Recognize a visible background dialog before requiring foreground.
+        // Request focus once per appearance, then wait for a fresh focused capture.
+        if (!groupDialogFocusRequested)
+        {
+            groupDialogFocusRequested = true;
+            if (focusOnActivation) requestFocus();
+        }
+        return current.Geometry.IsForeground;
+    }
+    private async Task RefreshAndStartGroupAttemptAsync()
+    {
+        var generation = groupFollow.Generation;
+        var group = followedMembership;
+        var config = followedSettings;
+        if (group == null || config == null) return;
+        using var refresh = CancellationTokenSource.CreateLinkedTokenSource(groupLifetime.Token);
+        groupJoinRefresh = refresh;
+        try
+        {
+            var snapshot = await groupFollow.RefreshForJoinAsync(generation, token => groupApi.GetAsync(group, token), refresh.Token);
+            if (snapshot == null || closing || generation != groupFollow.Generation || followedMembership != group) return;
+            ApplyFollowedGroup(generation, group, snapshot);
+            if (!groupFollow.CanRun(generation, Stopwatch.GetTimestamp()) || !Enum.TryParse<Team>(groupFollow.Team, out var team)) return;
+            var current = automation.Snapshot;
+            // A stop, group switch, focus loss or vanished dialog while awaiting HTTP must not start input.
+            if (current.State != RunState.Stopped || current.StopCause is AutomationStopCause.Manual or AutomationStopCause.Safety
+                || current.Detection?.IsMatch != true || current.JoinedDetection?.IsMatch == true
+                || current.Geometry?.IsForeground != true || (!config.DryRun && !current.Geometry.IsCalibrated)) return;
+            automation.Start(team, config, groupFollow.OnlineLeaseDeadline);
+        }
+        catch (OperationCanceledException) when (refresh.IsCancellationRequested) { }
+        catch (GroupApiException ex) when (ex.AccessRevoked)
+        {
+            if (!closing && generation == groupFollow.Generation) { StopAll("Mitgliedschaft beendet"); groupStatus.Text = ex.Message; }
+        }
+        catch (Exception)
+        {
+            if (!closing && generation == groupFollow.Generation)
+            {
+                automation.Stop("Warte auf aktuelle Gruppenauswahl", AutomationStopCause.GroupUpdate);
+                groupStatus.Text = "Gruppendienst nicht erreichbar. Mit „Aktualisieren“ erneut versuchen.";
+            }
+        }
+        finally { if (groupJoinRefresh == refresh) groupJoinRefresh = null; }
     }
     private async Task ShareAndJoinAsync(Team team)
     {
@@ -566,11 +624,12 @@ public sealed partial class MainWindow
     }
     private void StopGroupFollow()
     {
+        groupJoinRefresh?.Cancel(); groupJoinRefresh = null;
         if (groupFollow.Enabled && automation.Snapshot.State != RunState.Stopped) automation.Stop("Gruppenmodus beendet", AutomationStopCause.GroupUpdate);
         groupFollow.Stop(); groupSync?.Dispose(); groupSync = null; followedMembership = null; followedSettings = null;
-        stableGroupDialog = 0; lastGroupObservation = 0; automation.Observe(null);
+        stableGroupDialog = 0; lastGroupObservation = 0; groupDialogFocusRequested = false; automation.Observe(null);
         groupUiLoading = true; groupAuto.IsChecked = false; groupUiLoading = false;
-        if (groupStopButton != null) UpdateGroupControls();
+        if (groupStopButton != null) { UpdateGroupControls(); UpdateRunDisplay(automation.Snapshot); }
     }
     private void DisposeGroups()
     {

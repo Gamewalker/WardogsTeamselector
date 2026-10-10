@@ -485,7 +485,7 @@ public sealed partial class MainWindow
 
     private void ToggleTeam(Team team)
     {
-        var current = automation.Snapshot;
+        var current = RunDisplaySnapshot(automation.Snapshot);
         if (current.State != RunState.Stopped && current.Team == team)
         {
             StopAll("Manuell gestoppt");
@@ -516,11 +516,23 @@ public sealed partial class MainWindow
         UpdateRunDisplay(automation.Snapshot);
     }
 
+    private AutomationSnapshot RunDisplaySnapshot(AutomationSnapshot current)
+    {
+        if (groupFollow.Enabled && groupFollow.Auto && current.State == RunState.Stopped
+            && current.StopCause is AutomationStopCause.Joined or AutomationStopCause.GroupUpdate)
+        {
+            current = current with { State = RunState.Waiting, Team = Enum.TryParse<Team>(groupFollow.Team, out var followedTeam) ? followedTeam : null,
+                Reason = groupFollow.JoinRefreshPending || !groupFollow.Online ? "Warte auf aktuelle Gruppenauswahl" : "Warte auf Auswahldialog" };
+        }
+        return current;
+    }
+
     private void UpdateRunDisplay(AutomationSnapshot current)
     {
+        current = RunDisplaySnapshot(current);
         bool running = current.State != RunState.Stopped;
         bool testing = dryRun.IsChecked == true;
-        string state = current.State switch { RunState.Waiting => "Wartet · " + TeamName(current.Team ?? Team.Blue), RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), _ => "Gestoppt" };
+        string state = current.State switch { RunState.Waiting => current.Team is Team waitingTeam ? "Wartet · " + TeamName(waitingTeam) : "Warte auf aktuelle Gruppenauswahl", RunState.Clicking => "Klickt · " + TeamName(current.Team ?? Team.Blue), _ => "Gestoppt" };
         status.Text = state + (testing ? " · Testmodus" : " · echte Klicks");
         operationState.Text = current.State == RunState.Stopped && current.Team == null ? "Bereit für die Teamwahl" : state;
         operationState.Foreground = current.State switch { RunState.Waiting => WarningBrush, RunState.Clicking => BrushFrom(120, 220, 160), _ => Foreground };

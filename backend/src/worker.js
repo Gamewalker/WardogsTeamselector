@@ -3,6 +3,7 @@ import { DurableObject } from "cloudflare:workers";
 const ID = /^[a-f0-9]{32}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const TEAMS = new Set(["Blue", "Red", "Green"]);
+const MEMBER_CALLS_PER_MINUTE = 10;
 const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 const json = (value, status = 200) => new Response(JSON.stringify(value), { status, headers });
 class ApiError extends Error {
@@ -72,14 +73,18 @@ export class GroupRoom extends DurableObject {
       if (action === "socket") {
         if (request.method !== "GET" || request.headers.get("Upgrade")?.toLowerCase() !== "websocket") fail(400, "websocket_required", "WebSocket erforderlich.");
         const member = await this.authorize(request);
-        this.rate(member.id, 120);
+        this.rate(member.id, MEMBER_CALLS_PER_MINUTE);
         const pair = new WebSocketPair();
         pair[1].serializeAttachment({ memberId: member.id });
         this.ctx.acceptWebSocket(pair[1]);
         pair[1].send(JSON.stringify(this.snapshot(member)));
         return new Response(null, { status: 101, webSocket: pair[0] });
       }
-      if (action === "state" && request.method === "GET") return json(this.snapshot(await this.authorize(request)));
+      if (action === "state" && request.method === "GET") {
+        const member = await this.authorize(request);
+        this.rate(member.id, MEMBER_CALLS_PER_MINUTE);
+        return json(this.snapshot(member));
+      }
       if (request.method !== "POST") fail(405, "method", "Methode nicht erlaubt.");
       const data = await body(request);
       // Storage commit and publication run serially, including across awaits.
@@ -96,7 +101,7 @@ export class GroupRoom extends DurableObject {
         }
         if (action === "join") return await this.join(data);
         const member = await this.authorize(request);
-        this.rate(member.id, 120);
+        this.rate(member.id, MEMBER_CALLS_PER_MINUTE);
         const operationId = id(data.operationId);
         const fingerprint = await hash(JSON.stringify({ action, data }));
         const duplicate = this.state.operations.find(x => x.memberId === member.id && x.id === operationId);
@@ -209,7 +214,7 @@ export class GroupRoom extends DurableObject {
       const member = this.state?.members.find(x => x.id === ws.deserializeAttachment()?.memberId);
       if (!member || this.state.deleted || ["Removed", "Rejected"].includes(member.status)) { ws.close(4003, "Mitgliedschaft beendet"); return; }
       if (member.status === "Pending" && Date.now() - member.requestedAt > 7 * 86400000) { ws.close(4003, "Anfrage abgelaufen"); return; }
-      this.rate(member.id, 120);
+      this.rate(member.id, MEMBER_CALLS_PER_MINUTE);
       if (typeof message !== "string" || message.length > 256 || JSON.parse(message).type !== "sync") { ws.close(1008, "Ungültige Nachricht"); return; }
       // Always answer with an authorized snapshot; transport pings are not a sync.
       ws.send(JSON.stringify(this.snapshot(member)));

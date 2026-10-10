@@ -37,6 +37,8 @@ Segoe UI trägt die gesamte Oberfläche. Titel: 24 DIP, Seitentitel: 21 DIP, Gru
 
 Die eigenen Vektor-Icons verwenden ein gemeinsames 24er-Koordinatensystem, 1,7 DIP Strichstärke und abgerundete Linienenden. Aktionen und Navigation zeigen 18 DIP große Icons; Teamaktivierung verwendet 20 DIP. Icons ergänzen sichtbare Beschriftungen. Buttons erhalten weiterhin ausdrücklich zugängliche Aktionsnamen; die Teamnamen enthalten auch Hotkey und Aktivierungszustand.
 
+Jede Buttonaktion besitzt eine ausdrückliche Zuordnung; ein allgemeines Einstellungen-Symbol dient nicht als Ersatz für fehlende Icons. Gruppenanlage verwendet Person/Plus, Beitreten und Verlassen gerichtete Türsymbole, Löschen einen Papierkorb und Mitgliederentfernung Person/Minus. Bestätigen, Ablehnen, Kopieren, Einladung und Zugangscode verwenden Haken, Verbot, überlagerte Blätter, Link/Plus und Schlüssel. Import und Export zeigen entgegengesetzte Pfeile; Adminimport und exklusive Übernahme behalten einen Schutzschild mit unterschiedlichen Pfeilen. Dialog- und HUD-Prüfung verwenden Dialogfenster und Balkenanzeige. Gleiche Aktionen behalten bereichsübergreifend dasselbe Symbol. Die Übersicht aller tatsächlich gerenderten WPF-Icons liegt im GUI-Smoke-Artefakt `button-icons.png`.
+
 ## Flächen und Abstände
 
 Das Fenster startet mit 1180 × 820 DIP; Mindestgröße ist 920 × 660 DIP. Außen stehen 20 DIP, Registerinhalte haben 20 DIP Innenabstand. Der Kopf hält Anwendungstitel, Info, Sprachauswahl und bei verfügbarer neuer Version die Update-Aktion. Laufstatus und Abbruch sind im Betrieb zusammengefasst. Die Profilfußleiste mit Speichern und Verwerfen erscheint nur in Einrichtung, Konfiguration und Diagnose; sie hat 16 × 12 DIP Innenabstand.

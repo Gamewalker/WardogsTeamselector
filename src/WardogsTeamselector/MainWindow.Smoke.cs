@@ -15,6 +15,22 @@ public sealed partial class MainWindow
     internal async Task CaptureSmokeImages(string directory)
     {
         Directory.CreateDirectory(directory);
+        // Render the actual WPF icon family at button size for one visual inspection.
+        var iconGallery = new System.Windows.Controls.Primitives.UniformGrid { Columns = 6, Background = Background };
+        TextBlock.SetForeground(iconGallery, Foreground);
+        foreach (var icon in Enum.GetValues<ActionIcon>())
+        {
+            var cell = new StackPanel { Margin = new Thickness(12) };
+            var glyph = IconPath(icon); glyph.HorizontalAlignment = HorizontalAlignment.Center;
+            cell.Children.Add(glyph);
+            cell.Children.Add(new TextBlock { Text = icon.ToString(), TextAlignment = TextAlignment.Center, Margin = new Thickness(0, 8, 0, 0), FontSize = 12 });
+            iconGallery.Children.Add(cell);
+        }
+        var gallerySize = new Size(780, Math.Ceiling(iconGallery.Children.Count / 6d) * 72);
+        iconGallery.Measure(gallerySize); iconGallery.Arrange(new Rect(gallerySize)); iconGallery.UpdateLayout();
+        var galleryWindow = new Window { Content = iconGallery, Background = Background };
+        SaveRender(Path.Combine(directory, "button-icons.png"), galleryWindow);
+        galleryWindow.Close();
         LocalizeInterface();
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
         Check(profileText.Text.Contains("Default profile") || hasSavedProfile, "English profile");
@@ -200,7 +216,30 @@ public sealed partial class MainWindow
         var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
         groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
         UpdateGroupControls(); Check(groupStopButton.IsEnabled, "Global Stop is available while Auto waits");
+        var focusRequests = 0;
+        var backgroundDialog = new AutomationSnapshot(RunState.Stopped, null, 0, 0, "", new DetectionResult(true, 1, Array.Empty<ProbeResult>(), ""),
+            new TargetGeometry(new System.Drawing.Rectangle(0, 0, 1600, 900), new IntPtr(42), false, "Fixture", true));
+        var focusConfig = new AppSettings { DryRun = false };
+        Check(!GroupDialogReady(backgroundDialog, focusConfig, true, () => focusRequests++) && focusRequests == 1,
+            "Returning background dialog requests focus before foreground gating");
+        Check(!GroupDialogReady(backgroundDialog, focusConfig, true, () => focusRequests++) && focusRequests == 1,
+            "Same dialog does not repeatedly steal focus");
+        Check(GroupDialogReady(backgroundDialog with { Geometry = backgroundDialog.Geometry! with { IsForeground = true } }, focusConfig, true, () => focusRequests++),
+            "Fresh focused observation releases dialog validation");
+        GroupDialogReady(backgroundDialog with { Detection = null }, focusConfig, true, () => focusRequests++);
+        Check(!GroupDialogReady(backgroundDialog, focusConfig, false, () => focusRequests++) && focusRequests == 1,
+            "Disabled foreground option leaves background dialog waiting without focusing");
+        GroupDialogReady(backgroundDialog with { Detection = null }, focusConfig, true, () => focusRequests++);
+        Check(!GroupDialogReady(backgroundDialog, focusConfig, true, () => focusRequests++) && focusRequests == 2,
+            "New dialog appearance requests focus again");
+        automation.Stop("HUD: Beitritt erkannt", AutomationStopCause.Joined);
+        UpdateRunDisplay(automation.Snapshot);
+        Check(groupFollow.Enabled && groupFollow.Auto && operationState.Text.StartsWith("Wartet") && runReason.Text == "Warte auf Auswahldialog",
+            "Auto shows waiting for the next dialog after HUD success instead of stopped");
+        ToggleTeam(Enum.Parse<Team>(groupFollow.Team!));
+        Check(!groupFollow.Enabled && automation.Snapshot.State == RunState.Stopped, "Waiting Auto team button stops instead of starting another run");
         StopAll("ESC fixture");
+        Check(!operationState.Text.StartsWith("Wartet"), "Explicit stop removes the Auto waiting display");
         Check(!groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp()), "Delayed online update cannot rearm after ESC");
         var secondOwner = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(fixtureOwner));
         secondOwner.GroupId = GroupMembership.NewId(); secondOwner.Name = "Weitere Gruppe";

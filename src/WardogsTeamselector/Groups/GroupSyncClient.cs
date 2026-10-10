@@ -57,7 +57,7 @@ public sealed class GroupSyncClient : IDisposable
         var message = Encoding.UTF8.GetBytes("{\"type\":\"sync\"}");
         while (!cancellation.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(55), cancellation).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.FromSeconds(15), cancellation).ConfigureAwait(false);
             await socket.SendAsync(message, WebSocketMessageType.Text, true, cancellation).ConfigureAwait(false);
         }
     }
@@ -68,8 +68,8 @@ public sealed class GroupSyncClient : IDisposable
         {
             using var message = new MemoryStream();
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
-            // 55s until the next sync + 10s response timeout.
-            deadline.CancelAfter(TimeSpan.FromSeconds(65));
+            // 15s until the next sync + 10s response timeout.
+            deadline.CancelAfter(TimeSpan.FromSeconds(25));
             WebSocketReceiveResult received;
             do
             {
@@ -83,7 +83,7 @@ public sealed class GroupSyncClient : IDisposable
                 message.Write(chunk, 0, received.Count);
             } while (!received.EndOfMessage);
             var snapshot = JsonSerializer.Deserialize<GroupSnapshot>(message.ToArray(), GroupJson.Options) ?? throw new GroupApiException("Leere Gruppennachricht.", "invalid_response");
-            snapshot.Validate(group); Updated?.Invoke(snapshot with { ReceivedAt = System.Diagnostics.Stopwatch.GetTimestamp() }); ConnectionChanged?.Invoke(true, "Verbunden · Zustandsprüfung mindestens jede Minute");
+            snapshot.Validate(group); Updated?.Invoke(snapshot with { ReceivedAt = System.Diagnostics.Stopwatch.GetTimestamp() }); ConnectionChanged?.Invoke(true, "Verbunden · Zustandsprüfung alle 15 Sekunden");
         }
     }
     public void Dispose() { lifetime.Cancel(); /* Do not block WPF waiting for callbacks. */ }

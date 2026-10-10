@@ -126,3 +126,24 @@ test("state survives object eviction and snapshots reveal no credentials", async
   assert.ok(!JSON.stringify(snapshot.body).includes(owner.token)); assert.ok(!JSON.stringify(snapshot.body).includes(owner.inviteToken));
   const page = await mf.dispatchFetch(`https://groups.example/invite/${owner.groupId}`); assert.equal(page.headers.get("Referrer-Policy"), "no-referrer");
 });
+
+test("ten calls per minute share a member budget across reads and writes", async () => {
+  const owner = await create(); const member = await join(owner);
+  for (let i = 0; i < 4; i++) assert.equal((await request(owner, "state")).status, 200);
+  for (let i = 0; i < 6; i++) assert.equal((await action(owner, "publish", { team: "Blue" })).status, 200);
+  const limited = await request(owner, "state");
+  assert.equal(limited.status, 429); assert.equal(limited.body.code, "rate_limit");
+  assert.equal((await action(owner, "clear")).status, 429);
+  assert.equal((await request(member, "state")).status, 200, "another member retains their own budget");
+});
+
+test("socket connections and sync messages use the same ten-call budget as HTTP", async () => {
+  const owner = await create();
+  const { ws, next } = await connect(owner); await next();
+  for (let i = 0; i < 4; i++) { ws.send(JSON.stringify({ type: "sync" })); await next(); }
+  for (let i = 0; i < 5; i++) assert.equal((await request(owner, "state")).status, 200);
+  assert.equal((await request(owner, "state")).status, 429);
+  const closed = new Promise(resolve => ws.addEventListener("close", resolve, { once: true }));
+  ws.send(JSON.stringify({ type: "sync" }));
+  assert.equal((await closed).code, 1008);
+});

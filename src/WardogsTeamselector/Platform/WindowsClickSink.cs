@@ -12,26 +12,34 @@ public sealed class WindowsClickSink : IClickSink
 {
     public void Click(Point position)
     {
-        if (!Screen.AllScreens.Any(s => s.Bounds.Contains(position)))
+        var monitor = Screen.AllScreens.FirstOrDefault(s => s.Bounds.Contains(position));
+        if (monitor is null)
             throw new ArgumentOutOfRangeException(nameof(position), "Klickpunkt liegt außerhalb der sichtbaren Monitore.");
         var desktop = SystemInformation.VirtualScreen;
         if (desktop.Width < 2 || desktop.Height < 2) throw new InvalidOperationException("Ungültige Desktopgeometrie.");
-        var inputs = new[]
-        {
-            Mouse((int)Math.Round(((long)position.X - desktop.Left) * 65535d / (desktop.Width - 1)),
-                  (int)Math.Round(((long)position.Y - desktop.Top) * 65535d / (desktop.Height - 1)), 0x8000 | 0x4000 | 0x0001),
-            Mouse(0, 0, 0x0002),
-            Mouse(0, 0, 0x0004)
-        };
+        var inputs = BuildInputs(position, desktop, monitor.Bounds);
         var inserted = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<Input>());
         if (inserted != inputs.Length)
         {
             var error = Marshal.GetLastWin32Error();
             // In case only movement and down were accepted, release the button.
             // This is error cleanup, never a second click or an input bypass.
-            if (inserted == 2) SendInput(1, new[] { Mouse(0, 0, 0x0004) }, Marshal.SizeOf<Input>());
+            if (inserted == inputs.Length - 1) SendInput(1, new[] { Mouse(0, 0, 0x0004) }, Marshal.SizeOf<Input>());
             throw new Win32Exception(error, "Windows hat die Mauseingabe nicht vollständig angenommen.");
         }
+    }
+
+    private static Input[] BuildInputs(Point position, Rectangle desktop, Rectangle monitor)
+    {
+        // A recreated game dialog can lose its hover target while the pointer stays
+        // at the same coordinates. Move one pixel and back before every click.
+        // Keep both positions on the target monitor and preserve both move events.
+        var adjacent = new Point(position.X < monitor.Right - 1 ? position.X + 1 : position.X - 1, position.Y);
+        Input Move(Point point) => Mouse(
+            (int)Math.Round(((long)point.X - desktop.Left) * 65535d / (desktop.Width - 1)),
+            (int)Math.Round(((long)point.Y - desktop.Top) * 65535d / (desktop.Height - 1)),
+            0x8000 | 0x4000 | 0x2000 | 0x0001);
+        return new[] { Move(adjacent), Move(position), Mouse(0, 0, 0x0002), Mouse(0, 0, 0x0004) };
     }
 
     private static Input Mouse(int x, int y, uint flags) => new()

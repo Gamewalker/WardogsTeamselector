@@ -2,6 +2,18 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Klickwiederholung und Gruppenabgleich (10. Oktober 2026, Featurebranch)
+
+Alle Buttonaktionen einschließlich der Gruppenverwaltung erhalten ausdrücklich zugeordnete Icons. Release-Build ohne Warnungen/Fehler und GUI-Smoke-Test bestanden. Die WPF-Iconübersicht sowie Gruppenverwaltung bei Standard- und Mindestgröße und die Diagnose wurden visuell geprüft; Icons sind lesbar, gleich gewichtet und für unterschiedliche Aktionen unterscheidbar. Renderings liegen unter `artifacts/button-icons-smoke/`.
+
+Auto bleibt nach HUD-bestätigtem Beitritt in der Dialogbeobachtung. Vor jedem neuen Versuch wird die Auswahl per HTTP erneut bestätigt. 59 Gruppenprüfungen bestanden, darunter ausstehende Abfragen, wechselnde Leiterteams, doppelte Aufrufe, verspätete Antworten nach Stopp/Gruppenwechsel, ältere HTTP-Revisionen als bereits empfangene WebSocket-Updates und Wartezeit nach Verbindungsfehlern. Der GUI-Smoke-Test bestätigt die Warteanzeige nach Beitritt und dass die als Stopp beschriftete Teamtaste auch im wartenden Auto-Modus stoppt.
+
+Beim erneut erkannten Dialog berücksichtigt Auto die aktuelle Vordergrund-Einstellung. Zusätzliche GUI-Smoke-Prüfungen bestätigen einen Fokusversuch pro Dialoganzeige, erneutes Fokussieren beim nächsten Auftauchen, keinen Fokusversuch bei deaktivierter Option und Warten auf eine neue Aufnahme mit bestätigtem Spielfokus. Die Fokusaufrufe werden in diesen Fixtures gezählt; kein echtes Spiel wird aktiviert. Release-Build ohne Warnungen/Fehler und GUI-Smoke-Test bestanden.
+
+Vor jedem Klick werden zwei nicht zusammengefasste Mausbewegungen erzeugt: einen Pixel neben den Zielpunkt und zurück. Die Plattformprüfung untersucht die Eingabepakete ohne `SendInput`, einschließlich negativer Desktop-Ursprünge und Monitorränder. 32 Plattformprüfungen bestanden; Windows verweigerte den Fokus des Testfensters, daher wurde die zugehörige Vordergrundtransfer-Prüfung übersprungen. Die Automationsprüfung bestätigt weiterlaufende Klicks beim Verschwinden und Wiederkehren des Dialogs nach einem fehlgeschlagenen Beitritt.
+
+Alle 14 Backend-Tests bestanden, einschließlich des gemeinsamen Zehn-Aufrufe-Budgets je Gruppenmitglied für HTTP und WebSocket sowie unabhängiger Mitgliedsbudgets. Der echte .NET-Client gegen Miniflare bestätigt den Zustandsabgleich nach 15 Sekunden und den Zugriffsentzug bei Entfernung. Release-Build ohne Warnungen/Fehler, 48 Gruppenprüfungen, 19.419 Sprachprüfungen und Worker-Deployment-Dry-Run bestanden. Kein Versuch im echten Spiel, keine echten Mausklicks und keine Bereitstellung.
+
 ## Gruppenverwaltung und geteilte Navigation (9. Oktober 2026, Featurebranch)
 
 Der [abschließende CI-Lauf](https://github.com/Gamewalker/WardogsTeamselector/actions/runs/37911155557) besteht mit beiden Windows-EXEs und GUI-Screenshots. Der GUI-Smoke-Lauf prüft fünf Bereiche, links/rechts getrennte und bei geringer Breite umbrechende Tabs, Mindestfenstergröße, Englisch/Arabisch/Chinesisch, Administration ausschließlich im Verwaltungstab, dieselbe aktive Gruppe in allen drei Auswahllisten sowie Stopp und Entwertung alter Antworten beim Gruppenwechsel. Der neue Verwaltungstab zeigt keine Profil-Speichern-Leiste, weil Gruppenänderungen separat gespeichert werden.
