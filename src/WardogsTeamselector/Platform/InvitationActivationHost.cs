@@ -29,14 +29,22 @@ public sealed class InvitationActivationHost : IDisposable
 
     public static void RegisterProtocol()
     {
-        var executable = Environment.ProcessPath;
-        // dotnet run points at the SDK host, which must never become the handler.
-        if (executable == null || !Path.GetFileNameWithoutExtension(executable).Equals("WardogsTeamselector", StringComparison.OrdinalIgnoreCase)) return;
+        var protocolCommand = CreateProtocolCommand(Environment.ProcessPath);
+        if (protocolCommand == null) return;
         using var key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\wardogs");
         key.SetValue("", "URL:Wardogs group invitation");
         key.SetValue("URL Protocol", "");
         using var command = key.CreateSubKey(@"shell\open\command");
-        command.SetValue("", $"\"{executable}\" --join \"%1\"");
+        command.SetValue("", protocolCommand);
+    }
+
+    public static string? CreateProtocolCommand(string? executable)
+    {
+        // Release downloads and portable copies may be renamed. Only the SDK
+        // host must be excluded: it cannot start the app with --join alone.
+        if (string.IsNullOrWhiteSpace(executable) ||
+            Path.GetFileNameWithoutExtension(executable).Equals("dotnet", StringComparison.OrdinalIgnoreCase)) return null;
+        return $"\"{executable}\" --join \"%1\"";
     }
 
     public async Task ForwardAsync(string invitation)

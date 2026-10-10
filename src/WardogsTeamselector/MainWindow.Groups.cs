@@ -259,7 +259,7 @@ public sealed partial class MainWindow
         }
         groupStopButton.IsEnabled = groupFollow.Enabled;
         groupStopButton.Visibility = groupFollow.Enabled ? Visibility.Visible : Visibility.Collapsed;
-        if (group == null && !groupStorageFailed) groupStatus.Text = "Noch keine Gruppe gespeichert. Gruppe erstellen oder Einladung einfügen.";
+        if (group == null && !groupStorageFailed && string.IsNullOrEmpty(groupStatus.Text)) groupStatus.Text = "Noch keine Gruppe gespeichert. Gruppe erstellen oder Einladung einfügen.";
         managementGroupStatus.Text = groupStatus.Text;
     }
     private void SaveGroupService()
@@ -292,13 +292,15 @@ public sealed partial class MainWindow
         var input = invitationLink == null
             ? GroupPrompt("Gruppe beitreten", ("Vollständiger Einladungslink", ""), ("Dein Name", ""))
             : GroupPrompt("Gruppe beitreten", $"{linkedInvitation.ServiceUrl}\n{linkedInvitation.GroupId}", ("Dein Name", ""));
-        if (input == null) return;
+        if (input == null) { groupStatus.Text = "Gruppenbeitritt abgebrochen. Es wurde keine Anfrage gesendet."; return; }
         var invitation = GroupServiceAddress.ParseInvitation(invitationLink ?? input[0]);
         if (groupProfile.Groups.Any(x => x.ServiceUrl == invitation.ServiceUrl && x.GroupId == invitation.GroupId)) throw new ArgumentException("Diese Gruppe ist bereits gespeichert. Aktualisieren oder die alte Mitgliedschaft aus der Liste entfernen.");
         var group = new GroupMembership { ServiceUrl = invitation.ServiceUrl, GroupId = invitation.GroupId, MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), InviteToken = invitation.InviteToken, Name = "Neue Gruppenanfrage", DisplayName = input[invitationLink == null ? 1 : 0].Trim(), RegistrationPending = true };
         group.Validate(); groupProfile.Groups.Add(group);
         try { SaveGroups(); } catch { groupProfile.Groups.Remove(group); throw; }
         ReloadGroupPickers(); groupPicker.SelectedItem = group;
+        groupStatus.Text = "Beitrittsanfrage wird gesendet …";
+        managementGroupStatus.Text = groupStatus.Text;
         await CompleteRegistrationAsync(group);
         groupStatus.Text = "Anfrage gesendet · wartet auf Bestätigung. „Aktualisieren“ prüft die Freigabe.";
     }
@@ -322,6 +324,7 @@ public sealed partial class MainWindow
                 if (closing) return;
                 var next = invitationActivations.Dequeue();
                 ShowPage(4);
+                groupStatus.Text = "Einladung empfangen. Bitte deinen Namen eingeben und den Beitritt bestätigen.";
                 await RunGroupUiAction(() => JoinGroupAsync(GroupInvitationActivation.Parse(next)));
             }
         }
@@ -566,7 +569,7 @@ public sealed partial class MainWindow
     {
         var group = SelectedGroup; if (group == null || groupBusy) return;
         if (LocalizedMessageBox.Show(this, "Lokale Zugangsdaten entfernen? Dies verlässt oder löscht die Online-Gruppe nicht. Ohne Wiederherstellungscode gehen deine Rechte auf diesem PC verloren.", "Aus Liste entfernen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
-        try { StopAll("Gruppe aus lokaler Liste entfernt"); groupProfile.Groups.Remove(group); SaveGroups(); selectedGroupSnapshot = null; ReloadGroupPickers(); }
+        try { StopAll("Gruppe aus lokaler Liste entfernt"); groupProfile.Groups.Remove(group); SaveGroups(); selectedGroupSnapshot = null; groupStatus.Text = ""; ReloadGroupPickers(); }
         catch (Exception) { groupStatus.Text = "Lokale Gruppenliste konnte nicht gespeichert werden."; }
     }
     private void CopyGroupInvitation()

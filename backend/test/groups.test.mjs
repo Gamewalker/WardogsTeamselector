@@ -25,6 +25,12 @@ test("Invitation page passes the complete invitation to the app only for valid l
       assert.equal(elements.open.hidden, false);
       assert.equal(decodeURIComponent(elements.open.href.split('#')[1]), location.href);
       assert.match(elements.open.href, /^wardogs:\/\/join\/#/);
+      elements.open.onclick();
+      assert.equal(elements.status.textContent, 'Öffnen in der App angefordert');
+      assert.equal(elements.manual.open, true);
+      assert.match(elements['launch-note'].textContent, /Browserabfrage/);
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(elements.status.textContent, 'Öffnen in der App angefordert', 'A late preview must preserve launch feedback');
     } else {
       assert.equal(elements.open.hidden, true);
       assert.equal(elements.open.href, undefined);

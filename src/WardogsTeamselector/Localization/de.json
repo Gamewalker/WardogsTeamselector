@@ -491,5 +491,8 @@
   "Stopp und {0} verwenden {1}. Für Stopp eine andere Taste wählen.": "Stopp und {0} verwenden {1}. Für Stopp eine andere Taste wählen.",
   "Einmal drücken aktiviert das Team. Stopp: {0}.": "Einmal drücken aktiviert das Team. Stopp: {0}.",
   "Beendet den aktuellen Lauf sofort. Stopp: {0}.": "Beendet den aktuellen Lauf sofort. Stopp: {0}.",
-  "Die laufende App konnte nicht erreicht werden. App neu starten und Einladung erneut öffnen.": "Die laufende App konnte nicht erreicht werden. App neu starten und Einladung erneut öffnen."
+  "Die laufende App konnte nicht erreicht werden. App neu starten und Einladung erneut öffnen.": "Die laufende App konnte nicht erreicht werden. App neu starten und Einladung erneut öffnen.",
+  "Gruppenbeitritt abgebrochen. Es wurde keine Anfrage gesendet.": "Gruppenbeitritt abgebrochen. Es wurde keine Anfrage gesendet.",
+  "Beitrittsanfrage wird gesendet …": "Beitrittsanfrage wird gesendet …",
+  "Einladung empfangen. Bitte deinen Namen eingeben und den Beitritt bestätigen.": "Einladung empfangen. Bitte deinen Namen eingeben und den Beitritt bestätigen."
 }

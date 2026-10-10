@@ -10,6 +10,15 @@ if (args.Length == 3 && args[0] == "--forward")
     return;
 }
 
+foreach (var filename in new[] { "WardogsTeamselector.exe", "WardogsTeamselector-win-x64-with-runtime.exe", "WardogsTeamselector-win-x64-without-runtime.exe", "My portable app.exe" })
+{
+    var executable = Path.Combine(@"C:\Portable Apps", filename);
+    if (InvitationActivationHost.CreateProtocolCommand(executable) != $"\"{executable}\" --join \"%1\"")
+        throw new Exception("Protocol command must support renamed release executables and quote paths");
+}
+foreach (var executable in new string?[] { null, "", @"C:\Program Files\dotnet\dotnet.exe", @"C:\SDK\DOTNET.EXE" })
+    if (InvitationActivationHost.CreateProtocolCommand(executable) != null) throw new Exception("SDK host must not be registered");
+
 var channel = "WardogsActivationTest-" + Guid.NewGuid().ToString("N");
 // Keep mutex ownership on this thread; async continuations must not release it.
 using var primary = new InvitationActivationHost(channel);
@@ -38,4 +47,4 @@ Forward(""); WaitForCount(1);
 if (!received.TryDequeue(out actual) || actual != "") throw new Exception("Ordinary activation changed");
 primary.Dispose();
 listener.GetAwaiter().GetResult();
-Console.WriteLine("ActivationChecks: existing-process forwarding, invalid input recovery, ordinary launch and shutdown passed.");
+Console.WriteLine("ActivationChecks: renamed release protocol commands, existing-process forwarding, invalid input recovery, ordinary launch and shutdown passed.");

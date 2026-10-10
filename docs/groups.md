@@ -16,6 +16,8 @@ Die neuen Gruppenmeldungen stehen auf Deutsch und Englisch zur Verfügung. In de
 
 Die Bestätigung wird beim nächsten Aktualisieren auf dem eingeladenen PC sichtbar. Gleichnamige Personen werden durch eine kurze Mitgliedskennung unterschieden. Namen bestätigen keine Identität.
 
+Die App registriert beim Start ihren aktuellen EXE-Pfad für **In App öffnen**. Der Dateiname ist frei wählbar. Nach dem Umbenennen oder Verschieben die EXE einmal direkt starten, damit Windows den neuen Pfad kennt. Läuft die App bereits, wird die Einladung an das vorhandene Fenster übergeben. Der Browser zeigt nach dem Klick Hinweise zum Öffnen und zum manuellen Einfügen; in der App bleiben auch Abbruch- und Fehlermeldungen sichtbar.
+
 ## Ein Team teilen
 
 Es können mehrere Gruppen gespeichert werden. Die Gruppenauswahl unter **Manuell**, **Gruppenmodus** und **Gruppenverwaltung** ist dieselbe aktive Gruppe. Ein Wechsel beendet den bisherigen Gruppenlauf und entwertet seine verspäteten Antworten. Die Auswahl und der Auto-Schalter bleiben nach einem Neustart erhalten.

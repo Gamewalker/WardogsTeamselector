@@ -48,9 +48,11 @@ export function invitationPage(path) {
     const valid=group&&/^[A-Za-z0-9_-]{43}$/.test(location.hash.slice(1));
     if(valid){
       open.href='wardogs://join/#'+encodeURIComponent(location.origin+'/invite/'+group+location.hash);open.hidden=false;status.textContent='Einladung wird geprüft …';
+      let launching=false;
+      open.onclick=()=>{launching=true;status.textContent='Öffnen in der App angefordert';byId('launch-note').textContent='Bestätige die Browserabfrage zum Öffnen von Wardogs. Gib anschließend in der App deinen Namen ein und sende die Anfrage. Falls nichts passiert: Starte die aktuelle App einmal und klicke erneut auf „In App öffnen“ oder nutze den Link unten.';byId('manual').open=true};
       fetch('/v1/groups/'+group+'/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inviteToken:location.hash.slice(1)})}).then(async r=>{
         const d=await r.json();
-        if(r.ok){document.title='Einladung: '+d.name;byId('heading').textContent=d.name;status.textContent='Du bist eingeladen'}
+        if(r.ok){document.title='Einladung: '+d.name;byId('heading').textContent=d.name;if(!launching)status.textContent='Du bist eingeladen'}
         else{status.className='status error';status.textContent=r.status===429?'Bitte kurz warten':'Einladung nicht verfügbar';byId('name').textContent=d.message;if(r.status===403||r.status===410){open.hidden=true;byId('launch-note').hidden=true;byId('heading').textContent='Diese Einladung ist nicht mehr gültig.';byId('manual').hidden=true}}
       }).catch(()=>{status.textContent='Vorschau nicht erreichbar';byId('name').textContent='Du kannst die Einladung trotzdem in der App öffnen. Prüfe dort deine Verbindung zum Gruppendienst.'});
     }else if(group){status.className='status error';status.textContent='Einladungslink unvollständig';byId('name').textContent='Bitte deinen Ersteller um den vollständigen Einladungslink mit Zugangscode.';byId('launch-note').hidden=true;byId('manual').hidden=true}

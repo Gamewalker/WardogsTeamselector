@@ -67,6 +67,10 @@ public sealed partial class MainWindow
         invitationTimer.Stop();
         if (invitationFailure != null) throw invitationFailure;
         Check(invitationDialogSeen && groupProfile.Groups.Count == initialGroupCount, "Cancelling an app invitation does not save or join a group");
+        Check(groupStatus.Text == "Gruppenbeitritt abgebrochen. Es wurde keine Anfrage gesendet." && managementGroupStatus.Text == groupStatus.Text, "Cancelled invitation remains visible in group management");
+        ReceiveInvitationActivation("wardogs://invalid/");
+        while (receivingInvitation) await Task.Delay(50);
+        Check(groupStatus.Text == "Ungültiger Einladungslink." && managementGroupStatus.Text == groupStatus.Text, "Invalid invitation feedback is not overwritten for an empty group list");
         ShowPage(initialPage);
         var originalCheckboxes = PersistedCheckboxes().ToDictionary(pair => pair.Key, pair => pair.Value.IsChecked == true);
         shareTeamWithGroup.IsChecked = true;
