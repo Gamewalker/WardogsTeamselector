@@ -16,6 +16,8 @@ npm run dev
 
 Der lokale Dienst läuft üblicherweise unter `http://localhost:8787`. Diese lokale HTTP-Adresse ist im Windows-Client erlaubt; öffentliche Dienste benötigen HTTPS. Die Tests verwenden echte Worker- und Durable-Object-Instanzen in Miniflare und benötigen keine Cloudflare-Zugangsdaten. `test:client` benötigt zusätzlich das .NET-10-SDK und prüft den tatsächlichen Desktop-HTTP-/WebSocket-Client einschließlich des geplanten 15-Sekunden-Abgleichs; der Lauf dauert etwa 20 Sekunden.
 
+Der npm-Override für Miniflare 4 setzt dessen fest gebundene `undici`-Abhängigkeit auf eine gepatchte Version ab `7.29.1`. Er verhindert den Dependabot-Fehler `security_update_not_possible` und kann entfernt werden, sobald die verwendete Miniflare-Version selbst eine gepatchte Version mitbringt.
+
 ## Ausschließlich kostenlos bereitstellen
 
 Die vollständige [Deployment-Anleitung im Repository-Wiki](../docs/wiki/Eigenen-Gruppendienst-deployen.md) beschreibt Einrichtung, Prüfungen und Bereitstellung. Der Desktop-Client verwendet standardmäßig `https://wardogs-groups.niels-82f.workers.dev/`; eigene Dienstadressen sind weiterhin möglich.
