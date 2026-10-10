@@ -39,6 +39,7 @@ public sealed partial class MainWindow
     private bool groupUiLoading, groupBusy, groupStorageFailed;
     private int stableGroupDialog;
     private long lastGroupObservation;
+    private long nextGroupRecovery;
     private bool groupDialogFocusRequested;
     private CancellationTokenSource? groupJoinRefresh;
     private Button groupStopButton = null!;
@@ -332,14 +333,22 @@ public sealed partial class MainWindow
         var generation = groupFollow.Begin(group, auto); followedMembership = group; followedSettings = config;
         automation.Stop("Warte auf aktuelle Gruppenauswahl", AutomationStopCause.GroupUpdate);
         groupUiLoading = true; groupAuto.IsChecked = auto; groupUiLoading = false;
+        SaveCheckboxPreferences();
         UpdateGroupControls();
         try
         {
-            var snapshot = await groupApi.GetAsync(group, groupLifetime.Token);
+            // Auto's sync worker performs the initial authorization and retries
+            // temporary failures. A failed first HTTP request must not turn Auto off.
+            if (!auto)
+            {
+                var snapshot = await groupApi.GetAsync(group, groupLifetime.Token);
+                if (!groupFollow.Enabled || generation != groupFollow.Generation || closing) return;
+                if (snapshot.YourStatus != "Approved") throw new GroupApiException("Mitgliedschaft nicht bestätigt.", "membership_revoked");
+                ApplyFollowedGroup(generation, group, snapshot);
+                if (snapshot.Team == null) { StopGroupFollow(); groupStatus.Text = "Noch keine Auswahl veröffentlicht."; return; }
+            }
             if (!groupFollow.Enabled || generation != groupFollow.Generation || closing) return;
-            if (snapshot.YourStatus != "Approved") throw new GroupApiException("Mitgliedschaft nicht bestätigt.", "membership_revoked");
-            ApplyFollowedGroup(generation, group, snapshot);
-            if (!auto && snapshot.Team == null) { StopGroupFollow(); groupStatus.Text = "Noch keine Auswahl veröffentlicht."; return; }
+            if (auto) automation.Observe(config);
             groupSync = new(groupApi, group);
             groupSync.AccessRevoked += ex => Dispatcher.BeginInvoke(() =>
             {
@@ -350,7 +359,7 @@ public sealed partial class MainWindow
             groupSync.ConnectionChanged += (online, reason) => Dispatcher.BeginInvoke(() =>
             {
                 if (closing || generation != groupFollow.Generation || !groupFollow.Enabled) return;
-                if (!online) { groupFollow.Disconnected(generation); automation.Observe(null); automation.Stop("Gruppenverbindung pausiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; }
+                if (!online) { groupFollow.Disconnected(generation); automation.Observe(groupFollow.Auto ? followedSettings : null); automation.Stop("Gruppenverbindung pausiert", AutomationStopCause.GroupUpdate); stableGroupDialog = 0; }
                 groupStatus.Text = reason; UpdateGroupControls();
             });
             groupSync.Start();
@@ -377,10 +386,21 @@ public sealed partial class MainWindow
     {
         if (!groupFollow.Enabled || followedSettings == null || closing) return;
         var current = automation.Snapshot;
-        if (current.State == RunState.Stopped && current.StopCause is AutomationStopCause.Manual or AutomationStopCause.Safety) { StopGroupFollow(); return; }
+        if (current.State == RunState.Stopped && current.StopCause is AutomationStopCause.Manual or AutomationStopCause.Safety)
+        {
+            if (!groupFollow.Auto) { StopGroupFollow(); return; }
+            // Explicit stop/ESC and disabling Auto already end the group session.
+            // A stopped individual attempt only returns persistent Auto to observation.
+            if (Stopwatch.GetTimestamp() < nextGroupRecovery) return;
+            nextGroupRecovery = Stopwatch.GetTimestamp() + Stopwatch.Frequency;
+            automation.Stop("Warte auf Auswahldialog", AutomationStopCause.GroupUpdate);
+            automation.Observe(followedSettings);
+            stableGroupDialog = 0; lastGroupObservation = 0; groupDialogFocusRequested = false;
+            current = automation.Snapshot;
+        }
         if (!groupFollow.HasCurrentState(groupFollow.Generation, Stopwatch.GetTimestamp()))
         {
-            if (!groupFollow.Online || groupFollow.Team != null) { automation.Observe(null); if (current.State != RunState.Stopped) automation.Stop("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); }
+            if (!groupFollow.Online || groupFollow.Team != null) { if (!groupFollow.Auto) automation.Observe(null); if (current.State != RunState.Stopped) automation.Stop("Gruppenstatus nicht aktuell", AutomationStopCause.GroupUpdate); }
             stableGroupDialog = 0; return;
         }
         if (current.State != RunState.Stopped) return;
@@ -627,8 +647,9 @@ public sealed partial class MainWindow
         groupJoinRefresh?.Cancel(); groupJoinRefresh = null;
         if (groupFollow.Enabled && automation.Snapshot.State != RunState.Stopped) automation.Stop("Gruppenmodus beendet", AutomationStopCause.GroupUpdate);
         groupFollow.Stop(); groupSync?.Dispose(); groupSync = null; followedMembership = null; followedSettings = null;
-        stableGroupDialog = 0; lastGroupObservation = 0; groupDialogFocusRequested = false; automation.Observe(null);
+        stableGroupDialog = 0; lastGroupObservation = 0; nextGroupRecovery = 0; groupDialogFocusRequested = false; automation.Observe(null);
         groupUiLoading = true; groupAuto.IsChecked = false; groupUiLoading = false;
+        SaveCheckboxPreferences();
         if (groupStopButton != null) { UpdateGroupControls(); UpdateRunDisplay(automation.Snapshot); }
     }
     private void DisposeGroups()

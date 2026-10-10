@@ -519,7 +519,7 @@ public sealed partial class MainWindow
     private AutomationSnapshot RunDisplaySnapshot(AutomationSnapshot current)
     {
         if (groupFollow.Enabled && groupFollow.Auto && current.State == RunState.Stopped
-            && current.StopCause is AutomationStopCause.Joined or AutomationStopCause.GroupUpdate)
+            && current.StopCause is AutomationStopCause.Joined or AutomationStopCause.GroupUpdate or AutomationStopCause.Safety or AutomationStopCause.Manual)
         {
             current = current with { State = RunState.Waiting, Team = Enum.TryParse<Team>(groupFollow.Team, out var followedTeam) ? followedTeam : null,
                 Reason = groupFollow.JoinRefreshPending || !groupFollow.Online ? "Warte auf aktuelle Gruppenauswahl" : "Warte auf Auswahldialog" };

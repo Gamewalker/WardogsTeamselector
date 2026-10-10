@@ -87,6 +87,7 @@ public sealed partial class MainWindow : Window
         try { settings = SettingsStore.Load(); hasSavedProfile = File.Exists(SettingsStore.FilePath); } catch (Exception ex) { startupSettingsError = "Gespeichertes Profil ungültig: " + ex.Message + " Unter Einrichtung und Konfiguration prüfen, dann speichern."; }
         Build(); LoadFields();
         InitializeGroups();
+        InitializeCheckboxPreferences();
         LocalizeInterface();
         Loaded += (_, _) => localizationTimer.Start();
         Loaded += (_, _) => InitializeUpdates();
@@ -125,6 +126,7 @@ public sealed partial class MainWindow : Window
         finally { loadingFields = false; }
         SetLiveUpdates(settings.LivePreviewEnabled);
         UpdateProfileState();
+        SaveCheckboxPreferences();
     }
     private AppSettings ReadFields()
     {

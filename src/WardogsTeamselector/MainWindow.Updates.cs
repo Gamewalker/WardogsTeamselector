@@ -66,6 +66,7 @@ public sealed partial class MainWindow
         try
         {
             updatePreferences = UpdatePreferences.Load();
+            if (checkboxPreferences.TryGetValue("AutomaticUpdates", out var enabled)) updatePreferences.Enabled = enabled;
             automaticUpdates.IsChecked = updatePreferences.Enabled;
             string result = Path.Combine(UpdatePreferences.DirectoryPath, "update-result.txt");
             if (File.Exists(result)) { updateStatus.Text = File.ReadAllText(result); AddLog(updateStatus.Text.Trim()); File.Delete(result); }

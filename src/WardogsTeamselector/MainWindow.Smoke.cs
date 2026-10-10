@@ -35,6 +35,20 @@ public sealed partial class MainWindow
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
         Check(profileText.Text.Contains("Default profile") || hasSavedProfile, "English profile");
         Check(groupService.Text == GroupProfile.DefaultServiceUrl, "New group settings show the default service address");
+        var originalCheckboxes = PersistedCheckboxes().ToDictionary(pair => pair.Key, pair => pair.Value.IsChecked == true);
+        shareTeamWithGroup.IsChecked = true;
+        Check(checkboxPreferences["ShareTeamWithGroup"], "Sharing checkbox is saved immediately without saving the profile");
+        var restoredCheckboxes = new System.Collections.Generic.Dictionary<string, bool>(originalCheckboxes)
+            { ["ShareTeamWithGroup"] = true, ["AutoFollow"] = true, ["FocusGame"] = false, ["LivePreview"] = false };
+        checkboxPreferences = restoredCheckboxes;
+        ApplyCheckboxPreferences();
+        Check(shareTeamWithGroup.IsChecked == true && groupAuto.IsChecked == true && focusGame.IsChecked == false && !liveUpdatesEnabled && !groupFollow.Enabled,
+            "Saved checkboxes restore without triggering a join while startup fields are loading");
+        closing = true;
+        try { StopGroupFollow(); }
+        finally { closing = false; }
+        Check(checkboxPreferences["AutoFollow"], "Closing the app preserves Auto for the next launch");
+        checkboxPreferences = originalCheckboxes; ApplyCheckboxPreferences();
         SaveRender(Path.Combine(directory, "english-startup.png"));
         foreach (var language in Localization.Languages)
         {
@@ -216,6 +230,27 @@ public sealed partial class MainWindow
         var fixtureGeneration = groupFollow.Begin(fixtureOwner, true);
         groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
         UpdateGroupControls(); Check(groupStopButton.IsEnabled, "Global Stop is available while Auto waits");
+        followedSettings = new AppSettings(); followedMembership = fixtureOwner;
+        groupUiLoading = true; groupAuto.IsChecked = true; groupUiLoading = false;
+        automation.Stop("Spielfokus verloren", AutomationStopCause.Safety);
+        TickGroupFollow();
+        Check(groupFollow.Enabled && groupFollow.Auto && groupAuto.IsChecked == true,
+            "Auto remains enabled after focus loss and waits for another dialog");
+        foreach (var reason in new[] { "Beobachtung fehlgeschlagen", "Spielbereich geändert", "Aufnahme/Steuerung fehlgeschlagen" })
+        {
+            nextGroupRecovery = 0;
+            automation.Stop(reason, AutomationStopCause.Safety);
+            TickGroupFollow();
+            Check(groupFollow.Enabled && groupFollow.Auto && groupAuto.IsChecked == true && automation.Snapshot.State == RunState.Stopped
+                && automation.Snapshot.StopCause == AutomationStopCause.GroupUpdate,
+                "Auto recovers to observation without input after: " + reason);
+        }
+        groupFollow.Disconnected(fixtureGeneration);
+        automation.Stop("Gruppenverbindung pausiert", AutomationStopCause.GroupUpdate);
+        TickGroupFollow();
+        Check(groupFollow.Enabled && groupAuto.IsChecked == true && automation.Snapshot.State == RunState.Stopped,
+            "Temporary disconnection keeps Auto enabled without starting clicks");
+        groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
         var focusRequests = 0;
         var backgroundDialog = new AutomationSnapshot(RunState.Stopped, null, 0, 0, "", new DetectionResult(true, 1, Array.Empty<ProbeResult>(), ""),
             new TargetGeometry(new System.Drawing.Rectangle(0, 0, 1600, 900), new IntPtr(42), false, "Fixture", true));
@@ -241,6 +276,12 @@ public sealed partial class MainWindow
         StopAll("ESC fixture");
         Check(!operationState.Text.StartsWith("Wartet"), "Explicit stop removes the Auto waiting display");
         Check(!groupFollow.Apply(fixtureGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp()), "Delayed online update cannot rearm after ESC");
+        var oneTimeGeneration = groupFollow.Begin(fixtureOwner, false);
+        followedSettings = new AppSettings(); followedMembership = fixtureOwner;
+        groupFollow.Apply(oneTimeGeneration, selectedGroupSnapshot, System.Diagnostics.Stopwatch.GetTimestamp());
+        automation.Stop("Spielfokus verloren", AutomationStopCause.Safety);
+        TickGroupFollow();
+        Check(!groupFollow.Enabled, "One-time join still ends after an attempt fails");
         var secondOwner = GroupRecoveryCodec.ImportAdmin(GroupRecoveryCodec.ExportAdmin(fixtureOwner));
         secondOwner.GroupId = GroupMembership.NewId(); secondOwner.Name = "Weitere Gruppe";
         groupProfile.Groups.Add(secondOwner); ReloadGroupPickers();

@@ -21,6 +21,8 @@ Die Oberfläche hat vier Bereiche. Neue Profile starten in **Einrichtung**, vorh
 
 **Ungespeicherte Änderungen** stehen in der Fußleiste. **Einstellungen speichern** sichert sie dauerhaft; **Änderungen verwerfen** lädt das gespeicherte Profil. Beim Schließen mit Änderungen wird nach Speichern gefragt. Eine Teamaktivierung verwendet gültige aktuelle Eingaben, speichert diese aber nicht automatisch. Reine Navigation und der Vorschau-Schalter stoppen keinen Lauf; das Bearbeiten der Steuerungs- und Kalibrierwerte stoppt ihn.
 
+Checkboxen werden beim Umschalten automatisch gespeichert und beim nächsten Start wiederhergestellt, einschließlich **Mit Gruppe teilen** und **Auto folgen**. Dafür ist kein zusätzliches Speichern des Profils nötig.
+
 Die Aktivierung darf schon vor der Auswahl erfolgen. Auch volle/verblasste Teams werden angeklickt. Globale Teamhotkeys sind auf unterschiedliche F1–F24 anpassbar.
 
 Nach dem ersten Klick klickt der Lauf dasselbe Team weiter an, auch wenn der Auswahldialog verschwindet oder seine Erkennung flackert. Vor jedem Klick bewegt sich der Mauszeiger um einen Pixel und zurück zum Klickpunkt, damit auch ein nach fehlgeschlagenem Beitritt neu geöffneter Dialog die Hover-Erkennung aktualisiert. Er endet automatisch erst, wenn die fünf weißen HUD-Balken unten rechts mindestens **0,5 Sekunden** ununterbrochen erkannt werden. Die bisherige Beendigung nach „Dialog muss fehlen für X Sekunden“ entfällt vollständig.

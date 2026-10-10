@@ -2,7 +2,13 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Checkboxen nach Neustart (10. Oktober 2026)
+
+Alle acht Checkboxen werden beim Umschalten unabhängig vom Profilentwurf gespeichert. `ConfigurationChecks` prüft den Dateiroundtrip, fehlende Einstellungsdateien und ausdrücklich ausgeschaltete Gruppenoptionen. Der GUI-Prüflauf kontrolliert unmittelbares Speichern von **Mit Gruppe teilen**, das Wiederherstellen ohne vorzeitigen Gruppenbeitritt und den Erhalt der Auto-Auswahl beim Schließen. Release-Build ohne Warnungen/Fehler und GUI-Prüflauf unter `artifacts/checkbox-persistence-confirm` erfolgreich. Die Prüfungen verändern keine Benutzereinstellungen und senden keine Spieleingaben.
+
 ## Klickwiederholung und Gruppenabgleich (10. Oktober 2026, Featurebranch)
+
+Der Fehler „Auto geht bei Fokusverlust aus“ wurde im tatsächlichen UI-Timerpfad reproduziert: `--ui-smoke artifacts/auto-persistent-red` scheiterte an `Auto remains enabled after focus loss and waits for another dialog`. Nach der Korrektur besteht `--ui-smoke artifacts/auto-persistent-confirm`: Auto bleibt bei Fokusverlust, Beobachtungs-/Aufnahmefehlern, Geometrieänderungen und vorübergehender Gruppentrennung aktiv. Nur der Klickversuch endet; Auto startet die Beobachtung erneut, bei wiederholten Fehlern höchstens einmal pro Sekunde. Einmaliger Beitritt und ausdrücklicher Stopp bleiben davon unabhängig. Release-Build ohne Warnungen/Fehler, 59 Gruppenprüfungen und AutomationChecks bestanden. Ein paralleler GUI-Lauf scheiterte zuvor an einem Timeout der bestehenden Übersetzungsroutine; der einzeln ausgeführte Bestätigungslauf bestand. Kein Versuch im echten Spiel und keine echten Mausklicks.
 
 Alle Buttonaktionen einschließlich der Gruppenverwaltung erhalten ausdrücklich zugeordnete Icons. Release-Build ohne Warnungen/Fehler und GUI-Smoke-Test bestanden. Die WPF-Iconübersicht sowie Gruppenverwaltung bei Standard- und Mindestgröße und die Diagnose wurden visuell geprüft; Icons sind lesbar, gleich gewichtet und für unterschiedliche Aktionen unterscheidbar. Renderings liegen unter `artifacts/button-icons-smoke/`.
 
