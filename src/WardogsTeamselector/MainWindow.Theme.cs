@@ -75,7 +75,7 @@ public sealed partial class MainWindow
     private static ActionIcon IconForAction(string text) => text switch
     {
         "Über die App" => ActionIcon.Info,
-        "Stopp · ESC" => ActionIcon.Stop,
+        var label when label.StartsWith("Stopp · ", StringComparison.Ordinal) => ActionIcon.Stop,
         "Änderungen verwerfen" or "Standardwerte laden …" => ActionIcon.Undo,
         "Einstellungen speichern" or "Bild speichern" or "Update-Einstellungen speichern" or "Dienstadresse speichern" => ActionIcon.Save,
         "Spiel suchen / Bild laden" => ActionIcon.Search,

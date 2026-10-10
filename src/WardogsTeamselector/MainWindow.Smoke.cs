@@ -123,6 +123,9 @@ public sealed partial class MainWindow
         // Use an in-memory fixture: smoke mode never writes the user's profile or registers hotkeys.
         settings = new AppSettings(); startupSettingsError = null; dirty = false;
         LoadFields(); ApplyHotkeys(settings);
+        Check(settings.StopHotkey == 0x23 && dryRun.IsChecked == false, "New profiles use End and disable test mode");
+        foreach (var key in HotkeyChoice.All)
+            Check(IconForAction("Stopp · " + key.Name) == ActionIcon.Stop, "Stop icon supports " + key.Name);
         Check(!dirty && !regionDirty, "Loading fields does not create unsaved edits");
         Check(focusGame.IsChecked == true && ReadFields().FocusGameOnTeamActivation, "Game focus defaults to enabled");
         foreach (var code in new[] { "en", "de" })
@@ -421,7 +424,7 @@ public sealed partial class MainWindow
         SaveRender(Path.Combine(directory, "red-waiting.png"));
         StartTeam(Team.Green); await Settle();
         Check(teamStateLabels[Team.Green].Text == "Aktiv · wartet" && teamStateLabels[Team.Red].Text == "Aktivieren", "Green is marked without retaining another active team");
-        ShowPage(3); dryRun.IsChecked = false; await Settle();
+        ShowPage(3); dryRun.IsChecked = dryRun.IsChecked != true; await Settle();
         Check(automation.Snapshot.State == RunState.Stopped && teamStateLabels.Values.All(label => label.Text == "Aktivieren"), "Changing test mode in diagnosis stops the run and clears markers");
         dryRun.IsChecked = true;
         StartTeam(Team.Blue); await Settle();
