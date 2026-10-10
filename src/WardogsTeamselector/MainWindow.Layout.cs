@@ -277,7 +277,7 @@ public sealed partial class MainWindow
         links.Children.Add(Button("Intervall / Hotkeys ändern", () => ShowPage(2)));
         links.Children.Add(Button("Diagnose / Testmodus", () => ShowPage(3)));
         body.Children.Add(links);
-        body.Children.Add(Hint("Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. ESC, Fokusverlust und Aufnahmefehler stoppen den Lauf.", 18));
+        body.Children.Add(Hint("Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. Die Stopptaste, Fokusverlust und Aufnahmefehler stoppen den Lauf.", 18));
         operationTabs.Items.Add(new TabItem { Header = "Manuell", Content = Scroll(body) });
         operationTabs.Items.Add(new TabItem { Header = "Gruppenmodus", Content = BuildGroupMode() });
         operationTabs.SelectionChanged += (_, e) => { if (e.Source == operationTabs && operationTabs.SelectedIndex == 1 && !smokeMode) _ = RefreshSelectedGroupAsync(); };
@@ -302,7 +302,7 @@ public sealed partial class MainWindow
         left.Children.Add(Heading("Globale Tastenkürzel"));
         foreach (var team in Enum.GetValues<Team>())
         {
-            var box = new ComboBox { ItemsSource = Enumerable.Range(1, 24).Select(n => "F" + n).ToList(), MinHeight = 38, Margin = new Thickness(0, 0, 0, 8) };
+            var box = new ComboBox { ItemsSource = HotkeyChoice.All, MinHeight = 38, Margin = new Thickness(0, 0, 0, 8) };
             box.Margin = new Thickness(0);
             var inputFrame = new Border { Child = box, BorderBrush = Brushes.Transparent, BorderThickness = new Thickness(2), Margin = new Thickness(0, 0, 0, 6) };
             AutomationProperties.SetName(box, "Team " + TeamName(team));
@@ -310,7 +310,11 @@ public sealed partial class MainWindow
             keyBoxes[team] = box;
             left.Children.Add(Label("Team " + TeamName(team), box)); left.Children.Add(inputFrame);
         }
-        left.Children.Add(Hint("Drei verschiedene F-Tasten wählen. Ein Tastendruck aktiviert; ESC beendet immer und wird an das Spiel weitergegeben."));
+        stopKeyBox.ItemsSource = HotkeyChoice.All; stopKeyBox.MinHeight = 38;
+        AutomationProperties.SetName(stopKeyBox, "Stopp-Taste");
+        stopKeyBox.SelectionChanged += (_, _) => MarkDirty();
+        left.Children.Add(Label("Stopp-Taste", stopKeyBox)); left.Children.Add(stopKeyBox);
+        left.Children.Add(Hint("Vier unterschiedliche Tasten wählen: F1–F24, ESC oder Sondertasten. Die Stopptaste wird an das Spiel weitergegeben."));
         left.Children.Add(Heading("Spielfokus"));
         focusGame.Foreground = Foreground;
         focusGame.Content = new TextBlock { Text = "Spiel nach Teamaktivierung in den Vordergrund holen", TextWrapping = TextWrapping.Wrap };
@@ -509,9 +513,12 @@ public sealed partial class MainWindow
             ? "Auto-Fokus ist an: Ein Team aktivieren, und die App holt das Spiel in den Vordergrund."
             : "Auto-Fokus ist aus: Ein Team aktivieren, dann selbst zum Spiel wechseln.";
         bool testing = dryRun.IsChecked == true;
-        runMode.Text = testing ? "Testmodus · keine Mauseingaben" : "Echte Klicks aktiviert · ESC stoppt sofort";
+        var stopName = HotkeyChoice.Display(settings.StopHotkey);
+        if (groupStopButton.Content is StackPanel stopLabel && stopLabel.Children[1] is TextBlock stopText)
+            stopText.Text = "Stopp · " + stopName;
+        runMode.Text = testing ? "Testmodus · keine Mauseingaben" : $"Echte Klicks aktiviert · {stopName} stoppt sofort";
         runMode.Foreground = testing ? Muted : WarningBrush;
-        operationSummary.Text = $"Klickintervall: {fields["min"].Text}–{fields["max"].Text} ms  ·  Fenster: {fields["title"].Text}\nBeitritt: fünf HUD-Balken für mindestens 0,5 s  ·  Stopp: ESC";
+        operationSummary.Text = $"Klickintervall: {fields["min"].Text}–{fields["max"].Text} ms  ·  Fenster: {fields["title"].Text}\nBeitritt: fünf HUD-Balken für mindestens 0,5 s  ·  Stopp: {stopName}";
         status.ToolTip = testing ? "Testmodus · keine Mauseingaben" : "Echte Klicks aktiviert";
         UpdateRunDisplay(automation.Snapshot);
     }
@@ -549,7 +556,7 @@ public sealed partial class MainWindow
             teamButtons[team].Opacity = running && !active ? 0.45 : 1;
             teamNameLabels[team].Text = active ? "Stopp" : TeamName(team);
             teamIcons[team].Data = IconPath(active ? ActionIcon.Stop : ActionIcon.Play, 20).Data;
-            teamButtons[team].ToolTip = active ? "Beendet den aktuellen Lauf sofort. ESC funktioniert auch im Spiel." : "Einmal drücken aktiviert das Team. ESC bricht ab.";
+            teamButtons[team].ToolTip = active ? $"Beendet den aktuellen Lauf sofort. Stopp: {HotkeyChoice.Display(settings.StopHotkey)}." : $"Einmal drücken aktiviert das Team. Stopp: {HotkeyChoice.Display(settings.StopHotkey)}.";
             teamStateLabels[team].Text = active ? current.State == RunState.Clicking ? "Aktiv · klickt" : "Aktiv · wartet" : "Aktivieren";
             AutomationProperties.SetName(teamButtons[team], $"Team {TeamName(team)}, {teamKeyLabels[team].Text}, {(active ? "Stopp" : "Aktivieren")}");
         }

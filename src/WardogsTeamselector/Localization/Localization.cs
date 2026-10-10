@@ -29,6 +29,8 @@ internal static class Localization
         ["Gruppe: {0} · {1}"] = new[] { 1 },
         ["Auswahl: {0}"] = new[] { 0 },
         ["{0} verwenden F{1}. Für {2} eine andere F-Taste wählen."] = new[] { 0, 2 },
+        ["{0} verwenden {1}. Für {2} eine andere Taste wählen."] = new[] { 0, 2 },
+        ["Stopp und {0} verwenden {1}. Für Stopp eine andere Taste wählen."] = new[] { 0 },
         ["Dialog: {0} · Score {1}"] = new[] { 0 },
         ["Folgescreen: {0} · Score {1}"] = new[] { 0 },
         ["{0}\n{1}×{2} px · Ursprung ({3},{4}) · Fokus: {5} · Geometrie: {6}"] = new[] { 0, 5, 6 },

@@ -48,6 +48,7 @@ public sealed partial class MainWindow : Window
     private string? lastUiReason;
     private readonly Dictionary<string, TextBox> fields = new();
     private readonly Dictionary<Team, ComboBox> keyBoxes = new();
+    private readonly ComboBox stopKeyBox = new();
     private readonly Dictionary<Team, Button> teamButtons = new();
     private readonly ComboBox monitor = new(), selectedTeam = new();
     private readonly CheckBox dryRun = new() { Content = "Testmodus – keine Mauseingaben", IsChecked = true }, calibrated = new() { Content = "Geometrie für dieses Profil geprüft" };
@@ -94,7 +95,7 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) => FinishUpdates();
         pages.SelectedIndex = hasSavedProfile && startupSettingsError == null ? 1 : 0;
         UpdatePreviewLocation();
-        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += ActivateTeam; hotkeys.EscapePressed += () => StopAll("ESC – abgebrochen"); RegisterKeys(); };
+        SourceInitialized += (_, _) => { if (!registerGlobalHotkeys) return; hotkeys = new(this); hotkeys.TeamPressed += ActivateTeam; hotkeys.StopPressed += () => StopAll("Hotkey – abgebrochen"); RegisterKeys(); };
         Loaded += async (_, _) => { if (startupSettingsError != null) ShowError(startupSettingsError); await RefreshPreview(); UpdatePreviewTimer(); };
         timer.Tick += async (_, _) => await RefreshPreview();
         Closing += (_, e) =>
@@ -106,7 +107,6 @@ public sealed partial class MainWindow : Window
             }
             closing = true; timer.Stop(); localizationTimer.Stop(); DisposeGroups(); automation.Dispose(); hotkeys?.Dispose();
         };
-        PreviewKeyDown += (_, e) => { if (e.Key == Key.Escape) StopAll("ESC – abgebrochen"); };
     }
 
     private void LoadFields()
@@ -120,7 +120,8 @@ public sealed partial class MainWindow : Window
         focusGame.IsChecked = settings.FocusGameOnTeamActivation;
         fields["threshold"].Text = Format(settings.DetectionThreshold * 100); fields["offsetx"].Text = Format(settings.DetectionOffsetX * 100); fields["offsety"].Text = Format(settings.DetectionOffsetY * 100); fields["scale"].Text = Format(settings.DetectionScale);
         fields["bounds"].Text = settings.ManualBounds is Rectangle r ? $"{r.X},{r.Y},{r.Width},{r.Height}" : ""; dryRun.IsChecked = settings.DryRun; calibrated.IsChecked = settings.GeometryCalibrated;
-        foreach (var t in Enum.GetValues<Team>()) keyBoxes[t].SelectedIndex = settings.Hotkeys[t] - 0x70;
+        foreach (var t in Enum.GetValues<Team>()) keyBoxes[t].SelectedItem = HotkeyChoice.All.First(key => key.Code == settings.Hotkeys[t]);
+        stopKeyBox.SelectedItem = HotkeyChoice.All.First(key => key.Code == settings.StopHotkey);
         RefreshMonitors(false); LoadRegion();
         }
         finally { loadingFields = false; }
@@ -141,17 +142,23 @@ public sealed partial class MainWindow : Window
         if (scale < .25 || scale > 4) throw FieldError("scale", "Die Dialogskalierung muss zwischen 0,25 und 4 liegen (Standard: 1).");
         var regions = settings.Regions.ToList();
         if (regionDirty) { var region = ReadRegion(editingTeam); regions = regions.Select(r => r.Team == editingTeam ? region : r).ToList(); }
-        var keys = keyBoxes.ToDictionary(k => k.Key, k => 0x70 + k.Value.SelectedIndex);
+        var keys = keyBoxes.ToDictionary(k => k.Key, k => ((HotkeyChoice)k.Value.SelectedItem).Code);
+        var stopKey = ((HotkeyChoice)stopKeyBox.SelectedItem).Code;
         var conflict = keys.GroupBy(pair => pair.Value).FirstOrDefault(group => group.Count() > 1);
         if (conflict != null)
         {
             var team = conflict.Last().Key;
             var names = string.Join(" und ", conflict.Select(pair => TeamName(pair.Key)));
-            var message = $"{names} verwenden F{conflict.Key - 0x6F}. Für {TeamName(team)} eine andere F-Taste wählen.";
+            var message = $"{names} verwenden {HotkeyChoice.Display(conflict.Key)}. Für {TeamName(team)} eine andere Taste wählen.";
             FocusInput(keyBoxes[team], 2, message);
             throw new ArgumentException(message);
         }
-        var s = new AppSettings { MinIntervalMs = minimum, MaxIntervalMs = maximum, WindowTitleContains = fields["title"].Text.Trim(), ProcessNameContains = fields["process"].Text.Trim(), DetectionThreshold = threshold / 100, DetectionOffsetX = Number("offsetx") / 100, DetectionOffsetY = Number("offsety") / 100, DetectionScale = scale, DryRun = dryRun.IsChecked == true, GeometryCalibrated = calibrated.IsChecked == true, MonitorId = (monitor.SelectedItem as MonitorChoice)?.Id, Regions = regions, Hotkeys = keys };
+        if (keys.Values.Contains(stopKey))
+        {
+            var message = $"Stopp und {TeamName(keys.First(pair => pair.Value == stopKey).Key)} verwenden {HotkeyChoice.Display(stopKey)}. Für Stopp eine andere Taste wählen.";
+            FocusInput(stopKeyBox, 2, message); throw new ArgumentException(message);
+        }
+        var s = new AppSettings { MinIntervalMs = minimum, MaxIntervalMs = maximum, WindowTitleContains = fields["title"].Text.Trim(), ProcessNameContains = fields["process"].Text.Trim(), DetectionThreshold = threshold / 100, DetectionOffsetX = Number("offsetx") / 100, DetectionOffsetY = Number("offsety") / 100, DetectionScale = scale, DryRun = dryRun.IsChecked == true, GeometryCalibrated = calibrated.IsChecked == true, MonitorId = (monitor.SelectedItem as MonitorChoice)?.Id, Regions = regions, Hotkeys = keys, StopHotkey = stopKey };
         if (!string.IsNullOrWhiteSpace(fields["bounds"].Text))
         {
             var parts = fields["bounds"].Text.Split(',');
@@ -192,7 +199,7 @@ public sealed partial class MainWindow : Window
     }
     private void ApplyHotkeys(AppSettings next)
     {
-        try { hotkeys?.Apply(next); foreach (var team in Enum.GetValues<Team>()) { teamKeyLabels[team].Text = "F" + (next.Hotkeys[team] - 0x6F); teamKeyLabels[team].FontSize = 26; teamButtons[team].ToolTip = "Einmal drücken aktiviert das Team. ESC bricht ab."; } }
+        try { hotkeys?.Apply(next); foreach (var team in Enum.GetValues<Team>()) { teamKeyLabels[team].Text = HotkeyChoice.Display(next.Hotkeys[team]); teamKeyLabels[team].FontSize = 26; teamButtons[team].ToolTip = $"Einmal drücken aktiviert das Team. Stopp: {HotkeyChoice.Display(next.StopHotkey)}."; } }
         catch { foreach (var team in Enum.GetValues<Team>()) { teamKeyLabels[team].Text = "Hotkey inaktiv"; teamKeyLabels[team].FontSize = 16; teamButtons[team].ToolTip = "Hotkey-Konflikt: Unter Konfiguration andere Tasten wählen und speichern. Die Teamtasten bleiben verfügbar."; } throw; }
         finally { UpdateRunDisplay(automation.Snapshot); }
     }

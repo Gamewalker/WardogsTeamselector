@@ -480,5 +480,15 @@
   "Privater Admin-Übertragungscode": "Private admin transfer code",
   "Ungültiger Admin-Übertragungscode.": "Invalid admin transfer code.",
   "Leerer Admin-Übertragungscode.": "Empty admin transfer code.",
-  "Mit Gruppe teilen": "Share with group"
+  "Mit Gruppe teilen": "Share with group",
+  "Stopp-Taste": "Stop key",
+  "Vier unterschiedliche Tasten wählen: F1–F24, ESC oder Sondertasten. Die Stopptaste wird an das Spiel weitergegeben.": "Choose four distinct keys: F1–F24, ESC or special keys. The stop key is forwarded to the game.",
+  "Vier unterschiedliche Tasten für Teams und Stopp wählen: F1–F24, ESC oder Sondertasten.": "Choose four distinct keys for teams and Stop: F1–F24, ESC or special keys.",
+  "Nach dem ersten Klick wird bis zu den fünf stabil erkannten weißen HUD-Balken weitergeklickt. Die Stopptaste, Fokusverlust und Aufnahmefehler stoppen den Lauf.": "After the first click, clicking continues until the five white HUD bars are detected steadily. The stop key, loss of focus and capture errors stop the attempt.",
+  "Stopp · {0}": "Stop · {0}",
+  "Echte Klicks aktiviert · {0} stoppt sofort": "Real clicks enabled · {0} stops immediately",
+  "{0} verwenden {1}. Für {2} eine andere Taste wählen.": "{0} use {1}. Choose another key for {2}.",
+  "Stopp und {0} verwenden {1}. Für Stopp eine andere Taste wählen.": "Stop and {0} use {1}. Choose another key for Stop.",
+  "Einmal drücken aktiviert das Team. Stopp: {0}.": "Press once to activate the team. Stop: {0}.",
+  "Beendet den aktuellen Lauf sofort. Stopp: {0}.": "Stops the current attempt immediately. Stop: {0}."
 }

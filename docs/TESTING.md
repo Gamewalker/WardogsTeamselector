@@ -2,6 +2,10 @@
 
 [← Dokumentation](README.md) · [Zur Projektstartseite](../README.md)
 
+## Frei belegbare Stopptaste und Sondertasten (10. Oktober 2026)
+
+`ConfigurationChecks` prüft alle angebotenen Tasten für Stopp und Teams, gespeicherte Belegungen, doppelte Belegungen und ESC als Standard beim Laden alter Profile. Der GUI-Prüflauf unter `artifacts/configurable-hotkeys-confirm` bestätigt die gemeinsame Auswahl, die Konfliktmeldung mit Fokus auf der Stopptaste und die Betriebsanzeige mit ESC, EINFG und ENDE einschließlich Stopp-Icon. Der Stopphook leitet die gewählte Taste an das Spiel weiter; ESC ist bei abweichender Stoppbelegung frei für ein Team. Release-Build ohne Warnungen/Fehler, Automationsprüfungen und 19.821 Sprachprüfungen bestanden. Neue Meldungen sind Deutsch/Englisch; weitere Sprachen verwenden dafür zunächst Englisch. Keine Spieleingaben oder globalen Hotkeys im GUI-Prüflauf.
+
 ## Checkboxen nach Neustart (10. Oktober 2026)
 
 Alle acht Checkboxen werden beim Umschalten unabhängig vom Profilentwurf gespeichert. `ConfigurationChecks` prüft den Dateiroundtrip, fehlende Einstellungsdateien und ausdrücklich ausgeschaltete Gruppenoptionen. Der GUI-Prüflauf kontrolliert unmittelbares Speichern von **Mit Gruppe teilen**, das Wiederherstellen ohne vorzeitigen Gruppenbeitritt und den Erhalt der Auto-Auswahl beim Schließen. Release-Build ohne Warnungen/Fehler und GUI-Prüflauf unter `artifacts/checkbox-persistence-confirm` erfolgreich. Die Prüfungen verändern keine Benutzereinstellungen und senden keine Spieleingaben.

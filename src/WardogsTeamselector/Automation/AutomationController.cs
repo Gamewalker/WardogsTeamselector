@@ -242,7 +242,7 @@ public sealed class AutomationController : IDisposable
         WindowTitleContains = value.WindowTitleContains, ProcessNameContains = value.ProcessNameContains, DryRun = value.DryRun,
         GeometryCalibrated = value.GeometryCalibrated, ManualBounds = value.ManualBounds,
         DetectionOffsetX = value.DetectionOffsetX, DetectionOffsetY = value.DetectionOffsetY,
-        DetectionScale = value.DetectionScale, Hotkeys = new(value.Hotkeys), Regions = new(value.Regions)
+        DetectionScale = value.DetectionScale, Hotkeys = new(value.Hotkeys), StopHotkey = value.StopHotkey, Regions = new(value.Regions)
     };
 
     public void Dispose()

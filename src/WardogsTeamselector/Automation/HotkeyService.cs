@@ -8,7 +8,7 @@ using WardogsTeamselector.Core;
 
 namespace WardogsTeamselector.Automation;
 
-/// <summary>Create, Apply and Dispose on the owning WPF window's UI thread. ESC is observed and forwarded unchanged.</summary>
+/// <summary>Create, Apply and Dispose on the owning WPF window's UI thread. The stop key is observed and forwarded unchanged.</summary>
 public sealed class HotkeyService : IDisposable
 {
     private readonly Window window;
@@ -17,10 +17,11 @@ public sealed class HotkeyService : IDisposable
     private readonly HookProc hookProc;
     private readonly Dictionary<int, Team> registered = new();
     private IntPtr hook;
-    private bool escapeDown;
+    private bool stopDown;
+    private int stopKey = 0x1B;
     private bool disposed;
     public event Action<Team>? TeamPressed;
-    public event Action? EscapePressed;
+    public event Action? StopPressed;
 
     public HotkeyService(Window window)
     {
@@ -34,7 +35,7 @@ public sealed class HotkeyService : IDisposable
         if (hook == IntPtr.Zero)
         {
             source.RemoveHook(WindowProc);
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "Globaler ESC-Abbruch konnte nicht eingerichtet werden.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "Globale Stopptaste konnte nicht eingerichtet werden.");
         }
     }
 
@@ -43,6 +44,7 @@ public sealed class HotkeyService : IDisposable
         window.Dispatcher.VerifyAccess();
         ObjectDisposedException.ThrowIf(disposed, this);
         settings.Validate();
+        stopKey = settings.StopHotkey; stopDown = false;
         UnregisterAll();
         foreach (var team in Enum.GetValues<Team>())
         {
@@ -52,7 +54,7 @@ public sealed class HotkeyService : IDisposable
             {
                 var error = Marshal.GetLastWin32Error();
                 UnregisterAll();
-                throw new Win32Exception(error, $"F{key - 0x6F} für {team} konnte nicht registriert werden (bereits belegt?). Teamhotkeys sind deaktiviert; andere Tasten wählen und erneut anwenden. ESC bleibt aktiv.");
+                throw new Win32Exception(error, $"{HotkeyChoice.Display(key)} für {team} konnte nicht registriert werden (bereits belegt?). Teamhotkeys sind deaktiviert; andere Tasten wählen und erneut anwenden. Stopp: {HotkeyChoice.Display(stopKey)} bleibt aktiv.");
             }
             registered.Add(id, team);
         }
@@ -70,14 +72,14 @@ public sealed class HotkeyService : IDisposable
 
     private IntPtr KeyboardProc(int code, IntPtr wParam, IntPtr lParam)
     {
-        if (code >= 0 && Marshal.ReadInt32(lParam) == 0x1B)
+        if (code >= 0 && Marshal.ReadInt32(lParam) == stopKey)
         {
             var msg = wParam.ToInt32();
-            if (msg is 0x0101 or 0x0105) escapeDown = false;
-            else if (msg is 0x0100 or 0x0104 && !escapeDown)
+            if (msg is 0x0101 or 0x0105) stopDown = false;
+            else if (msg is 0x0100 or 0x0104 && !stopDown)
             {
-                escapeDown = true;
-                try { EscapePressed?.Invoke(); } catch { }
+                stopDown = true;
+                try { StopPressed?.Invoke(); } catch { }
             }
         }
         return CallNextHookEx(hook, code, wParam, lParam);

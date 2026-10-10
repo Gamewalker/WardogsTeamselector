@@ -322,11 +322,32 @@ public sealed partial class MainWindow
         fields["min"].Text = "50"; ClearError();
         keyBoxes[Team.Red].SelectedIndex = keyBoxes[Team.Blue].SelectedIndex;
         StartTeam(Team.Blue);
-        Check(pages.SelectedIndex == 2 && errorText.Text.Contains("andere F-Taste") && automation.Snapshot.State == RunState.Stopped, "Duplicate hotkeys block activation");
+        Check(pages.SelectedIndex == 2 && errorText.Text.Contains("andere Taste") && automation.Snapshot.State == RunState.Stopped, "Duplicate hotkeys block activation");
         await Settle();
         Check(errorText.Text.Contains("Blau und Rot verwenden F6") && keyBoxes[Team.Red].IsKeyboardFocused, "Conflicting key and teams are named, and the conflicting input is focused");
         SaveRender(Path.Combine(directory, "hotkey-validation.png"));
         keyBoxes[Team.Red].SelectedIndex = 6; ClearError();
+        stopKeyBox.SelectedItem = keyBoxes[Team.Blue].SelectedItem;
+        StartTeam(Team.Blue); await Settle();
+        Check(errorText.Text.Contains("Stopp und Blau") && stopKeyBox.IsKeyboardFocused && automation.Snapshot.State == RunState.Stopped,
+            "Stop/team conflicts block activation and focus the stop selector");
+        stopKeyBox.SelectedItem = HotkeyChoice.All.First(key => key.Code == 0x23);
+        keyBoxes[Team.Blue].SelectedItem = HotkeyChoice.All.First(key => key.Code == 0x1B);
+        keyBoxes[Team.Red].SelectedItem = HotkeyChoice.All.First(key => key.Code == 0x2D);
+        keyBoxes[Team.Green].SelectedItem = HotkeyChoice.All.First(key => key.Code == 0x21);
+        var extendedKeys = ReadFields();
+        Check(extendedKeys.StopHotkey == 0x23 && extendedKeys.Hotkeys[Team.Blue] == 0x1B && extendedKeys.Hotkeys[Team.Red] == 0x2D && extendedKeys.Hotkeys[Team.Green] == 0x21,
+            "All selectors accept ESC and special keys independently");
+        var originalSettings = settings; settings = extendedKeys;
+        ApplyHotkeys(settings); UpdateOperationSummary();
+        Check(teamKeyLabels[Team.Blue].Text == "ESC" && teamKeyLabels[Team.Red].Text == "EINFG"
+            && groupStopButton.Content is StackPanel stopLabel && stopLabel.Children[1] is TextBlock stopText && stopText.Text.Contains("ENDE"),
+            "Operation shows selected special keys and retains the stop icon");
+        SaveRender(Path.Combine(directory, "extended-hotkeys.png"));
+        settings = originalSettings;
+        foreach (var team in Enum.GetValues<Team>()) keyBoxes[team].SelectedItem = HotkeyChoice.All.First(key => key.Code == settings.Hotkeys[team]);
+        stopKeyBox.SelectedItem = HotkeyChoice.All.First(key => key.Code == settings.StopHotkey);
+        ApplyHotkeys(settings); ClearError();
 
         fields["title"].Text = "UI-Prüfung-" + Guid.NewGuid().ToString("N");
         fields["process"].Text = "KeinSpielprozess";

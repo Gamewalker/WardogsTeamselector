@@ -46,7 +46,7 @@ You can activate a team before the selection screen appears. The tool waits for 
 
 During an attempt, the active team button becomes **Stop**. Click it or press **ESC** to cancel. The other two buttons appear dimmed but remain available to switch teams. All three return to normal after a stop or successful join detection. Loss of game focus, a changed or missing game area, and capture or input errors also stop an attempt; activate a team again to retry.
 
-In **Configuration**, choose three distinct **F1–F24** shortcuts and adjust the randomized click interval. The default is **50–70 ms**; supported values are **50–60,000 ms**, with the maximum at least as large as the minimum.
+In **Configuration**, choose four distinct shortcuts for the teams and **Stop**: **F1–F24**, **ESC**, **Insert**, **Delete**, **Home**, **End**, **Page Up/Down**, **Pause**, **Scroll Lock**, **Num Lock**, or arrow keys. ESC is the default stop key and can be assigned to a team when Stop uses another key. Save settings to retain the bindings after restarting. You can also adjust the randomized click interval. The default is **50–70 ms**; supported values are **50–60,000 ms**, with the maximum at least as large as the minimum.
 
 ## ✨ Current features
 

@@ -36,6 +36,8 @@ Check(Localization.Text("Gruppenmodus") == "Group mode", "Group mode has an Engl
 Check(Localization.Text("Gruppe: Rot · Bestätigt") == "Group: Rot · Approved", "Group name is user data and must stay literal.");
 Check(Localization.Text("Auswahl: Rot") == "Selection: Red", "Shared team uses translated team name.");
 Check(Localization.Text("Blau und Rot verwenden F6. Für Rot eine andere F-Taste wählen.").Contains("Blue and Red"), "Dynamic validation did not translate team names.");
+Check(Localization.Text("Stopp · ENDE") == "Stop · ENDE", "Custom stop label was not translated.");
+Check(Localization.Text("Stopp und Blau verwenden EINFG. Für Stopp eine andere Taste wählen.").Contains("Stop and Blue"), "Stop conflict did not translate the team name.");
 Check(Localization.Text("23:01:02.003  Warte auf Spielfenster").StartsWith("23:01:02.003  "), "Log timestamp modified.");
 Check(Localization.Text("C:\\Users\\Example\\my-profile.json") == "C:\\Users\\Example\\my-profile.json", "Unknown data changed.");
 Check(Localization.Text("Rotterdam") == "Rotterdam", "Word prefix in unknown data changed.");

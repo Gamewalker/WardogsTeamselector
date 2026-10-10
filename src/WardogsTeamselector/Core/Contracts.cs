@@ -6,6 +6,18 @@ using System.Linq;
 namespace WardogsTeamselector.Core;
 
 public enum Team { Blue, Red, Green }
+public sealed record HotkeyChoice(int Code, string Name)
+{
+    public override string ToString() => Name;
+    public static IReadOnlyList<HotkeyChoice> All { get; } = Enumerable.Range(0x70, 24)
+        .Select(code => new HotkeyChoice(code, "F" + (code - 0x6F)))
+        .Concat(new[] { new HotkeyChoice(0x1B, "ESC"), new(0x2D, "EINFG"), new(0x2E, "ENTF"),
+            new(0x24, "POS1"), new(0x23, "ENDE"), new(0x21, "BILD AUF"), new(0x22, "BILD AB"),
+            new(0x13, "PAUSE"), new(0x91, "ROLLEN"), new(0x90, "NUM"), new(0x25, "←"),
+            new(0x26, "↑"), new(0x27, "→"), new(0x28, "↓") }).ToArray();
+    public static bool IsSupported(int code) => All.Any(key => key.Code == code);
+    public static string Display(int code) => All.First(key => key.Code == code).Name;
+}
 public enum RunState { Stopped, Waiting, Clicking }
 public enum AutomationStopCause { None, Manual, Safety, Joined, GroupUpdate }
 public sealed record MonitorInfo(string Id, string Name, Rectangle Bounds, bool Primary);
@@ -41,6 +53,7 @@ public sealed class AppSettings
     public double DetectionOffsetY { get; set; }
     public double DetectionScale { get; set; } = 1;
     public Dictionary<Team, int> Hotkeys { get; set; } = new() { [Team.Blue] = 0x75, [Team.Red] = 0x76, [Team.Green] = 0x77 };
+    public int StopHotkey { get; set; } = 0x1B;
     public List<TeamRegion> Regions { get; set; } = DefaultRegions();
     public static List<TeamRegion> DefaultRegions() => new() {
         new(Team.Blue, 1483d/3838, 944d/2158, 273d/3838, 358d/2158),
@@ -53,7 +66,7 @@ public sealed class AppSettings
         if (!double.IsFinite(DetectionScale) || DetectionScale < 0.25 || DetectionScale > 4 || !double.IsFinite(DetectionOffsetX) || !double.IsFinite(DetectionOffsetY)) throw new ArgumentException("Ungültige Erkennungskalibrierung.");
         if (string.IsNullOrWhiteSpace(WindowTitleContains)) throw new ArgumentException("Spielfenster-Filter darf nicht leer sein.");
         if (string.IsNullOrWhiteSpace(ProcessNameContains)) throw new ArgumentException("Spielprozess-Filter darf nicht leer sein.");
-        if (Hotkeys.Count != 3 || Enum.GetValues<Team>().Any(t => !Hotkeys.ContainsKey(t)) || Hotkeys.Values.Distinct().Count() != 3 || Hotkeys.Values.Any(k => k < 0x70 || k > 0x87)) throw new ArgumentException("Drei unterschiedliche Teamhotkeys von F1 bis F24 wählen.");
+        if (Hotkeys.Count != 3 || Enum.GetValues<Team>().Any(t => !Hotkeys.ContainsKey(t)) || Hotkeys.Values.Append(StopHotkey).Distinct().Count() != 4 || Hotkeys.Values.Append(StopHotkey).Any(k => !HotkeyChoice.IsSupported(k))) throw new ArgumentException("Vier unterschiedliche Tasten für Teams und Stopp wählen: F1–F24, ESC oder Sondertasten.");
         if (Regions.Count != 3 || Regions.Select(r => r.Team).Distinct().Count() != 3 || Regions.Any(r => !Enum.IsDefined(r.Team) || !double.IsFinite(r.X) || !double.IsFinite(r.Y) || !double.IsFinite(r.Width) || !double.IsFinite(r.Height) || r.X < 0 || r.Y < 0 || r.Width <= 0 || r.Height <= 0 || r.X + r.Width > 1 || r.Y + r.Height > 1)) throw new ArgumentException("Teamflächen müssen vollständig im Spielbereich liegen.");
         if (ManualBounds is Rectangle b && (b.Width < 100 || b.Height < 100)) throw new ArgumentException("Manueller Spielbereich ist zu klein.");
     }

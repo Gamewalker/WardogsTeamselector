@@ -24,6 +24,27 @@ if (migrated.Contains("DialogAbsenceTimeoutMs") || migrated.Contains("DetectJoin
 
 Console.WriteLine("PASS: Profil-Roundtrip, ungültige Profile und Migration veralteter Beitrittseinstellungen. Keine Benutzereinstellungen verändert.");
 
+if (SettingsStore.Deserialize("{}").StopHotkey != 0x1B) throw new Exception("Alte Profile müssen ESC als Stopptaste behalten.");
+foreach (var key in HotkeyChoice.All)
+{
+    var hotkeyProfile = new AppSettings { StopHotkey = key.Code };
+    hotkeyProfile.Hotkeys = Enum.GetValues<Team>().Zip(HotkeyChoice.All.Where(choice => choice.Code != key.Code).Take(3))
+        .ToDictionary(pair => pair.First, pair => pair.Second.Code);
+    var savedHotkeys = SettingsStore.Deserialize(SettingsStore.Serialize(hotkeyProfile));
+    if (savedHotkeys.StopHotkey != key.Code || !savedHotkeys.Hotkeys.SequenceEqual(hotkeyProfile.Hotkeys)) throw new Exception("Hotkey-Roundtrip fehlgeschlagen.");
+    hotkeyProfile.Hotkeys[Team.Blue] = key.Code;
+    bool rejected = false; try { hotkeyProfile.Validate(); } catch (ArgumentException) { rejected = true; }
+    if (!rejected) throw new Exception("Doppelte Stopp-/Teambelegung akzeptiert.");
+    hotkeyProfile.Hotkeys = new() { [Team.Blue] = key.Code, [Team.Red] = 0x41, [Team.Green] = 0x42 };
+    hotkeyProfile.StopHotkey = 0x43;
+    rejected = false; try { hotkeyProfile.Validate(); } catch (ArgumentException) { rejected = true; }
+    if (!rejected) throw new Exception("Nicht unterstützte Hotkeys akzeptiert.");
+    var teamProfile = new AppSettings { StopHotkey = key.Code == 0x1B ? 0x23 : 0x1B };
+    teamProfile.Hotkeys = new() { [Team.Blue] = key.Code, [Team.Red] = key.Code == 0x75 ? 0x70 : 0x75, [Team.Green] = key.Code == 0x76 ? 0x71 : 0x76 };
+    teamProfile.Validate();
+}
+Console.WriteLine("PASS: Alle Hotkeys für Teams und Stopp, Profilmigration und Belegungskonflikte.");
+
 var checkboxPath = Path.Combine(Path.GetTempPath(), "wardogs-checkboxes-" + Guid.NewGuid().ToString("N") + ".json");
 try
 {
