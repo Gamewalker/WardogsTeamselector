@@ -13,6 +13,13 @@ Check(new GroupProfile().ServiceUrl == "https://wardogs-groups.niels-82f.workers
 Check(JsonSerializer.Deserialize<GroupProfile>("{\"serviceUrl\":\"https://custom.example\"}", GroupJson.Options)!.ServiceUrl == "https://custom.example", "Stored custom service survives the new default");
 
 var group = Membership(); var follower = new GroupFollowCoordinator(); var now = Stopwatch.GetTimestamp();
+var invitationLink = group.ServiceUrl + "/invite/" + group.GroupId + "#" + GroupMembership.NewToken();
+var activationLink = "wardogs://join/#" + Uri.EscapeDataString(invitationLink);
+Check(GroupInvitationActivation.Parse(activationLink) == invitationLink, "App activation preserves service, group and secret");
+var localInvitation = invitationLink.Replace(group.ServiceUrl, "http://localhost:8787");
+Check(GroupInvitationActivation.Parse("wardogs://join/#" + Uri.EscapeDataString(localInvitation)) == localInvitation, "Local development service activation");
+foreach (var invalid in new[] { "https://join/#" + Uri.EscapeDataString(invitationLink), "wardogs://other/#" + Uri.EscapeDataString(invitationLink), "wardogs://join:42/#" + Uri.EscapeDataString(invitationLink), "wardogs://user@join/#" + Uri.EscapeDataString(invitationLink), "wardogs://join/path#" + Uri.EscapeDataString(invitationLink), "wardogs://join/?link=x#" + Uri.EscapeDataString(invitationLink), "wardogs://join/#" + Uri.EscapeDataString(invitationLink.Replace("https:", "http:")), "wardogs://join/#" + Uri.EscapeDataString(invitationLink.Split('#')[0]), "wardogs://join/#" + new string('a', 4096) })
+    Reject(() => GroupInvitationActivation.Parse(invalid), "Reject malformed or unsafe activation");
 var generation = follower.Begin(group, true);
 Check(!follower.CanRun(generation, now), "Cannot start before authorized state");
 Check(follower.Apply(generation, Snapshot(group), now), "First team publication changes selection");

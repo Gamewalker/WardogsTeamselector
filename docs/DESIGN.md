@@ -75,3 +75,9 @@ Die GUI-Prüfung erfasst alle vier Bereiche bei Standard- und Mindestgröße, Ka
 ## Geteilte Tabnavigation und Gruppenverwaltung
 
 Einrichtung und Betrieb stehen links, Konfiguration, Diagnose und Gruppenverwaltung rechts. Alle fünf Bereiche teilen eine Inhaltsfläche; es werden keine zwei parallelen Arbeitsbereiche geöffnet. Reicht die Breite der übersetzten Tabs nicht aus, ordnet die Navigation beide Gruppen in getrennten Zeilen an. Die Gruppenverwaltung enthält Anlage, Einladung, Freigabe, Entfernung und administrative Übertragung. Der Betrieb enthält ausschließlich die Auswahl einer aktiven Gruppe, Teamfreigabe und Beitritt. Alle Gruppenauswahllisten zeigen dieselbe aktive Gruppe. Administrative Tokens sind verborgen und werden nur auf ausdrückliche Aktion als privater Code kopiert; Eingaben erfolgen verdeckt.
+
+## Öffentliche Einladungsseite
+
+Die Worker-Seite übernimmt die dunklen App-Farben, Segoe UI und das vorhandene Hundeschild-Logo. Auf dem Desktop stehen Logo und kurze Gruppenbotschaft links, Einladung und Aktionen rechts. Unter 600 Pixeln erscheint das Logo kompakt über dem Inhalt. Die hellblaue Hauptaktion „In App öffnen“ steht vor Download und einer aufklappbaren Kopier-Alternative. Fehler und unvollständige Einladungen erhalten eigene verständliche Zustände; widerrufene Einladungen zeigen keine Beitrittsaktion.
+
+Die Darstellung liegt in `backend/src/invitation-page.mjs`. Das auf 384 × 384 Pixel verkleinerte Original-Logo wird als `backend/public/logo.png` über Workers Static Assets ausgeliefert. Externe Schriften und Bilddienste werden nicht verwendet. Tastaturfokus, Textauswahl, mobile Umbrüche und reduzierte Bewegung sind berücksichtigt.

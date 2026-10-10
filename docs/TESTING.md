@@ -111,3 +111,12 @@ Ausgeführt am 6. Oktober 2026 auf Windows x64.
 - Unabhängige Prüfung: kein wesentlicher Logikfehler gefunden; Kontrast des blauen Buttons korrigiert und mit 5,41:1 bestätigt.
 
 Es wurden keine echten Mauseingaben an Wardogs gesendet. Tatsächliche Spielaufnahme, HDR/exklusives Vollbild, reale UI-Skalierung und Akzeptanz der Eingaben durch das Spiel bleiben unbestätigt. Die EXE wurde auf diesem Rechner getestet, nicht auf einem frisch aufgesetzten Windows ohne .NET; die Veröffentlichung ist self-contained mit gebündelter Runtime.
+
+## Direkte App-Einladungen (10. Oktober 2026)
+
+- App-Build erfolgreich ohne Warnungen und Fehler; 70 Gruppenprüfungen, 15 Backend-Tests und 19.861 Lokalisierungsprüfungen erfolgreich.
+- `ActivationChecks` prüft die Übergabe zwischen echten Prozessen, unveränderte Einladung einschließlich Dienst und Token, Ablehnung ungültiger Eingaben, erneute Zustellung nach ungültiger Eingabe, normalen Zweitstart und geordnetes Beenden. Der Test verwendet einen eigenen Kanal und verändert keine Protokollregistrierung.
+- GUI-Smoke erfolgreich: Einladungen öffnen den Namensdialog ohne Linkfeld, zeigen den Ziel-Dienst und verbergen das Token. Abbrechen erzeugt keine lokale Mitgliedschaft. Screenshot unter `artifacts/app-invitations-smoke/invitation-dialog.png`.
+- Lokale Worker-Seite im Browser kontrolliert; App-Link enthält die vollständige URL im kodierten Fragment. Backend-Test prüft auch eigene Dienstadressen, ungültige und fehlende Token sowie die Startseite ohne Einladung.
+- Die tatsächliche Browser-Freigabe für ein registriertes Windows-Protokoll und eine produktive Veröffentlichung wurden nicht ausgeführt.
+- Überarbeitete Einladungsseite: alle 16 Backend-Tests erfolgreich, einschließlich sicherer Gruppennamen, widerrufener Einladungen, temporärer Dienstfehler und Clipboard-Fallback. Workers-Dry-Run einschließlich Logo-Asset erfolgreich. Desktop (1280 × 800) und Mobilansicht (390 × 844) im Browser kontrolliert: Logo geladen, App-Link korrekt, kein horizontaler Überlauf.

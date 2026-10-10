@@ -35,6 +35,39 @@ public sealed partial class MainWindow
         Check(Localization.CurrentLanguage == "en" && ((Localization.Language)languageSelector.SelectedItem).Code == "en", "First launch selects English");
         Check(profileText.Text.Contains("Default profile") || hasSavedProfile, "English profile");
         Check(groupService.Text == GroupProfile.DefaultServiceUrl, "New group settings show the default service address");
+        var invitationToken = GroupMembership.NewToken();
+        var initialPage = pages.SelectedIndex;
+        var invitation = "https://groups.example/invite/" + GroupMembership.NewId() + "#" + invitationToken;
+        Exception? invitationFailure = null;
+        bool invitationDialogSeen = false;
+        var invitationTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+        invitationTimer.Tick += (_, _) =>
+        {
+            var dialog = OwnedWindows.Cast<Window>().FirstOrDefault(w => w.IsLoaded);
+            if (dialog == null) return;
+            invitationTimer.Stop();
+            try
+            {
+                var children = ((StackPanel)dialog.Content).Children.Cast<UIElement>();
+                var fields = children.OfType<TextBox>().ToList();
+                Check(fields.Count == 1, "App invitation asks only for the player name");
+                var labels = children.OfType<TextBlock>().Select(x => x.Text).ToList();
+                Check(labels.Any(x => x.Contains("https://groups.example")), "App invitation shows the destination service before confirming");
+                Check(!labels.Any(x => x.Contains(invitationToken)), "App invitation keeps its secret out of the dialog");
+                SaveRender(Path.Combine(directory, "invitation-dialog.png"), dialog);
+                invitationDialogSeen = true;
+            }
+            catch (Exception ex) { invitationFailure = ex; }
+            finally { dialog.DialogResult = false; }
+        };
+        var initialGroupCount = groupProfile.Groups.Count;
+        invitationTimer.Start();
+        ReceiveInvitationActivation("wardogs://join/#" + Uri.EscapeDataString(invitation));
+        while (receivingInvitation) await Task.Delay(50);
+        invitationTimer.Stop();
+        if (invitationFailure != null) throw invitationFailure;
+        Check(invitationDialogSeen && groupProfile.Groups.Count == initialGroupCount, "Cancelling an app invitation does not save or join a group");
+        ShowPage(initialPage);
         var originalCheckboxes = PersistedCheckboxes().ToDictionary(pair => pair.Key, pair => pair.Value.IsChecked == true);
         shareTeamWithGroup.IsChecked = true;
         Check(checkboxPreferences["ShareTeamWithGroup"], "Sharing checkbox is saved immediately without saving the profile");

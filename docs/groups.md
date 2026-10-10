@@ -11,7 +11,7 @@ Die neuen Gruppenmeldungen stehen auf Deutsch und Englisch zur Verfügung. In de
 1. Unter **Gruppenverwaltung → Gruppendienst einrichten** ist für neue oder bisher leere Einstellungen `https://wardogs-groups.niels-82f.workers.dev/` voreingestellt. Für einen eigenen Dienst die HTTPS-Adresse ändern und speichern; vorhandene eigene Adressen bleiben erhalten. Die [Deployment-Anleitung im Repository-Wiki](wiki/Eigenen-Gruppendienst-deployen.md) erklärt die Bereitstellung.
 2. Unter **Gruppenverwaltung** **Gruppe erstellen** wählen und Gruppenname sowie deinen Namen eingeben.
 3. **Einladungslink kopieren** und an deine Mitspieler senden.
-4. Mitspieler wählen unter **Gruppenverwaltung** **Gruppe beitreten**, fügen den vollständigen Link ein und geben ihren Namen ein. Der Link allein bestätigt niemanden.
+4. Mitspieler öffnen den Link im Browser und wählen **In App öffnen**. In der App geben sie ihren Namen ein und bestätigen die Anfrage. Alternativ bleibt das Einfügen unter **Gruppenverwaltung → Gruppe beitreten** möglich. Der Link allein bestätigt niemanden.
 5. Als Ersteller die Gruppe aktualisieren. Unter **Gruppe verwalten → Offene Beitrittsanfragen** eine Anfrage auswählen und **Bestätigen** oder **Ablehnen** wählen.
 
 Die Bestätigung wird beim nächsten Aktualisieren auf dem eingeladenen PC sichtbar. Gleichnamige Personen werden durch eine kurze Mitgliedskennung unterschieden. Namen bestätigen keine Identität.
@@ -52,3 +52,13 @@ Mitgliedschaften und Erstellerrechte werden mit Windows-DPAPI geschützt in `%LO
 **Aus Liste entfernen** löscht nur die lokalen Zugangsdaten. Es verlässt oder löscht die Online-Gruppe nicht. Ohne gesicherten Wiederherstellungscode können dabei Erstellerrechte verloren gehen.
 
 Bei einer beschädigten Gruppendatei überschreibt das Tool sie nicht automatisch. Datei sichern und einen gültigen Wiederherstellungscode importieren. Eine abgebrochene Gruppenanlage oder Anfrage lässt sich über **Aktualisieren** fortsetzen, weil die Zugangsdaten schon vor der Netzwerkanfrage gesichert werden.
+
+## Einladungen direkt in der App öffnen
+
+Auf der Einladungsseite öffnet **In App öffnen** die lokale WardogsTeamselector-App. Die Einladung wird automatisch übernommen; anschließend nur den eigenen Namen eingeben und bestätigen. Eine bereits laufende App erhält die Einladung im bestehenden Fenster. Bereits gespeicherte Gruppen werden ausgewählt und aktualisiert.
+
+Die neue App-Version muss einmal gestartet worden sein. Dabei registriert die portable EXE `wardogs://` für den aktuellen Windows-Benutzer, ohne Administratorrechte. Nach Verschieben der EXE die App am neuen Ort einmal starten. Der Browser kann vor dem Öffnen nach einer Bestätigung fragen. Ohne registrierte App bleibt „Link kopieren“ als Alternative verfügbar.
+
+Technisch übergibt die Webseite `wardogs://join/#<URL-kodierter vollständiger Einladungslink>`. Das Einladungsgeheimnis bleibt im Fragment; die App validiert Dienstadresse, Gruppenkennung und Token vor der Übernahme. Erst die Bestätigung im Namensdialog sendet eine neue Beitrittsanfrage. Die Freigabe durch den Ersteller bleibt erforderlich.
+
+Für die Nutzung müssen sowohl die neue App als auch die aktualisierte Worker-Einladungsseite veröffentlicht werden.

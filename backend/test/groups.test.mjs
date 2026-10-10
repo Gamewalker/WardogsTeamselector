@@ -1,6 +1,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
+import { runInNewContext } from "node:vm";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 
@@ -8,6 +9,55 @@ const mf = new Miniflare({ name: "groups-test", unsafeInspectDurableObjects: tru
 after(() => mf.dispose());
 const id = () => randomBytes(16).toString("hex");
 const token = () => randomBytes(32).toString("base64url");
+const pageElements = () => Object.fromEntries(['link', 'copy', 'open', 'name', 'heading', 'status', 'launch-note', 'manual', 'copy-feedback'].map(id => [id, { hidden: id === 'open' }]));
+test("Invitation page passes the complete invitation to the app only for valid links", async () => {
+  const groupId = id();
+  const response = await mf.dispatchFetch("https://groups.example/invite/" + groupId);
+  const html = await response.text();
+  assert.equal(response.headers.get("Referrer-Policy"), "no-referrer");
+  const script = html.match(/<script>(.*?)<\/script>/s)[1];
+  for (const secret of [token(), "", "invalid", token() + "extra"]) {
+    const elements = pageElements();
+    const location = { origin: "https://custom.example:8443", hash: secret ? "#" + secret : "" };
+    location.href = location.origin + "/invite/" + groupId + location.hash;
+    runInNewContext(script, { location, document: { getElementById: id => elements[id] }, fetch: () => Promise.resolve({ ok: true, json: async () => ({ name: "Friends" }) }) });
+    if (secret.length === 43) {
+      assert.equal(elements.open.hidden, false);
+      assert.equal(decodeURIComponent(elements.open.href.split('#')[1]), location.href);
+      assert.match(elements.open.href, /^wardogs:\/\/join\/#/);
+    } else {
+      assert.equal(elements.open.hidden, true);
+      assert.equal(elements.open.href, undefined);
+    }
+    assert.equal(elements.link.value, location.href);
+  }
+  const root = await mf.dispatchFetch("https://groups.example/");
+  const rootScript = (await root.text()).match(/<script>(.*?)<\/script>/s)[1];
+  const elements = pageElements();
+  runInNewContext(rootScript, { location: { href: "https://groups.example/#" + token(), hash: "#" + token() }, document: { getElementById: id => elements[id] } });
+  assert.equal(elements.open.hidden, true);
+});
+test("Invitation page displays group names safely and explains expired links and clipboard fallback", async () => {
+  const response = await mf.dispatchFetch("https://groups.example/invite/" + id());
+  const html = await response.text();
+  assert.match(html, /src="\/logo.png"/);
+  assert.match(response.headers.get('Content-Security-Policy'), /img-src 'self'/);
+  const script = html.match(/<script>(.*?)<\/script>/s)[1];
+  for (const statusCode of [200, 403, 410, 429, 503]) {
+    const elements = pageElements();
+    const document = { getElementById: id => elements[id] };
+    runInNewContext(script, { document, location: { href: 'https://groups.example/invite/test#' + token(), origin: 'https://groups.example', hash: '#' + token() }, navigator: { clipboard: { writeText: async () => { throw new Error('denied'); } } }, fetch: async () => ({ ok: statusCode === 200, status: statusCode, json: async () => ({ name: '<img src=x onerror=alert(1)>', message: 'Einladung ungültig.' }) }) });
+    await new Promise(resolve => setImmediate(resolve));
+    if (statusCode === 200) assert.equal(elements.heading.textContent, '<img src=x onerror=alert(1)>');
+    assert.equal(elements.open.hidden, statusCode === 403 || statusCode === 410);
+    let selected = false;
+    elements.link.focus = () => {};
+    elements.link.select = () => { selected = true; };
+    await elements.copy.onclick();
+    assert.equal(selected, true);
+    assert.match(elements['copy-feedback'].textContent, /Strg\+C/);
+  }
+});
 async function request(group, action, data, secret = group.token) {
   const path = action === "create" ? "/v1/groups" : `/v1/groups/${group.groupId}/${action}`;
   const response = await mf.dispatchFetch("https://groups.example" + path, {

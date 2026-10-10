@@ -1,3 +1,4 @@
+import { invitationPage } from './invitation-page.mjs';
 import { DurableObject } from "cloudflare:workers";
 
 const ID = /^[a-f0-9]{32}$/;
@@ -222,10 +223,4 @@ export class GroupRoom extends DurableObject {
   }
   webSocketClose(ws, code, reason) { ws.close(code, reason); }
   webSocketError(ws) { ws.close(1011, "Verbindung unterbrochen"); }
-}
-
-function invitationPage(path) {
-  const groupId = path.startsWith("/invite/") ? path.slice(8) : "";
-  const html = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wardogs – Gruppeneinladung</title><style>body{font:18px system-ui;background:#1c1e22;color:#eee;max-width:640px;margin:10vh auto;padding:24px}a{color:#94c5ff}button,input{font:inherit;padding:12px;border-radius:8px}input{width:90%}p{line-height:1.6}</style><h1>Wardogs Gruppeneinladung</h1><p id="name">Öffne im Tool unter Betrieb → Gruppenmodus die Aktion „Gruppe beitreten“, füge diesen Link ein und gib deinen Namen ein. Der Ersteller bestätigt anschließend deine Anfrage.</p><input id="link" readonly aria-label="Einladungslink"><p><button id="copy">Link kopieren</button></p><p><a href="https://github.com/Gamewalker/WardogsTeamselector/releases/latest">WardogsTeamselector herunterladen</a></p><script>const link=document.getElementById('link');link.value=location.href;document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(link.value);document.getElementById('copy').textContent='Kopiert'}catch{link.select()}};const group=${JSON.stringify(groupId)};if(group&&location.hash.length>1)fetch('/v1/groups/'+group+'/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({inviteToken:location.hash.slice(1)})}).then(async r=>{const d=await r.json();if(r.ok)document.title='Einladung: '+d.name;else document.getElementById('name').textContent=d.message}).catch(()=>{});</script></html>`;
-  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'" } });
 }

@@ -53,3 +53,5 @@ Grenzen: 48 Zeichen pro Name, 50 bestätigte Mitglieder, 50 offene Anfragen, sie
 ## Kosten und Ausfälle
 
 Free-Kontingente gelten kontoweit. Bei Überschreitung können API, Speicherung oder Sync ausfallen. Der Client stoppt die betroffene Gruppensteuerung, prüft nach steigender Wartezeit erneut und lässt manuelle lokale Teamstarts weiter zu. Eine unbegrenzte öffentliche Verfügbarkeit wird nicht zugesagt. Die Cloudflare-Nutzungsmetriken für Requests, Durable-Object-Laufzeit und Speicherzugriffe vor einer breiten Einführung prüfen.
+
+Die öffentliche Start- und Einladungsseite verwendet das App-Logo aus `public/logo.png`; Wrangler liefert das Verzeichnis über Workers Static Assets aus. Das HTML und die interaktiven Zustände stehen separat in `src/invitation-page.mjs`.

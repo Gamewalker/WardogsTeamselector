@@ -21,7 +21,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks', 'GroupChecks', 'GroupStorageChecks')) {
+          foreach ($name in @('DetectionChecks', 'JoinedScreenChecks', 'AutomationChecks', 'ConfigurationChecks', 'LocalizationChecks', 'UpdateChecks', 'GroupChecks', 'GroupStorageChecks', 'ActivationChecks')) {
             dotnet run --project "tests/$name/$name.csproj" -c Release
             if ($LASTEXITCODE -ne 0) { throw "Checks failed: $name" }
           }

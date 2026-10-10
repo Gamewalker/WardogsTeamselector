@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/WardogsTeamselector/Platform/InvitationActivationHost.cs" Link="InvitationActivationHost.cs" />
+    <Compile Include="../../src/WardogsTeamselector/Groups/GroupInvitationActivation.cs" Link="GroupInvitationActivation.cs" />
+    <Compile Include="../../src/WardogsTeamselector/Groups/GroupContracts.cs" Link="GroupContracts.cs" />
+  </ItemGroup>
+</Project>

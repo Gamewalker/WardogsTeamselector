@@ -490,5 +490,6 @@
   "{0} verwenden {1}. Für {2} eine andere Taste wählen.": "{0} use {1}. Choose another key for {2}.",
   "Stopp und {0} verwenden {1}. Für Stopp eine andere Taste wählen.": "Stop and {0} use {1}. Choose another key for Stop.",
   "Einmal drücken aktiviert das Team. Stopp: {0}.": "Press once to activate the team. Stop: {0}.",
-  "Beendet den aktuellen Lauf sofort. Stopp: {0}.": "Stops the current attempt immediately. Stop: {0}."
+  "Beendet den aktuellen Lauf sofort. Stopp: {0}.": "Stops the current attempt immediately. Stop: {0}.",
+  "Die laufende App konnte nicht erreicht werden. App neu starten und Einladung erneut öffnen.": "The running app could not be reached. Restart the app and open the invitation again."
 }

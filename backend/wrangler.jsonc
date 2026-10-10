@@ -4,6 +4,7 @@
   "main": "src/worker.js",
   "compatibility_date": "2026-08-06",
   "workers_dev": true,
+  "assets": { "directory": "./public" },
   "durable_objects": {
     "bindings": [{ "name": "GROUPS", "class_name": "GroupRoom" }]
   },

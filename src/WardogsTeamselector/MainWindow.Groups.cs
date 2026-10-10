@@ -280,17 +280,52 @@ public sealed partial class MainWindow
         await CompleteRegistrationAsync(group);
         groupStatus.Text = "Gruppe erstellt. Einladungslink kopieren und mit deinen Leuten teilen.";
     }
-    private async Task JoinGroupAsync()
+    private Task JoinGroupAsync() => JoinGroupAsync(null);
+    private async Task JoinGroupAsync(string? invitationLink)
     {
-        var input = GroupPrompt("Gruppe beitreten", ("Vollständiger Einladungslink", ""), ("Dein Name", "")); if (input == null) return;
-        var invitation = GroupServiceAddress.ParseInvitation(input[0]);
+        var linkedInvitation = invitationLink == null ? default : GroupServiceAddress.ParseInvitation(invitationLink);
+        if (invitationLink != null)
+        {
+            var existing = groupProfile.Groups.FirstOrDefault(x => x.ServiceUrl == linkedInvitation.ServiceUrl && x.GroupId == linkedInvitation.GroupId);
+            if (existing != null) { groupPicker.SelectedItem = existing; await RefreshSelectedGroupAsync(); return; }
+        }
+        var input = invitationLink == null
+            ? GroupPrompt("Gruppe beitreten", ("Vollständiger Einladungslink", ""), ("Dein Name", ""))
+            : GroupPrompt("Gruppe beitreten", $"{linkedInvitation.ServiceUrl}\n{linkedInvitation.GroupId}", ("Dein Name", ""));
+        if (input == null) return;
+        var invitation = GroupServiceAddress.ParseInvitation(invitationLink ?? input[0]);
         if (groupProfile.Groups.Any(x => x.ServiceUrl == invitation.ServiceUrl && x.GroupId == invitation.GroupId)) throw new ArgumentException("Diese Gruppe ist bereits gespeichert. Aktualisieren oder die alte Mitgliedschaft aus der Liste entfernen.");
-        var group = new GroupMembership { ServiceUrl = invitation.ServiceUrl, GroupId = invitation.GroupId, MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), InviteToken = invitation.InviteToken, Name = "Neue Gruppenanfrage", DisplayName = input[1].Trim(), RegistrationPending = true };
+        var group = new GroupMembership { ServiceUrl = invitation.ServiceUrl, GroupId = invitation.GroupId, MemberId = GroupMembership.NewId(), Token = GroupMembership.NewToken(), InviteToken = invitation.InviteToken, Name = "Neue Gruppenanfrage", DisplayName = input[invitationLink == null ? 1 : 0].Trim(), RegistrationPending = true };
         group.Validate(); groupProfile.Groups.Add(group);
         try { SaveGroups(); } catch { groupProfile.Groups.Remove(group); throw; }
         ReloadGroupPickers(); groupPicker.SelectedItem = group;
         await CompleteRegistrationAsync(group);
         groupStatus.Text = "Anfrage gesendet · wartet auf Bestätigung. „Aktualisieren“ prüft die Freigabe.";
+    }
+    private readonly System.Collections.Generic.Queue<string> invitationActivations = new();
+    private bool receivingInvitation;
+    public async void ReceiveInvitationActivation(string value)
+    {
+        if (closing) return;
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Show(); Activate();
+        if (value.Length == 0) return;
+        if (invitationActivations.Count >= 10) return;
+        invitationActivations.Enqueue(value);
+        if (receivingInvitation) return;
+        receivingInvitation = true;
+        try
+        {
+            while (invitationActivations.Count != 0 && !closing)
+            {
+                while (groupBusy && !closing) await Task.Delay(100);
+                if (closing) return;
+                var next = invitationActivations.Dequeue();
+                ShowPage(4);
+                await RunGroupUiAction(() => JoinGroupAsync(GroupInvitationActivation.Parse(next)));
+            }
+        }
+        finally { receivingInvitation = false; }
     }
     private async Task CompleteRegistrationAsync(GroupMembership group)
     {
@@ -657,10 +692,13 @@ public sealed partial class MainWindow
         groupLifetime.Cancel(); groupTimer.Stop(); StopGroupFollow(); groupApi.Dispose();
     }
     private string[]? GroupPrompt(string title, params (string Label, string Initial)[] values)
+        => GroupPrompt(title, null, values);
+    private string[]? GroupPrompt(string title, string? description, params (string Label, string Initial)[] values)
     {
         var dialog = new Window { Owner = this, Title = title, Width = 580, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize, Background = Background, Foreground = Foreground, FontFamily = FontFamily, FontSize = FontSize, MaxHeight = 600 };
         dialog.Resources.MergedDictionaries.Add(CreateTheme());
         var body = new StackPanel { Margin = new Thickness(24) }; var inputs = new System.Collections.Generic.List<TextBox>();
+        if (description != null) body.Children.Add(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap });
         foreach (var field in values)
         {
             body.Children.Add(new TextBlock { Text = field.Label, Margin = new Thickness(0, 8, 0, 4) });
