@@ -1,47 +1,71 @@
 1
 00:00:00,000 --> 00:00:06,000
-WardogsTeamselector
-Choose Blue, Red or Green with F6, F7 or F8. Start in test mode.
-CURRENT ENGLISH INTERFACE / NO MOUSE INPUT
+🐺 WardogsTeamselector
+Your team, one keypress. Play solo or bring your friends along.
+ENGLISH FEATURE TOUR / NO LIVE MATCH
 
 2
 00:00:06,000 --> 00:00:12,000
-01 / Connect and calibrate
-Find the game, check the colored team outlines, then save your setup.
-EMBEDDED REFERENCE IMAGE / NOT A LIVE GAME
+🎯 Set up your screen
+Find Wardogs, choose your monitor and line up the colored team outlines.
+SAMPLE GAME SCREEN
 
 3
 00:00:12,000 --> 00:00:18,000
-02 / Activate, switch or stop
-The active team becomes Stop. Other teams stay selectable. ESC cancels.
-WAITING-STATE UI FIXTURE / CONTROLLER STOPPED
+⌨️ Choose, switch or stop
+F6: Blue. F7: Red. F8: Green. Choose early, wait for the game, or stop with ESC.
+DEMO STATUS / NO REAL CLICKS
 
 4
 00:00:18,000 --> 00:00:24,000
-03 / Make it yours
-Adjust click intervals and hotkeys. Auto focus brings the game forward.
-DEFAULT INTERVAL: 50-70 MS / HOTKEYS: F1-F24
+✅ Stop automatically after joining
+The app keeps trying your team and stops when it recognizes that you have joined.
+SAMPLE IN-GAME SCREEN / NO LIVE JOIN
 
 5
 00:00:24,000 --> 00:00:30,000
-04 / Test before real clicks
-Use test mode, check reference images and export diagnostics for support.
-TEST MODE SENDS NO MOUSE INPUT
+👥 Share your team
+Turn on sharing, choose your group and pick a team. Your friends can follow your choice.
+DEMO GROUP / NO ONLINE ACTIONS
 
 6
 00:00:30,000 --> 00:00:36,000
-05 / Confirm the join
-A run stops after five white HUD bars stay detected for at least 0.5 seconds.
-EMBEDDED HUD REFERENCE / NO LIVE JOIN SHOWN
+🔁 Join once or keep following
+Join the shared team once, or use Auto follow to stay ready for the next team selection screen.
+AUTO REMEMBERS YOUR CHOICE WHEN YOU REOPEN THE APP
 
 7
 00:00:36,000 --> 00:00:42,000
-06 / Stay up to date
-Release builds check at startup and every six hours. Your runtime variant and settings are preserved.
-UPDATES ARE DISABLED IN THIS DOCUMENTATION CAPTURE
+✉️ Invite and manage your friends
+Create groups, share invitations and approve requests. Manage members and your shared choice.
+DEMO GROUP AND SAMPLE MEMBERS
 
 8
 00:00:42,000 --> 00:00:48,000
-07 / Your language, your project
-20 offline UI languages. English by default. Project, GPL license and bug reports in About the app.
-OPEN SOURCE / GAMEWALKER ON GITHUB
+🔑 Take your groups with you
+Keep a private recovery code for a new PC. Copy admin access or transfer it exclusively.
+KEEP RECOVERY AND ADMIN CODES PRIVATE
+
+9
+00:00:48,000 --> 00:00:54,000
+💾 Make it yours
+Customize team and Stop keys, click speed and game focus. Your setup and checkbox choices are remembered.
+YOUR SETTINGS / YOUR PLAY STYLE
+
+10
+00:00:54,000 --> 00:01:00,000
+🧪 Test before you click
+Try test mode without real clicks. Check sample screens, save screenshots and export a report for help.
+TEST MODE SENDS NO MOUSE INPUT
+
+11
+00:01:00,000 --> 00:01:06,000
+🔄 Stay up to date
+Get new releases from the app. Your settings and download variant stay with you.
+UPDATE OVERVIEW / NO UPDATE INSTALLED IN THIS TOUR
+
+12
+00:01:06,000 --> 00:01:12,000
+🌍 Your language, your team
+20 interface languages, a dark Windows 11 look and project, license and bug-report links.
+FREE AND OPEN SOURCE / GAMEWALKER ON GITHUB

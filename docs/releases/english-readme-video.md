@@ -1,7 +1,7 @@
-# English README and updated video
+﻿# English README and feature tour
 
-The project README is now in English and covers the current team controls, automatic game focus, 20 offline interface languages, Windows 11 styling, profile behavior, diagnostics and verified automatic updates with install-and-restart support.
+The README now describes the app in everyday language while keeping its emoji headings and friendly style. It covers team selection, automatic waiting and stopping, shared team choices, one-time group joins, continuous Auto follow, invitations, membership management, private admin transfers, recovery, calibration, saved preferences, test mode, diagnostics, 20 interface languages and updates.
 
-A new 48-second English tour replaces the previous German tour in the README. It uses the current app interface with English captions and a matching animated preview. Static reference images and the UI-only waiting fixture are labeled; the video does not claim to show a live game session. The caption file and regeneration source are included under `docs/media/`.
+The matching 72-second English tour has twelve scenes, emoji headings, short captions and a looping preview. It includes current app views and an in-memory demo group. Sample game images and demo states are labeled; no live match, online group action or successful live join is shown. Captions and regeneration sources remain under `docs/media/`.
 
-Detailed guides remain in German and are labeled accordingly in the README. Application behavior is unchanged.
+The README retains download and quick-start instructions and links to the detailed German guides. Application behavior is unchanged.

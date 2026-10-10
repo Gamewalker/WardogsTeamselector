@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$Dotnet = 'dotnet',
     [string]$Ffmpeg = 'ffmpeg'
 )
@@ -12,16 +12,20 @@ New-Item -ItemType Directory -Force $work | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'English UI capture failed.' }
 
 $scenes = @(
-    @{ Image='operation'; Title='WardogsTeamselector'; Detail='Choose Blue, Red or Green with F6, F7 or F8. Start in test mode.'; Note='CURRENT ENGLISH INTERFACE / NO MOUSE INPUT' },
-    @{ Image='setup'; Title='01 / Connect and calibrate'; Detail='Find the game, check the colored team outlines, then save your setup.'; Note='EMBEDDED REFERENCE IMAGE / NOT A LIVE GAME' },
-    @{ Image='waiting-fixture'; Title='02 / Activate, switch or stop'; Detail='The active team becomes Stop. Other teams stay selectable. ESC cancels.'; Note='WAITING-STATE UI FIXTURE / CONTROLLER STOPPED' },
-    @{ Image='configuration'; Title='03 / Make it yours'; Detail='Adjust click intervals and hotkeys. Auto focus brings the game forward.'; Note='DEFAULT INTERVAL: 50-70 MS / HOTKEYS: F1-F24' },
-    @{ Image='diagnostics'; Title='04 / Test before real clicks'; Detail='Use test mode, check reference images and export diagnostics for support.'; Note='TEST MODE SENDS NO MOUSE INPUT' },
-    @{ Image='hud-reference'; Title='05 / Confirm the join'; Detail='A run stops after five white HUD bars stay detected for at least 0.5 seconds.'; Note='EMBEDDED HUD REFERENCE / NO LIVE JOIN SHOWN' },
-    @{ Image=$null; Title='06 / Stay up to date'; Detail='Release builds check at startup and every six hours. Your runtime variant and settings are preserved.'; Note='UPDATES ARE DISABLED IN THIS DOCUMENTATION CAPTURE' },
-    @{ Image='about'; Title='07 / Your language, your project'; Detail='20 offline UI languages. English by default. Project, GPL license and bug reports in About the app.'; Note='OPEN SOURCE / GAMEWALKER ON GITHUB' }
+    @{ Image='operation'; Title='🐺 WardogsTeamselector'; Detail='Your team, one keypress. Play solo or bring your friends along.'; Note='ENGLISH FEATURE TOUR / NO LIVE MATCH' },
+    @{ Image='setup'; Title='🎯 Set up your screen'; Detail='Find Wardogs, choose your monitor and line up the colored team outlines.'; Note='SAMPLE GAME SCREEN' },
+    @{ Image='waiting-fixture'; Title='⌨️ Choose, switch or stop'; Detail='F6: Blue. F7: Red. F8: Green. Choose early, wait for the game, or stop with ESC.'; Note='DEMO STATUS / NO REAL CLICKS' },
+    @{ Image='hud-reference'; Title='✅ Stop automatically after joining'; Detail='The app keeps trying your team and stops when it recognizes that you have joined.'; Note='SAMPLE IN-GAME SCREEN / NO LIVE JOIN' },
+    @{ Image='share-team'; Title='👥 Share your team'; Detail='Turn on sharing, choose your group and pick a team. Your friends can follow your choice.'; Note='DEMO GROUP / NO ONLINE ACTIONS' },
+    @{ Image='group-mode'; Title='🔁 Join once or keep following'; Detail='Join the shared team once, or use Auto follow to stay ready for the next team selection screen.'; Note='AUTO REMEMBERS YOUR CHOICE WHEN YOU REOPEN THE APP' },
+    @{ Image='group-management'; Title='✉️ Invite and manage your friends'; Detail='Create groups, share invitations and approve requests. Manage members and your shared choice.'; Note='DEMO GROUP AND SAMPLE MEMBERS' },
+    @{ Image='group-recovery'; Title='🔑 Take your groups with you'; Detail='Keep a private recovery code for a new PC. Copy admin access or transfer it exclusively.'; Note='KEEP RECOVERY AND ADMIN CODES PRIVATE' },
+    @{ Image='configuration'; Title='💾 Make it yours'; Detail='Customize team and Stop keys, click speed and game focus. Your setup and checkbox choices are remembered.'; Note='YOUR SETTINGS / YOUR PLAY STYLE' },
+    @{ Image='diagnostics'; Title='🧪 Test before you click'; Detail='Try test mode without real clicks. Check sample screens, save screenshots and export a report for help.'; Note='TEST MODE SENDS NO MOUSE INPUT' },
+    @{ Image=$null; Title='🔄 Stay up to date'; Detail='Get new releases from the app. Your settings and download variant stay with you.'; Note='UPDATE OVERVIEW / NO UPDATE INSTALLED IN THIS TOUR' },
+    @{ Image='about'; Title='🌍 Your language, your team'; Detail='20 interface languages, a dark Windows 11 look and project, license and bug-report links.'; Note='FREE AND OPEN SOURCE / GAMEWALKER ON GITHUB' }
 )
-$titleFont = New-Object System.Drawing.Font('Segoe UI', 30, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel))
+$titleFont = New-Object System.Drawing.Font('Segoe UI Emoji', 30, ([System.Drawing.FontStyle]::Bold), ([System.Drawing.GraphicsUnit]::Pixel))
 $detailFont = New-Object System.Drawing.Font('Segoe UI', 26, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel))
 $noteFont = New-Object System.Drawing.Font('Segoe UI', 18, ([System.Drawing.FontStyle]::Regular), ([System.Drawing.GraphicsUnit]::Pixel))
 $muted = New-Object System.Drawing.SolidBrush([System.Drawing.ColorTranslator]::FromHtml('#b8c1ce'))
@@ -40,7 +44,7 @@ try {
             $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
             $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
             $graphics.DrawString($scene.Title, $titleFont, $white, 64, 30)
-            $graphics.DrawString(('{0:00} / 08' -f ($i + 1)), $noteFont, $muted, 1440, 43)
+            $graphics.DrawString(('{0:00} / {1:00}' -f ($i + 1), $scenes.Count), $noteFont, $muted, 1440, 43)
             $graphics.DrawString($scene.Note, $noteFont, $accent, 64, 78)
             if ($scene.Image) {
                 $shot = [System.Drawing.Image]::FromFile((Join-Path $captures ($scene.Image + '.png')))
@@ -52,9 +56,9 @@ try {
                 } finally { $shot.Dispose() }
             } else {
                 $cards = @(
-                    @('Verified downloads', 'Size, Windows EXE format and SHA-256 checks.'),
-                    @('Update and restart', 'The header Update button appears when a newer version is available.'),
-                    @('Install on exit', 'Or close the app to install the prepared update. The old EXE is kept as .previous.')
+                    @('New versions, within reach', 'The app checks for updates regularly. You can check manually too.'),
+                    @('Update and restart', 'Use the Update button when a new version is ready.'),
+                    @('Keep your preferences', 'Or install a ready update when you close the app. Your settings are kept.')
                 )
                 for ($card = 0; $card -lt $cards.Count; $card++) {
                     $y = 190 + 210 * $card
