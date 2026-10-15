@@ -26,7 +26,10 @@ public sealed record TeamRegion(Team Team, double X, double Y, double Width, dou
 {
     public Point Center(Rectangle bounds) => new(bounds.Left + (int)Math.Round((X + Width / 2) * bounds.Width), bounds.Top + (int)Math.Round((Y + Height / 2) * bounds.Height));
 }
-public sealed record ProbeResult(string Name, double Score, string Expected, string Actual);
+public sealed record ProbeResult(string Name, double Score, string Expected, string Actual)
+{
+    public Rectangle? Bounds { get; init; }
+}
 public sealed record DetectionResult(bool IsMatch, double Score, IReadOnlyList<ProbeResult> Probes, string Reason);
 public sealed class CaptureFrame : IDisposable
 {

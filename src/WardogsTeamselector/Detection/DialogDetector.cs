@@ -17,7 +17,7 @@ public sealed class DialogDetector : IDialogDetector
 {
     private const double ReferenceWidth = 3838, ReferenceHeight = 2158;
     private sealed record Area(string Name, RectangleF Rect, double Expected);
-    private static readonly Area[] Patches = {
+    private static readonly Area[] LegacyPatches = {
         new("Dialog oben links", new(1470, 926, 70, 9), 28),
         new("Dialog oben rechts", new(2280, 926, 70, 9), 28),
         new("Dialog unten links", new(1480, 1307, 75, 8), 28),
@@ -28,35 +28,53 @@ public sealed class DialogDetector : IDialogDetector
         new("Karte Rot", new(1802, 967, 32, 15), 3),
         new("Karte Grün", new(2102, 967, 32, 15), 3)
     };
-    private sealed record Edge(string Name, float X1, float Y1, float X2, float Y2, bool Horizontal, double MinimumContrast);
-    private static readonly Edge[] Edges = {
+    private sealed record Edge(string Name, float X1, float Y1, float X2, float Y2, bool Horizontal, double MinimumContrast, float Inset = 9);
+    private static readonly Edge[] LegacyEdges = {
         new("Oberer Dialograhmen", 1480, 837, 2360, 837, true, 25),
         new("Unterer Dialograhmen", 1480, 1323, 2360, 1323, true, 12),
         new("Linker Dialograhmen", 1459, 950, 1459, 1290, false, 16),
         new("Rechter Dialograhmen", 2380, 950, 2380, 1290, false, 16)
     };
 
+    // The bonus footer makes the centered dialog taller. Cards and heading move
+    // up by 16 reference pixels, while the bottom frame moves down by 16.
+    // Keep each layout complete: never mix matching edges from different layouts.
+    private static readonly Area[] Patches = LegacyPatches.Select(a => a with {
+        Rect = new RectangleF(a.Rect.X, a.Rect.Y - (a.Rect.Y > 1300 ? 20 : 16), a.Rect.Width, a.Rect.Height)
+    }).ToArray();
+    private static readonly Edge[] Edges = LegacyEdges.Select(e => e.Horizontal
+        ? e with { Y1 = e.Y1 + (e.Y1 < ReferenceHeight / 2 ? -16 : 16),
+            Y2 = e.Y2 + (e.Y2 < ReferenceHeight / 2 ? -16 : 16),
+            Inset = e.Y1 > ReferenceHeight / 2 ? 3 : e.Inset }
+        : e).ToArray();
+
     /// <summary>Use these bitmap-relative areas for the debug preview overlay.</summary>
-    public static IReadOnlyList<DetectionProbeArea> GetProbeAreas(Size bitmapSize, AppSettings settings)
+    public static IReadOnlyList<DetectionProbeArea> GetProbeAreas(Size bitmapSize, AppSettings settings, bool withBonuses = true)
     {
-        var result = Patches.Select(a => new DetectionProbeArea(a.Name, Transform(a.Rect, bitmapSize, settings))).ToList();
-        foreach (var e in Edges)
+        var result = (withBonuses ? Patches : LegacyPatches).Select(a => new DetectionProbeArea(a.Name, Transform(a.Rect, bitmapSize, settings))).ToList();
+        foreach (var e in withBonuses ? Edges : LegacyEdges)
         {
-            var r = e.Horizontal ? new RectangleF(e.X1, e.Y1 - 3, e.X2 - e.X1, 6)
-                : new RectangleF(e.X1 - 3, e.Y1, 6, e.Y2 - e.Y1);
-            result.Add(new(e.Name, Transform(r, bitmapSize, settings)));
+            result.Add(new(e.Name, Transform(EdgeArea(e), bitmapSize, settings)));
         }
         return result;
     }
 
     public DetectionResult Detect(CaptureFrame frame, AppSettings settings)
     {
+        var current = DetectLayout(frame, settings, Patches, Edges);
+        if (current.IsMatch) return current;
+        var legacy = DetectLayout(frame, settings, LegacyPatches, LegacyEdges);
+        return legacy.IsMatch || legacy.Score > current.Score ? legacy : current;
+    }
+
+    private static DetectionResult DetectLayout(CaptureFrame frame, AppSettings settings, Area[] patches, Edge[] edges)
+    {
         var bitmap = frame.Bitmap;
         if (!double.IsFinite(settings.DetectionScale) || settings.DetectionScale <= 0 ||
             !double.IsFinite(settings.DetectionOffsetX) || !double.IsFinite(settings.DetectionOffsetY))
             return new(false, 0, Array.Empty<ProbeResult>(), "Ungültige Erkennungskalibrierung.");
         var probes = new List<ProbeResult>();
-        foreach (var a in Patches)
+        foreach (var a in patches)
         {
             var rect = Transform(a.Rect, bitmap.Size, settings);
             if (!Contains(bitmap, rect)) return new(false, 0, probes, "Messflächen liegen außerhalb des Spielbereichs.");
@@ -71,9 +89,9 @@ public sealed class DialogDetector : IDialogDetector
             double deviation = card ? Math.Max(0, mean - 64) : Math.Abs(mean - a.Expected);
             double score = Math.Clamp(1 - deviation / 24 - neutral / 40 - variation / 30, 0, 1);
             probes.Add(new(a.Name, score, card ? "Dunkle neutrale Fläche (RGB 0–64), Hover erlaubt" : $"RGB ≈ {a.Expected:F0}, neutral und gleichmäßig",
-                $"RGB {r:F0}/{g:F0}/{b:F0}; Streuung {variation:F1}"));
+                $"RGB {r:F0}/{g:F0}/{b:F0}; Streuung {variation:F1}") { Bounds = rect });
         }
-        foreach (var e in Edges)
+        foreach (var e in edges)
         {
             int matched = 0;
             double totalContrast = 0;
@@ -82,8 +100,8 @@ public sealed class DialogDetector : IDialogDetector
                 double t = (i + .5) / 20;
                 float x = (float)(e.X1 + (e.X2 - e.X1) * t), y = (float)(e.Y1 + (e.Y2 - e.Y1) * t);
                 var p = TransformPoint(x, y, bitmap.Size, settings);
-                var inside = TransformPoint(x + (e.Horizontal ? 0 : e.X1 < 1900 ? 9 : -9),
-                    y + (e.Horizontal ? e.Y1 < 1000 ? 9 : -9 : 0), bitmap.Size, settings);
+                var inside = TransformPoint(x + (e.Horizontal ? 0 : e.X1 < ReferenceWidth / 2 ? e.Inset : -e.Inset),
+                    y + (e.Horizontal ? e.Y1 < ReferenceHeight / 2 ? e.Inset : -e.Inset : 0), bitmap.Size, settings);
                 if (!Contains(bitmap, p) || !Contains(bitmap, inside)) return new(false, 0, probes, "Rahmenmessung liegt außerhalb des Spielbereichs.");
                 double peak = 0;
                 // Thin antialiased frame survives downsampling; find its local peak along the normal.
@@ -100,20 +118,24 @@ public sealed class DialogDetector : IDialogDetector
                 if (contrast >= e.MinimumContrast) matched++;
             }
             probes.Add(new(e.Name, matched / 20d, $"Kontrast ≥ {e.MinimumContrast:F0} an mindestens 80 % der Kante",
-                $"{matched}/20 passend; mittlerer Kontrast {totalContrast / 20:F1}"));
+                $"{matched}/20 passend; mittlerer Kontrast {totalContrast / 20:F1}") { Bounds = Transform(EdgeArea(e), bitmap.Size, settings) });
         }
         // One locally occluded surface patch may be ignored, never a whole frame edge.
         // Remaining surfaces and all four edges must independently support the dialog.
-        var retainedPatches = probes.Take(Patches.Length).OrderByDescending(p => p.Score).Take(Patches.Length - 1).ToArray();
-        var frameEdges = probes.Skip(Patches.Length).ToArray();
+        var retainedPatches = probes.Take(patches.Length).OrderByDescending(p => p.Score).Take(patches.Length - 1).ToArray();
+        var frameEdges = probes.Skip(patches.Length).ToArray();
         double total = retainedPatches.Concat(frameEdges).Average(p => p.Score);
         bool structure = retainedPatches.All(p => p.Score >= .55) && frameEdges.All(p => p.Score >= .8);
-        int ignored = Enumerable.Range(0, Patches.Length).OrderBy(i => probes[i].Score).First();
+        int ignored = Enumerable.Range(0, patches.Length).OrderBy(i => probes[i].Score).First();
         probes[ignored] = probes[ignored] with { Actual = probes[ignored].Actual + "; schwächste Flächenprobe nicht gewichtet" };
         bool match = structure && total >= settings.DetectionThreshold;
         return new(match, total, probes, match ? "Teamauswahldialog erkannt (Rahmen und Kartenlayout)." :
             structure ? "Gesamtscore unter Erkennungsschwelle." : "Rahmen oder Kartenlayout fehlt/ist verdeckt.");
     }
+
+    private static RectangleF EdgeArea(Edge e) => e.Horizontal
+        ? new(e.X1, e.Y1 - 3, e.X2 - e.X1, 6)
+        : new(e.X1 - 3, e.Y1, 6, e.Y2 - e.Y1);
 
     private static Point TransformPoint(double x, double y, Size size, AppSettings settings) => new(
         (int)Math.Round(((x / ReferenceWidth - .5) * settings.DetectionScale + .5 + settings.DetectionOffsetX) * size.Width),
